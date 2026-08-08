@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import TerminalCard from '../components/ui/TerminalCard';
 import NeonButton from '../components/ui/NeonButton';
 import CyberGrid from '../components/ui/CyberGrid';
@@ -5,6 +6,7 @@ import TypewriterText from '../components/ui/TypewriterText';
 import CyberHeader from '../components/ui/CyberHeader';
 
 export default function MainPortal() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#FFFFFF] flex flex-col items-center justify-center p-4">
       <CyberGrid variant="cyan" />
@@ -14,7 +16,7 @@ export default function MainPortal() {
           <span className="text-[#00FF00] mr-2">&gt;</span>
           <TypewriterText text="SYSTEM INITIALIZED. AWAITING HACKER INPUT..." speed={40} />
         </p>
-        <NeonButton variant="cyan" styleType="outline">
+        <NeonButton variant="cyan" styleType="outline" onClick={() => navigate('/auth')}>
           Enter Portal
         </NeonButton>
       </TerminalCard>
