@@ -26,7 +26,7 @@ export default function LoginForm() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: window.location.origin + '/auth'
+        redirectTo: `${window.location.origin}/auth`
       }
     });
     if (error) setError(error.message);
