@@ -16,8 +16,8 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/portal" element={<ProtectedRoute><HackerPortal /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute><AdminPortal /></ProtectedRoute>} />
-        <Route path="/judge" element={<ProtectedRoute><JudgePortal /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPortal /></ProtectedRoute>} />
+        <Route path="/judge" element={<ProtectedRoute allowedRoles={['judge', 'admin']}><JudgePortal /></ProtectedRoute>} />
 
         {/* Unguarded design preview, stripped from production builds. */}
         {import.meta.env.DEV && (

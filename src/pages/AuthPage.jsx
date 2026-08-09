@@ -1,19 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import LoginForm from '../components/auth/LoginForm';
-import CreateTeamForm from '../components/auth/CreateTeamForm';
-import JoinTeamForm from '../components/auth/JoinTeamForm';
 import { PANEL } from '../components/auth/authStyles';
 
-const TABS = [
-  { key: 'login', label: 'System login' },
-  { key: 'create', label: 'Forge squad' },
-  { key: 'join', label: 'Enlist' },
-];
-
 export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState('login'); // 'login', 'create', 'join'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -102,45 +93,10 @@ export default function AuthPage() {
         </div>
 
         <div
-          className="mt-8 flex border-b border-[#B3E0F2]/10"
-          style={{ animation: 'rise .5s ease-out .08s both' }}
-          role="tablist"
-        >
-          {TABS.map((tab) => {
-            const active = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                role="tab"
-                aria-selected={active}
-                onClick={() => setActiveTab(tab.key)}
-                className={`relative flex-1 px-2 py-3 font-jet text-[10.5px] uppercase tracking-[0.14em] transition-colors duration-200 sm:text-[11px] ${
-                  active ? 'text-[#B3E0F2]' : 'text-[#56707B] hover:text-[#8AA5AE]'
-                }`}
-              >
-                {tab.label}
-                {active && (
-                  <span className="absolute inset-x-0 -bottom-px h-px bg-[#B3E0F2] shadow-[0_0_10px_rgba(179,224,242,.7)]" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        <div
-          key={activeTab}
           className="mt-6"
           style={{ animation: 'rise .4s ease-out both' }}
         >
-          {activeTab === 'login' && (
-            <div className={`${PANEL} p-7 sm:p-8`}><LoginForm /></div>
-          )}
-          {activeTab === 'create' && (
-            <div className={`${PANEL} p-7 sm:p-8`}><CreateTeamForm /></div>
-          )}
-          {activeTab === 'join' && (
-            <div className={`${PANEL} p-7 sm:p-8`}><JoinTeamForm /></div>
-          )}
+          <div className={`${PANEL} p-7 sm:p-8`}><LoginForm /></div>
         </div>
 
         <p className="mt-7 text-center font-jet text-[10px] uppercase tracking-[0.16em] text-[#56707B]">

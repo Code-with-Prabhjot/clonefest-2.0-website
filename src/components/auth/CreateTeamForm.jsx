@@ -1,49 +1,58 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { FIELD, HINT, LABEL, PRIMARY, FormError, FormHead, FormSuccess } from './authStyles';
+import { FIELD, LABEL, PRIMARY, FormError, FormHead, FormSuccess } from './authStyles';
 
-export default function CreateTeamForm() {
+export default function CreateTeamForm({ user }) {
   const [teamName, setTeamName] = useState('');
   const [leaderName, setLeaderName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
+  const generateInviteCode = () => {
+    return Array.from({ length: 3 }, () => 
+      Math.random().toString(36).substring(2, 6).toUpperCase()
+    ).join('-');
+  };
+
   const handleCreateTeam = async (e) => {
     e.preventDefault();
+    if (!user) return;
+    
     setLoading(true);
     setError(null);
     setSuccess(false);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: leaderName,
-            role: 'lead',
-            team_name: teamName
-          }
-        }
-      });
+      const inviteCode = generateInviteCode();
 
-      if (authError) throw authError;
+      // 1. Insert into teams table
+      const { error: teamError } = await supabase
+        .from('teams')
+        .insert({
+          name: teamName,
+          invite_code: inviteCode
+        });
 
-      // If sign-up requires email confirmation, the user is created but session might be null.
-      if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
-          throw new Error('An account with this email already exists. One Hacker, One Squad.');
-      }
+      if (teamError) throw teamError;
+
+      // 2. Update user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: leaderName,
+          role: 'lead',
+          team_name: teamName
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
 
       setSuccess(true);
+      // Give it a short delay then reload to update portal state
+      setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
-      // Clean up Supabase's trigger exception messages if present
-      const message = err.message.includes('Database error saving new user')
-        ? 'Transaction Failed: ' + err.message.split('\n')[0]
-        : err.message;
-      setError(message);
+      setError('Transaction Failed: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -54,7 +63,7 @@ export default function CreateTeamForm() {
       <FormSuccess
         kicker="Squad initialized"
         title="Your squad is registered"
-        body="Check your inbox to verify the address, then sign in from System login. Your invite code is waiting in the squad panel — share it with your members."
+        body="Hold tight, rerouting to the operative dashboard..."
       />
     );
   }
@@ -94,34 +103,6 @@ export default function CreateTeamForm() {
             className={FIELD}
             placeholder="e.g. zerocool"
           />
-        </div>
-
-        <div>
-          <label className={LABEL} htmlFor="create-email">Comms link (email)</label>
-          <input
-            id="create-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className={FIELD}
-            placeholder="lead@rvce.edu.in"
-          />
-        </div>
-
-        <div>
-          <label className={LABEL} htmlFor="create-password">Encryption key (password)</label>
-          <input
-            id="create-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className={FIELD}
-            placeholder="••••••••"
-          />
-          <p className={HINT}>MINIMUM 6 CHARACTERS</p>
         </div>
 
         <button type="submit" disabled={loading} className={PRIMARY}>

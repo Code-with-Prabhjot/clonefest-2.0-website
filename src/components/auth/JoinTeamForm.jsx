@@ -2,10 +2,8 @@ import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { FIELD, HINT, LABEL, PRIMARY, FormError, FormHead, FormSuccess } from './authStyles';
 
-export default function JoinTeamForm() {
+export default function JoinTeamForm({ user }) {
   const [memberName, setMemberName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,37 +11,40 @@ export default function JoinTeamForm() {
 
   const handleJoinTeam = async (e) => {
     e.preventDefault();
+    if (!user) return;
+    
     setLoading(true);
     setError(null);
     setSuccess(false);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: memberName,
-            role: 'member',
-            invite_code: inviteCode
-          }
-        }
-      });
+      // 1. Verify the invite code exists in teams
+      const { data: teamData, error: teamError } = await supabase
+        .from('teams')
+        .select('name')
+        .eq('invite_code', inviteCode)
+        .single();
 
-      if (authError) throw authError;
-
-      // If sign-up requires email confirmation, the user is created but session might be null.
-      if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
-          throw new Error('An account with this email already exists. One Hacker, One Squad.');
+      if (teamError || !teamData) {
+        throw new Error('Invalid invite code. Team not found.');
       }
 
+      // 2. Update user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: memberName,
+          role: 'member',
+          team_name: teamData.name
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
       setSuccess(true);
+      setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
-      // Clean up Supabase's trigger exception messages if present
-      const message = err.message.includes('Database error saving new user')
-        ? 'Enlistment Failed: ' + err.message.split('\n')[0]
-        : err.message;
-      setError(message);
+      setError('Enlistment Failed: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -54,7 +55,7 @@ export default function JoinTeamForm() {
       <FormSuccess
         kicker="Enlistment successful"
         title="You're on the squad"
-        body="Check your comms link to verify the address, then sign in from System login to see your squad and this week's challenge."
+        body="Hold tight, rerouting to the operative dashboard..."
       />
     );
   }
@@ -81,34 +82,6 @@ export default function JoinTeamForm() {
             className={FIELD}
             placeholder="e.g. nulldiv"
           />
-        </div>
-
-        <div>
-          <label className={LABEL} htmlFor="join-email">Comms link (email)</label>
-          <input
-            id="join-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className={FIELD}
-            placeholder="operative@rvce.edu.in"
-          />
-        </div>
-
-        <div>
-          <label className={LABEL} htmlFor="join-password">Encryption key (password)</label>
-          <input
-            id="join-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className={FIELD}
-            placeholder="••••••••"
-          />
-          <p className={HINT}>MINIMUM 6 CHARACTERS</p>
         </div>
 
         <div>
