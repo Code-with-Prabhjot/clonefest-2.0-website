@@ -34,7 +34,13 @@ export default function CreateTeamForm({ user }) {
           invite_code: inviteCode
         });
 
-      if (teamError) throw teamError;
+      if (teamError) {
+        // 23505 is the Postgres error code for unique_violation
+        if (teamError.code === '23505') {
+          throw new Error('This squad name is already taken! Please choose another.');
+        }
+        throw teamError;
+      }
 
       // 2. Update user profile
       const { error: profileError } = await supabase
