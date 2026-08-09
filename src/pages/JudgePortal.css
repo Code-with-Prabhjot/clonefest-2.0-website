@@ -1,0 +1,32 @@
+/* :hover / :focus styles for JudgePortal.
+   The design uses inline styles, which outrank normal rules, so each
+   declaration carries !important to win the cascade. */
+
+[data-s="jp1"]:hover{border-color:#B3E0F2 !important;color:#B3E0F2 !important}
+[data-s="jp2"]:hover{border-color:#B3E0F2 !important;color:#B3E0F2 !important}
+[data-s="jp3"]:hover{transform:rotate(-6deg) scale(1.06) !important}
+[data-s="jp4"]:hover{border-color:rgba(194,86,75,.6) !important;color:#C2564B !important}
+[data-s="jp5"]:hover{transform:translateY(-2px) !important;box-shadow:0 8px 24px rgba(179,224,242,.25) !important}
+[data-s="jp6"]:hover{background:rgba(93,145,166,.06) !important}
+[data-s="jp7"]:focus{border-color:#5D91A6 !important}
+[data-s="jp8"]:hover{background:rgba(93,145,166,.07) !important}
+[data-s="jp9"]:hover{border-color:#B3E0F2 !important;color:#B3E0F2 !important}
+[data-s="jp10"]:hover{background:rgba(179,224,242,.1) !important}
+[data-s="jp11"]:hover{border-color:#B3E0F2 !important;color:#B3E0F2 !important}
+[data-s="jp12"]:hover{color:#B3E0F2 !important}
+[data-s="jp13"]:hover{border-color:#B3E0F2 !important;color:#B3E0F2 !important}
+[data-s="jp14"]:hover{border-color:#B3E0F2 !important;color:#B3E0F2 !important}
+[data-s="jp15"]:hover{border-color:rgba(179,224,242,.28) !important}
+[data-s="jp16"]:hover{border-color:#B3E0F2 !important;background:rgba(93,145,166,.10) !important}
+[data-s="jp17"]:hover{border-color:#B3E0F2 !important;background:rgba(93,145,166,.10) !important}
+[data-s="jp18"]:hover{background:rgba(93,145,166,.06) !important}
+[data-s="jp19"]:hover{background:#C2564B !important;color:#080D0C !important}
+[data-s="jp20"]:hover{background:rgba(179,224,242,.12) !important}
+[data-s="jp21"]:focus{border-color:#5D91A6 !important}
+[data-s="jp22"]:focus{border-color:#5D91A6 !important}
+[data-s="jp23"]:focus{border-color:#5D91A6 !important}
+[data-s="jp25"]:hover{border-color:#B3E0F2 !important;color:#B3E0F2 !important}
+[data-s="jp26"]:hover{border-color:rgba(194,86,75,.6) !important;color:#C2564B !important}
+[data-s="jp27"]:hover{transform:translateY(-2px) !important;box-shadow:0 8px 24px rgba(179,224,242,.25) !important}
+[data-s="jp28"]:hover{box-shadow:0 8px 24px rgba(179,224,242,.25) !important}
+[data-s="jp29"]:hover{border-color:#B3E0F2 !important;color:#B3E0F2 !important}

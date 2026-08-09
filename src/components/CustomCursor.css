@@ -1,0 +1,172 @@
+/* Custom cursor pack. The class is added by CustomCursor.jsx only on devices
+   with a fine hover-capable pointer, so touch devices are untouched. */
+
+html.has-custom-cursor,
+html.has-custom-cursor * {
+  /* Beats the landing's crosshair and every element-level cursor rule. */
+  cursor: none !important;
+}
+
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483000; /* above modals, toasts and the mascot */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  will-change: transform;
+}
+
+.cursor.is-visible {
+  opacity: 1;
+}
+
+.cursor__core {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Ring, viewfinder and I-beam states sit centred on the hotspot; the arrow
+   states keep their tip there instead. */
+.cursor__core.is-centered {
+  transform: translate(-50%, -50%);
+}
+
+.cursor.is-pressed .cursor__core {
+  transform: scale(0.88);
+}
+
+.cursor.is-pressed .cursor__core.is-centered {
+  transform: translate(-50%, -50%) scale(0.88);
+}
+
+/* --- 3. click pulse ------------------------------------------------------ */
+
+.cursor__pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border: 1.5px solid #b3e0f2;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cursor.is-pressed .cursor__pulse {
+  animation: cur-pulse 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cursor.is-pressed .cursor__pulse--late {
+  animation-delay: 0.1s;
+  border-color: #5d91a6;
+}
+
+@keyframes cur-pulse {
+  0% { opacity: 0.9; transform: scale(0.4); }
+  100% { opacity: 0; transform: scale(3.2); }
+}
+
+/* --- shared glow --------------------------------------------------------- */
+
+.cur-lit {
+  filter: drop-shadow(0 0 5px rgba(179, 224, 242, 0.55));
+}
+
+.cur-denied {
+  filter: drop-shadow(0 0 5px rgba(194, 86, 75, 0.5));
+}
+
+/* --- 1. glitchy pointer -------------------------------------------------- */
+
+.cur-glitch-a,
+.cur-glitch-b {
+  opacity: 0;
+}
+
+.cur-glitch-a {
+  animation: cur-glitch-a 4s steps(1) infinite;
+}
+
+.cur-glitch-b {
+  animation: cur-glitch-b 4s steps(1) infinite;
+}
+
+@keyframes cur-glitch-a {
+  0%, 89%, 93%, 100% { opacity: 0; transform: translate(0, 0); }
+  90% { opacity: 0.65; transform: translate(-2.5px, 1px); }
+  92% { opacity: 0.5; transform: translate(2px, -1px); }
+}
+
+@keyframes cur-glitch-b {
+  0%, 90.5%, 94%, 100% { opacity: 0; transform: translate(0, 0); }
+  91.5% { opacity: 0.45; transform: translate(2.5px, 1.5px); }
+  93% { opacity: 0.35; transform: translate(-2px, -1.5px); }
+}
+
+.cur-shards {
+  opacity: 0;
+  animation: cur-shards 4s steps(1) infinite;
+}
+
+@keyframes cur-shards {
+  0%, 89%, 94%, 100% { opacity: 0; }
+  90% { opacity: 1; }
+  92% { opacity: 0.25; }
+  93% { opacity: 0.8; }
+}
+
+/* --- motion for busy / button states ------------------------------------- */
+
+.cur-spin,
+.cur-spin-rev {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.cur-spin { animation: cur-spin 2.4s linear infinite; }
+.cur-spin-rev { animation: cur-spin-rev 3.2s linear infinite; }
+
+@keyframes cur-spin { to { transform: rotate(360deg); } }
+@keyframes cur-spin-rev { to { transform: rotate(-360deg); } }
+
+.cur-ring-breathe {
+  animation: cur-ring-breathe 1.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes cur-ring-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.14); opacity: 0.65; }
+}
+
+.cur-pulse-soft {
+  animation: cur-pulse-soft 1.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes cur-pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* Keep the cursor and its state changes, drop the idle looping motion. */
+@media (prefers-reduced-motion: reduce) {
+  .cur-glitch-a,
+  .cur-glitch-b,
+  .cur-shards,
+  .cur-spin,
+  .cur-spin-rev,
+  .cur-ring-breathe,
+  .cur-pulse-soft,
+  .cursor.is-pressed .cursor__pulse {
+    animation: none;
+  }
+}

@@ -1,0 +1,30 @@
+/* Shared base + keyframes for the Admin and Judge portals.
+   Extracted verbatim from the Claude Design export so the rendered result
+   is identical to the design canvas. Imported once from main.jsx. */
+
+*{box-sizing:border-box}
+html,body{margin:0;background:#080D0C;overflow-x:hidden}
+body{font-family:'Satoshi',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#B3E0F2;text-decoration:none}
+a:hover{color:#fff}
+input,select,textarea,button{font-family:'Satoshi',system-ui,sans-serif}
+select option{background:#112026;color:#E4EEF2}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:#080D0C}
+::-webkit-scrollbar-thumb{background:#1d3540}
+::-webkit-scrollbar-thumb:hover{background:#2c4f5d}
+
+@keyframes breathe{0%,100%{opacity:.3}50%{opacity:1}}
+@keyframes dayPulse{0%,100%{box-shadow:0 0 10px rgba(179,224,242,.35)}50%{box-shadow:0 0 22px rgba(179,224,242,.85)}}
+@keyframes driftA{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(60px,40px,0)}}
+@keyframes driftB{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-70px,50px,0)}}
+@keyframes fade{0%{opacity:0}100%{opacity:1}}
+@keyframes pop{0%{opacity:0;transform:scale(.94)}100%{opacity:1;transform:scale(1)}}
+@keyframes railScan{0%{transform:translateX(-30%);opacity:0}25%{opacity:1}100%{transform:translateX(130%);opacity:0}}
+@keyframes rise{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{opacity:.25}50%{opacity:.7}100%{opacity:.25}}
+@keyframes spin{100%{transform:rotate(360deg)}}
+@keyframes sweep{0%{transform:translateX(-120%)}100%{transform:translateX(420%)}}
+@keyframes sweepBar{0%{transform:scaleX(1)}100%{transform:scaleX(0)}}
+@keyframes tickIn{0%{transform:scaleY(0);opacity:0}100%{transform:scaleY(1);opacity:1}}

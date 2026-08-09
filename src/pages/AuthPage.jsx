@@ -31,7 +31,7 @@ export default function AuthPage() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-[var(--pet-lane)]">
       {/* Cyberpunk background accents */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
         <div className="absolute top-[20%] left-[-10%] w-96 h-96 bg-[#00F0FF] rounded-full mix-blend-screen filter blur-[100px]"></div>

@@ -1,0 +1,117 @@
+/* Walking pixel mascot, mounted once in App.jsx so it persists across routes.
+   Ported from the standalone build; palette already matches the design system. */
+
+:root {
+  /* How far above the viewport floor the mascot stands. */
+  --pet-bottom: 14px;
+  /* Vertical space pages should keep clear so nothing hides behind it:
+     sprite (55px) + floor glow + the offset above. */
+  --pet-lane: 88px;
+}
+
+/* The landing pins a marquee to the bottom edge, so the mascot walks on top
+   of that bar instead of through it. Landing.jsx toggles .landing-active. */
+html.landing-active {
+  --pet-bottom: 46px;
+}
+
+.hacker-pet {
+  position: fixed;
+  bottom: var(--pet-bottom);
+  left: 0;
+  /* Above page content, but deliberately below the portals' modal overlay
+     (z-index 80) and toast (z-index 90) so those still cover it. */
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.hacker-pet__speech {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: #b3e0f2;
+  text-shadow: 0 0 5px rgba(93, 145, 166, 0.45);
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.hacker-pet__speech.is-shown {
+  opacity: 1;
+  animation: pet-speech-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes pet-speech-pop {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Outer wrapper flips the sprite horizontally; the inner image handles the
+   vertical bob and jump, so the two transforms never overwrite each other. */
+.hacker-pet__flip {
+  pointer-events: none;
+  transform-origin: center center;
+  transition: transform 0.15s ease;
+}
+
+.hacker-pet__img {
+  width: 58px;
+  height: auto;
+  cursor: pointer;
+  pointer-events: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+  transform-origin: center bottom;
+  transition: filter 0.2s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.hacker-pet__img.is-bobbing {
+  animation: pet-walk-bob 0.45s ease-in-out infinite alternate;
+}
+
+.hacker-pet__img.is-reacting {
+  filter: drop-shadow(0 0 10px rgba(93, 145, 166, 0.5));
+  animation: pet-jump-react 0.6s ease-in-out;
+}
+
+@keyframes pet-walk-bob {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-2.5px); }
+}
+
+@keyframes pet-jump-react {
+  0%   { transform: translateY(0) scale(1); }
+  50%  { transform: translateY(-14px) scale(1.12); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.hacker-pet__glow {
+  width: 40px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(93, 145, 166, 0.35) 0%, transparent 75%);
+}
+
+/* Matches the landing's existing reduced-motion handling. */
+@media (prefers-reduced-motion: reduce) {
+  .hacker-pet__img.is-bobbing,
+  .hacker-pet__img.is-reacting {
+    animation: none;
+  }
+  .hacker-pet__speech.is-shown {
+    animation: none;
+  }
+}

@@ -1,0 +1,55 @@
+/* :hover / :focus styles for AdminPortal.
+   The design uses inline styles, which outrank normal rules, so each
+   declaration carries !important to win the cascade. */
+
+[data-s="ap1"]:hover{border-color:#B3E0F2 !important;color:#B3E0F2 !important}
+[data-s="ap2"]:hover{border-color:#B3E0F2 !important;color:#B3E0F2 !important}
+[data-s="ap3"]:hover{transform:rotate(-6deg) scale(1.06) !important}
+[data-s="ap4"]:hover{border-color:rgba(194,86,75,.6) !important;color:#C2564B !important}
+[data-s="ap5"]:hover{color:#E4EEF2 !important}
+[data-s="ap6"]:hover{background:#C2564B !important;color:#080D0C !important}
+[data-s="ap7"]:hover{color:#E4EEF2 !important}
+[data-s="ap8"]:hover{border-color:#B3E0F2 !important;background:rgba(179,224,242,.08) !important;transform:translateY(-1px) !important}
+[data-s="ap9"]:hover{background:#fff !important;border-color:#fff !important;transform:translateY(-1px) !important}
+[data-s="ap10"]:hover{background:rgba(93,145,166,.06) !important}
+[data-s="ap11"]:hover{background:rgba(93,145,166,.06) !important}
+[data-s="ap12"]:hover{border-color:#B3E0F2 !important;background:rgba(179,224,242,.08) !important;transform:translateY(-1px) !important}
+[data-s="ap13"]:focus{border-color:#5D91A6 !important;background:#0d1b20 !important}
+[data-s="ap14"]:focus{border-color:#5D91A6 !important}
+[data-s="ap15"]:focus{border-color:#5D91A6 !important}
+[data-s="ap16"]:focus{border-color:#5D91A6 !important}
+[data-s="ap17"]:focus{border-color:#5D91A6 !important}
+[data-s="ap18"]:focus{border-color:#5D91A6 !important}
+[data-s="ap19"]:hover{background:rgba(93,145,166,.07) !important}
+[data-s="ap20"]:hover{border-color:rgba(179,224,242,.5) !important;color:#E4EEF2 !important}
+[data-s="ap21"]:hover{background:#5D91A6 !important;color:#080D0C !important;border-color:#5D91A6 !important}
+[data-s="ap22"]:hover{background:#C2564B !important;color:#080D0C !important}
+[data-s="ap23"]:hover{background:#B3E0F2 !important;color:#080D0C !important}
+[data-s="ap24"]:hover{border-color:#B3E0F2 !important;background:rgba(179,224,242,.08) !important}
+[data-s="ap25"]:hover{background:#C2564B !important;color:#080D0C !important}
+[data-s="ap26"]:hover{border-color:#B3E0F2 !important;background:rgba(179,224,242,.08) !important}
+[data-s="ap27"]:focus{border-color:#5D91A6 !important}
+[data-s="ap28"]:focus{border-color:#5D91A6 !important}
+[data-s="ap29"]:focus{border-color:#5D91A6 !important}
+[data-s="ap30"]:hover{border-color:rgba(179,224,242,.5) !important;color:#E4EEF2 !important}
+[data-s="ap31"]:hover{background:#fff !important;border-color:#fff !important;transform:translateY(-1px) !important}
+[data-s="ap32"]:hover{background:rgba(93,145,166,.06) !important}
+[data-s="ap33"]:hover{border-color:rgba(179,224,242,.5) !important;color:#E4EEF2 !important}
+[data-s="ap34"]:hover{background:#C2564B !important;color:#080D0C !important}
+[data-s="ap35"]:hover{border-color:rgba(179,224,242,.5) !important;color:#E4EEF2 !important}
+[data-s="ap36"]:hover{background:#fff !important;border-color:#fff !important;transform:translateY(-1px) !important}
+[data-s="ap37"]:hover{background:rgba(93,145,166,.06) !important}
+[data-s="ap38"]:hover{transform:translateY(-3px) !important;border-color:rgba(179,224,242,.4) !important}
+[data-s="ap39"]:hover{border-color:#B3E0F2 !important;background:rgba(179,224,242,.08) !important}
+[data-s="ap40"]:hover{background:rgba(93,145,166,.06) !important}
+[data-s="ap41"]:hover{border-color:#B3E0F2 !important;background:rgba(179,224,242,.08) !important;transform:translateY(-1px) !important}
+[data-s="ap42"]:hover{border-color:rgba(179,224,242,.5) !important;color:#E4EEF2 !important}
+[data-s="ap43"]:hover{background:#fff !important;border-color:#fff !important}
+[data-s="ap44"]:hover{color:#E4EEF2 !important}
+[data-s="ap45"]:focus{border-color:#5D91A6 !important}
+[data-s="ap46"]:focus{border-color:#5D91A6 !important}
+[data-s="ap47"]:hover{background:rgba(93,145,166,.09) !important}
+[data-s="ap48"]:hover{border-color:rgba(179,224,242,.5) !important;color:#E4EEF2 !important}
+[data-s="ap49"]:hover{background:#fff !important;border-color:#fff !important}
+[data-s="ap50"]:hover{border-color:rgba(179,224,242,.5) !important;color:#E4EEF2 !important}
+[data-s="ap51"]:hover{color:#E4EEF2 !important}

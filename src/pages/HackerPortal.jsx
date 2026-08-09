@@ -4,7 +4,7 @@ import CyberHeader from '../components/ui/CyberHeader';
 
 export default function HackerPortal() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#FFFFFF] flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0A0A0A] text-[#FFFFFF] flex flex-col items-center justify-center p-4 pb-[var(--pet-lane)]">
       <CyberGrid variant="cyan" />
       <CyberHeader variant="cyan" />
       <TerminalCard variant="cyan" title="Operative Dashboard" className="max-w-2xl w-full text-center mt-20">
