@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import LoginForm from '../components/auth/LoginForm';
 import CreateTeamForm from '../components/auth/CreateTeamForm';
 import JoinTeamForm from '../components/auth/JoinTeamForm';
+import { PANEL } from '../components/auth/authStyles';
+
+const TABS = [
+  { key: 'login', label: 'System login' },
+  { key: 'create', label: 'Forge squad' },
+  { key: 'join', label: 'Enlist' },
+];
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState('login'); // 'login', 'create', 'join'
@@ -31,57 +38,115 @@ export default function AuthPage() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-[var(--pet-lane)]">
-      {/* Cyberpunk background accents */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
-        <div className="absolute top-[20%] left-[-10%] w-96 h-96 bg-[#00F0FF] rounded-full mix-blend-screen filter blur-[100px]"></div>
-        <div className="absolute bottom-[20%] right-[-10%] w-96 h-96 bg-[#00FF00] rounded-full mix-blend-screen filter blur-[100px]"></div>
-      </div>
+    <div className="relative min-h-screen overflow-x-hidden bg-[#080D0C] pb-[var(--pet-lane)]">
+      {/* Background treatment carried over from the Admin and Judge portals:
+          a fine dot lattice under two slowly drifting colour fields. */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(93,145,166,.16) 1px, transparent 1px)',
+          backgroundSize: '26px 26px',
+          opacity: 0.5,
+        }}
+      />
+      <div
+        className="pointer-events-none fixed z-0"
+        style={{
+          top: '-260px', left: '-160px', width: '820px', height: '620px',
+          background: 'radial-gradient(closest-side, rgba(93,145,166,.20), transparent)',
+          filter: 'blur(20px)', animation: 'driftA 26s ease-in-out infinite',
+        }}
+      />
+      <div
+        className="pointer-events-none fixed z-0"
+        style={{
+          bottom: '-220px', right: '-200px', width: '720px', height: '560px',
+          background: 'radial-gradient(closest-side, rgba(71,115,70,.20), transparent)',
+          filter: 'blur(20px)', animation: 'driftB 32s ease-in-out infinite',
+        }}
+      />
 
-      <div className="z-10 w-full max-w-4xl flex flex-col items-center">
-        <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] to-[#00FF00] mb-8 tracking-tighter uppercase">
-          Clonefest 2.0
-        </h1>
-        
-        <div className="flex gap-4 mb-8 font-mono">
-          <button 
-            onClick={() => setActiveTab('login')}
-            className={`px-6 py-2 uppercase font-bold text-sm border transition-all ${
-              activeTab === 'login' 
-                ? 'border-[#00F0FF] bg-[#00F0FF]/10 text-[#00F0FF] shadow-[0_0_10px_rgba(0,240,255,0.3)]' 
-                : 'border-gray-800 text-gray-500 hover:border-gray-500 hover:text-gray-300'
-            }`}
+      <header className="relative z-20 border-b border-[#B3E0F2]/10 bg-[#080D0C]/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1580px] items-center gap-4 px-5 py-3.5 sm:px-8 sm:py-4">
+          <img src="/assets/college-logo.png" alt="RVCE"
+               className="h-9 w-9 rounded-full border border-[#B3E0F2]/25 object-cover mix-blend-screen" />
+          <img src="/assets/club-logo.png" alt="Coding Club"
+               className="h-9 w-auto rounded-sm border border-[#B3E0F2]/25 mix-blend-screen" />
+          <span className="h-7 w-px bg-[#B3E0F2]/14" />
+          <div>
+            <p className="font-clash text-[15px] font-semibold tracking-[0.14em] text-[#B3E0F2] sm:text-[18px]">
+              CLONEFEST 2.0
+            </p>
+            <p className="mt-1 font-jet text-[9px] uppercase tracking-[0.24em] text-[#56707B]">
+              Secure access
+            </p>
+          </div>
+          <div className="flex-1" />
+          <Link
+            to="/"
+            className="font-jet text-[10px] uppercase tracking-[0.18em] text-[#56707B] transition-colors hover:text-[#B3E0F2]"
           >
-            System Login
-          </button>
-          <button 
-            onClick={() => setActiveTab('create')}
-            className={`px-6 py-2 uppercase font-bold text-sm border transition-all ${
-              activeTab === 'create' 
-                ? 'border-[#00FF00] bg-[#00FF00]/10 text-[#00FF00] shadow-[0_0_10px_rgba(0,255,0,0.3)]' 
-                : 'border-gray-800 text-gray-500 hover:border-gray-500 hover:text-gray-300'
-            }`}
-          >
-            Forge Squad
-          </button>
-          <button 
-            onClick={() => setActiveTab('join')}
-            className={`px-6 py-2 uppercase font-bold text-sm border transition-all ${
-              activeTab === 'join' 
-                ? 'border-white bg-white/10 text-white shadow-[0_0_10px_rgba(255,255,255,0.3)]' 
-                : 'border-gray-800 text-gray-500 hover:border-gray-500 hover:text-gray-300'
-            }`}
-          >
-            Enlist
-          </button>
+            ← Back to site
+          </Link>
+        </div>
+      </header>
+
+      <main className="relative z-10 mx-auto flex w-full max-w-md flex-col px-5 py-10 sm:py-14">
+        <div style={{ animation: 'rise .5s ease-out both' }}>
+          <p className="font-jet text-[10px] uppercase tracking-[0.26em] text-[#5D91A6]">
+            Operative terminal
+          </p>
+          <h1 className="mt-3 font-clash text-[30px] font-medium leading-tight text-[#E4EEF2] sm:text-[36px]">
+            Sign in, or bring a squad.
+          </h1>
         </div>
 
-        <div className="w-full flex justify-center mt-4 transition-all">
-          {activeTab === 'login' && <LoginForm />}
-          {activeTab === 'create' && <CreateTeamForm />}
-          {activeTab === 'join' && <JoinTeamForm />}
+        <div
+          className="mt-8 flex border-b border-[#B3E0F2]/10"
+          style={{ animation: 'rise .5s ease-out .08s both' }}
+          role="tablist"
+        >
+          {TABS.map((tab) => {
+            const active = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                role="tab"
+                aria-selected={active}
+                onClick={() => setActiveTab(tab.key)}
+                className={`relative flex-1 px-2 py-3 font-jet text-[10.5px] uppercase tracking-[0.14em] transition-colors duration-200 sm:text-[11px] ${
+                  active ? 'text-[#B3E0F2]' : 'text-[#56707B] hover:text-[#8AA5AE]'
+                }`}
+              >
+                {tab.label}
+                {active && (
+                  <span className="absolute inset-x-0 -bottom-px h-px bg-[#B3E0F2] shadow-[0_0_10px_rgba(179,224,242,.7)]" />
+                )}
+              </button>
+            );
+          })}
         </div>
-      </div>
+
+        <div
+          key={activeTab}
+          className="mt-6"
+          style={{ animation: 'rise .4s ease-out both' }}
+        >
+          {activeTab === 'login' && (
+            <div className={`${PANEL} p-7 sm:p-8`}><LoginForm /></div>
+          )}
+          {activeTab === 'create' && (
+            <div className={`${PANEL} p-7 sm:p-8`}><CreateTeamForm /></div>
+          )}
+          {activeTab === 'join' && (
+            <div className={`${PANEL} p-7 sm:p-8`}><JoinTeamForm /></div>
+          )}
+        </div>
+
+        <p className="mt-7 text-center font-jet text-[10px] uppercase tracking-[0.16em] text-[#56707B]">
+          One hacker, one squad
+        </p>
+      </main>
     </div>
   );
 }

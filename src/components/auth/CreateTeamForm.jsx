@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { FIELD, HINT, LABEL, PRIMARY, FormError, FormHead, FormSuccess } from './authStyles';
 
 export default function CreateTeamForm() {
   const [teamName, setTeamName] = useState('');
@@ -15,7 +16,7 @@ export default function CreateTeamForm() {
     setLoading(true);
     setError(null);
     setSuccess(false);
-    
+
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -28,9 +29,9 @@ export default function CreateTeamForm() {
           }
         }
       });
-      
+
       if (authError) throw authError;
-      
+
       // If sign-up requires email confirmation, the user is created but session might be null.
       if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
           throw new Error('An account with this email already exists. One Hacker, One Squad.');
@@ -39,8 +40,8 @@ export default function CreateTeamForm() {
       setSuccess(true);
     } catch (err) {
       // Clean up Supabase's trigger exception messages if present
-      const message = err.message.includes('Database error saving new user') 
-        ? 'Transaction Failed: ' + err.message.split('\n')[0] 
+      const message = err.message.includes('Database error saving new user')
+        ? 'Transaction Failed: ' + err.message.split('\n')[0]
         : err.message;
       setError(message);
     } finally {
@@ -50,82 +51,83 @@ export default function CreateTeamForm() {
 
   if (success) {
     return (
-      <div className="w-full max-w-md p-8 border border-[#00FF00] bg-[#00FF00]/10 rounded-sm font-mono text-center shadow-[0_0_15px_rgba(0,255,0,0.2)]">
-        <h3 className="text-xl font-bold text-[#00FF00] mb-2">SQUAD INITIALIZED</h3>
-        <p className="text-gray-300">Squad Initialized! Proceed to System Login.</p>
-      </div>
+      <FormSuccess
+        kicker="Squad initialized"
+        title="Your squad is registered"
+        body="Check your inbox to verify the address, then sign in from System login. Your invite code is waiting in the squad panel — share it with your members."
+      />
     );
   }
 
   return (
-    <div className="w-full max-w-md p-8 border border-[#00FF00] bg-[#0A0A0A] rounded-sm shadow-[0_0_15px_rgba(0,255,0,0.2)]">
-      <h2 className="text-2xl font-bold mb-6 text-[#00FF00] uppercase tracking-widest flex items-center gap-2">
-        <span className="w-2 h-6 bg-[#00FF00] inline-block animate-pulse"></span>
-        Forge New Squad
-      </h2>
-      
-      {error && (
-        <div className="mb-4 p-3 border border-red-500 text-red-500 bg-red-500/10 text-sm font-mono shadow-[0_0_10px_rgba(239,68,68,0.2)]">
-          <span className="font-bold">CRITICAL ERROR:</span> {error}
-        </div>
-      )}
+    <>
+      <FormHead
+        kicker="Squad lead"
+        title="Forge new squad"
+        blurb="Register as lead and your squad is created with you at the helm."
+      />
 
-      <form onSubmit={handleCreateTeam} className="space-y-4 font-mono">
+      <FormError>{error}</FormError>
+
+      <form onSubmit={handleCreateTeam} className="space-y-5">
         <div>
-          <label className="block text-sm text-gray-400 mb-1">SQUAD_DESIGNATION</label>
+          <label className={LABEL} htmlFor="create-team">Squad designation</label>
           <input
+            id="create-team"
             type="text"
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
             required
-            className="w-full bg-[#050505] border border-gray-800 text-white p-3 focus:outline-none focus:border-[#00FF00] transition-colors"
-            placeholder="e.g. Neon Syndicate"
+            className={FIELD}
+            placeholder="e.g. NEON_SYNDICATE"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-1">LEADER_CALLSIGN</label>
+          <label className={LABEL} htmlFor="create-lead">Leader callsign</label>
           <input
+            id="create-lead"
             type="text"
             value={leaderName}
             onChange={(e) => setLeaderName(e.target.value)}
             required
-            className="w-full bg-[#050505] border border-gray-800 text-white p-3 focus:outline-none focus:border-[#00FF00] transition-colors"
-            placeholder="e.g. ZeroCool"
+            className={FIELD}
+            placeholder="e.g. zerocool"
           />
         </div>
-        
+
         <div>
-          <label className="block text-sm text-gray-400 mb-1">COMMS_LINK (EMAIL)</label>
+          <label className={LABEL} htmlFor="create-email">Comms link (email)</label>
           <input
+            id="create-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full bg-[#050505] border border-gray-800 text-white p-3 focus:outline-none focus:border-[#00FF00] transition-colors"
+            className={FIELD}
+            placeholder="lead@rvce.edu.in"
           />
         </div>
-        
+
         <div>
-          <label className="block text-sm text-gray-400 mb-1">ENCRYPTION_KEY (PASSWORD)</label>
+          <label className={LABEL} htmlFor="create-password">Encryption key (password)</label>
           <input
+            id="create-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full bg-[#050505] border border-gray-800 text-white p-3 focus:outline-none focus:border-[#00FF00] transition-colors"
+            className={FIELD}
+            placeholder="••••••••"
           />
+          <p className={HINT}>MINIMUM 6 CHARACTERS</p>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full mt-6 bg-[#00FF00]/10 border border-[#00FF00] text-[#00FF00] p-3 uppercase font-bold hover:bg-[#00FF00] hover:text-black transition-colors disabled:opacity-50"
-        >
-          {loading ? 'INITIALIZING...' : 'INITIALIZE SQUAD'}
+        <button type="submit" disabled={loading} className={PRIMARY}>
+          {loading ? 'Initializing…' : 'Initialize squad'}
         </button>
       </form>
-    </div>
+    </>
   );
 }

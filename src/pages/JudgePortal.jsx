@@ -510,8 +510,8 @@ export default class JudgePortal extends React.Component {
           <div style={sx(V.L.headTop)}>
             <div style={sx("display:flex;align-items:center;gap:14px")}>
               <div style={sx("display:flex;align-items:center")}>
-                <div style={sx("width:34px;height:34px;border:1px solid rgba(179,224,242,.22);display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:8px;color:#8AA5AE;transition:all .3s")} data-s="jp1">RVCE</div>
-                <div style={sx("width:34px;height:34px;border:1px solid rgba(179,224,242,.22);border-left:none;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:7px;line-height:1.2;text-align:center;color:#8AA5AE;transition:all .3s")} data-s="jp2">CODE<br />CLUB</div>
+                <img src="/assets/college-logo.png" alt="RVCE" style={sx("width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid rgba(179,224,242,.22);mix-blend-mode:screen")} />
+                <img src="/assets/club-logo.png" alt="Coding Club" style={sx("height:34px;width:auto;margin-left:9px;border-radius:2px;border:1px solid rgba(179,224,242,.22);mix-blend-mode:screen")} />
               </div>
               <div style={sx("width:1px;height:30px;background:rgba(179,224,242,.14)")}></div>
               <div>
@@ -901,7 +901,7 @@ export default class JudgePortal extends React.Component {
                       <div style={sx("font-size:12.5px;line-height:1.6;color:#8AA5AE;margin-top:6px;max-width:520px;text-wrap:pretty")}>{c.hint}</div>
                     </div>
                     <div style={sx("display:flex;align-items:center;gap:9px")}>
-                      <input type="number" value={c.value} onChange={c.onScore} readOnly={V.locked} placeholder="\u2014" min="0" max={c.max} style={sx(c.inputStyle)} data-s="jp21" />
+                      <input type="number" value={c.value} onChange={c.onScore} readOnly={V.locked} placeholder="—" min="0" max={c.max} style={sx(c.inputStyle)} data-s="jp21" />
                       <span style={sx("font-family:'JetBrains Mono',monospace;font-size:12px;color:#56707B;white-space:nowrap")}>/ {c.max}</span>
                     </div>
                   </div>
@@ -959,8 +959,8 @@ export default class JudgePortal extends React.Component {
 
               <div style={sx(V.L.actionsBox)}>
                 <button onClick={V.submitFinal} style={sx(V.submitStyle)} data-s="jp24">{V.submitLabel}</button>
-                <button onClick={V.saveDraft} style={sx(V.draftStyle)} data-s="jp25">Save draft</button>
-                <button onClick={V.resetForm} style={sx(V.resetStyle)} data-s="jp26">Reset form</button>
+                {!V.locked ? <><button onClick={V.saveDraft} style={sx(V.draftStyle)} data-s="jp25">Save draft</button>
+                <button onClick={V.resetForm} style={sx(V.resetStyle)} data-s="jp26">Reset form</button></> : null}
                 <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.7;color:#56707B;margin-top:4px")}>{V.actionNote}</div>
               </div>
             </div>
