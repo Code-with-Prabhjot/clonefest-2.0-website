@@ -443,8 +443,8 @@ export default class AdminPortal extends React.Component {
 
             <div style={sx("display:flex;align-items:center;gap:14px")}>
               <div style={sx("display:flex;align-items:center")}>
-                <img src="/assets/college-logo.png" alt="RVCE" style={sx("width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid rgba(179,224,242,.22);mix-blend-mode:screen")} />
-                <img src="/assets/club-logo.png" alt="Coding Club" style={sx("height:34px;width:auto;margin-left:9px;border-radius:2px;border:1px solid rgba(179,224,242,.22);mix-blend-mode:screen")} />
+                <img src="/assets/image.png" alt="RVCE" style={sx("height:34px;width:auto;filter:invert(1);mix-blend-mode:screen")} />
+                <img src="/assets/cc%20new%20logo.jpeg" alt="Coding Club" style={sx("height:34px;width:auto;margin-left:12px;mix-blend-mode:screen")} />
               </div>
               <div style={sx("width:1px;height:30px;background:rgba(179,224,242,.14)")}></div>
               <div>

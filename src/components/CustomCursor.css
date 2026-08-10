@@ -35,6 +35,15 @@ html.has-custom-cursor * {
   transform: translate(-50%, -50%);
 }
 
+/* The arrow's tip is drawn at (3,2) inside its viewBox, so without this the
+   visible point sits below-right of the true hotspot — which reads as the
+   cursor trailing the pointer. Margin, not transform, so the press scale
+   below doesn't overwrite it. */
+.cursor__core:not(.is-centered) {
+  margin-left: -3px;
+  margin-top: -2px;
+}
+
 .cursor.is-pressed .cursor__core {
   transform: scale(0.88);
 }

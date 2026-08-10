@@ -161,8 +161,11 @@ const SHAPES = {
 
 export default function CustomCursor() {
   const rootRef = useRef(null);
-  const posRef = useRef({ x: -100, y: -100 });
-  const targetRef = useRef({ x: -100, y: -100 });
+  // Mirrors of the React state, so the hot path can skip redundant setState
+  // calls and the expensive hit-test entirely.
+  const lastTargetRef = useRef(null);
+  const stateRef = useRef('default');
+  const visibleRef = useRef(false);
 
   const [state, setState] = useState('default');
   const [pressed, setPressed] = useState(false);
@@ -174,40 +177,51 @@ export default function CustomCursor() {
 
     document.documentElement.classList.add('has-custom-cursor');
 
+    // Position only. Kept as small as possible: this runs at the pointer's
+    // full polling rate, which on a gaming mouse can be 1000Hz.
+    const onPos = (e) => {
+      const el = rootRef.current;
+      if (el) {
+        el.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      }
+    };
+
     const onMove = (e) => {
-      targetRef.current = { x: e.clientX, y: e.clientY };
-      setVisible(true);
+      onPos(e);
+
+      if (!visibleRef.current) {
+        visibleRef.current = true;
+        setVisible(true);
+      }
+
+      // resolveState walks the DOM with several closest() calls. On a dense
+      // page that is not free, and the answer only changes when the pointer
+      // crosses into a different element.
+      if (e.target === lastTargetRef.current) return;
+      lastTargetRef.current = e.target;
+
       const next = resolveState(e.target);
-      setState((prev) => (prev === next ? prev : next));
+      if (next !== stateRef.current) {
+        stateRef.current = next;
+        setState(next);
+      }
     };
     const onDown = () => setPressed(true);
     const onUp = () => setPressed(false);
-    const onLeave = () => setVisible(false);
-    const onEnter = () => setVisible(true);
+    const onLeave = () => { visibleRef.current = false; setVisible(false); };
+    const onEnter = () => { visibleRef.current = true; setVisible(true); };
 
-    window.addEventListener('mousemove', onMove, { passive: true });
+    const hasRaw = 'onpointerrawupdate' in window;
+    if (hasRaw) window.addEventListener('pointerrawupdate', onPos, { passive: true });
+    window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('mousedown', onDown);
     window.addEventListener('mouseup', onUp);
     document.addEventListener('mouseleave', onLeave);
     document.addEventListener('mouseenter', onEnter);
 
-    // Slight easing so the cursor feels weighted rather than glued.
-    let raf;
-    const tick = () => {
-      const p = posRef.current;
-      const t = targetRef.current;
-      p.x += (t.x - p.x) * 0.35;
-      p.y += (t.y - p.y) * 0.35;
-      if (rootRef.current) {
-        rootRef.current.style.transform = `translate3d(${p.x}px, ${p.y}px, 0)`;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('mousemove', onMove);
+      if (hasRaw) window.removeEventListener('pointerrawupdate', onPos);
+      window.removeEventListener('pointermove', onMove);
       window.removeEventListener('mousedown', onDown);
       window.removeEventListener('mouseup', onUp);
       document.removeEventListener('mouseleave', onLeave);

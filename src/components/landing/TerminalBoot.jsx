@@ -3,11 +3,11 @@ import { motion } from "framer-motion";
 
 const LINES = [
     { text: "CLONEFEST_v2.0 :: BOOT SEQUENCE INITIATED", tone: "ice" },
-    { text: "mounting /legacy/codebases ............ OK", tone: "teal" },
-    { text: "forking squads [alpha|beta|gamma] ..... OK", tone: "teal" },
-    { text: "patching broken_canvas.repo ........... FAIL → handed to squads", tone: "matrix" },
-    { text: "loading rubric.engine ................. ARMED", tone: "teal" },
-    { text: "uptime: 3 weeks | judges: online | mercy: disabled", tone: "matrix" },
+    { text: "mounting /realworld/codebases ......... OK", tone: "teal" },
+    { text: "indexing open issues .................. OK", tone: "teal" },
+    { text: "prize_pool.load() ..................... ₹7,000", tone: "matrix" },
+    { text: "contribution.engine ................... ARMED", tone: "teal" },
+    { text: "uptime: 10 days | judges: online | mercy: disabled", tone: "matrix" },
     { text: "ACCESS GRANTED — WELCOME BACK, BUILDER", tone: "ice" },
 ];
 
@@ -48,7 +48,7 @@ export default function TerminalBoot({ onComplete }) {
             onClick={skip}
             exit={{ clipPath: "inset(0 0 100% 0)" }}
             transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
-            className="absolute inset-0 z-[100] flex flex-col justify-center bg-[#080D0C] px-6 sm:px-16"
+            className="fixed inset-0 z-[100] flex flex-col justify-center bg-[#080D0C] px-6 sm:px-16"
         >
             <div className="pointer-events-none absolute left-6 top-6 font-mono text-[10px] tracking-[0.3em] text-[#5D91A6]/60 sm:left-16">
                 CLONEFEST BIOS v2.0.26

@@ -6,7 +6,7 @@ import {
     useTransform,
 } from "framer-motion";
 import GlitchButton from "./GlitchButton";
-import WeekChips from "./WeekChips";
+import HeroChips from "./HeroChips";
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -130,7 +130,7 @@ export default function Hero({ booted }) {
                     <TypedTagline booted={booted} />
                 </MaskedLine>
 
-                <WeekChips booted={booted} />
+                <HeroChips booted={booted} />
 
                 <GlitchButton booted={booted} />
             </motion.div>

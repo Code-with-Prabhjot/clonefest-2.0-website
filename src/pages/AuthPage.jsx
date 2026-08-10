@@ -59,10 +59,10 @@ export default function AuthPage() {
 
       <header className="relative z-20 border-b border-[#B3E0F2]/10 bg-[#080D0C]/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1580px] items-center gap-4 px-5 py-3.5 sm:px-8 sm:py-4">
-          <img src="/assets/college-logo.png" alt="RVCE"
-               className="h-9 w-9 rounded-full border border-[#B3E0F2]/25 object-cover mix-blend-screen" />
-          <img src="/assets/club-logo.png" alt="Coding Club"
-               className="h-9 w-auto rounded-sm border border-[#B3E0F2]/25 mix-blend-screen" />
+          <img src="/assets/image.png" alt="RVCE"
+               className="h-9 w-auto [filter:invert(1)] mix-blend-screen" />
+          <img src="/assets/cc%20new%20logo.jpeg" alt="Coding Club"
+               className="h-9 w-auto mix-blend-screen" />
           <span className="h-7 w-px bg-[#B3E0F2]/14" />
           <div>
             <p className="font-clash text-[15px] font-semibold tracking-[0.14em] text-[#B3E0F2] sm:text-[18px]">

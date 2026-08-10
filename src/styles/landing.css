@@ -31,6 +31,11 @@ body {
    their own body font. Landing.jsx toggles .landing-active on <html>. */
 html.landing-active body {
     font-family: "JetBrains Mono", monospace;
+}
+
+/* While the boot sequence is on screen there is nothing to scroll to yet. */
+html.landing-booting,
+html.landing-booting body {
     overflow: hidden;
 }
 

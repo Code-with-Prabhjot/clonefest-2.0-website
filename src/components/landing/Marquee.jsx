@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 
 const ITEMS = [
-    "PROJECT ALPHA — WEEK 01",
-    "PROJECT BETA — WEEK 02",
-    "PROJECT GAMMA + DEPLOYMENT — WEEK 03",
-    "MERGE OR BE MERGED",
     "CLONEFEST 2.0",
+    "RVCE CODING CLUB",
+    "MERGE OR BE MERGED",
+    "OPEN SOURCE // OPEN SEASON",
+    "READ THE SOURCE",
 ];
 
 function Strip({ hidden }) {

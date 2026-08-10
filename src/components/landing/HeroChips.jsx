@@ -2,13 +2,15 @@ import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 const CHARS = "01<>/{}[]#$%&*+=@XKF";
+
+// The three known facts about the event. Formerly the Week 1/2/3 chips.
 const CHIPS = [
-    { id: "week-chip-alpha", label: "W01 // PROJECT ALPHA" },
-    { id: "week-chip-beta", label: "W02 // PROJECT BETA" },
-    { id: "week-chip-gamma", label: "W03 // GAMMA + DEPLOY" },
+    { id: "chip-fork", label: "FORK // COMMIT // PUSH" },
+    { id: "chip-public", label: "BUILD IN PUBLIC" },
+    { id: "chip-ship", label: "SHIP IT" },
 ];
 
-function Chip({ id, label, delay, booted }) {
+function Chip({ id, label, delay, booted, accent }) {
     const [text, setText] = useState(label);
     const busy = useRef(false);
 
@@ -35,6 +37,17 @@ function Chip({ id, label, delay, booted }) {
         }, 26);
     };
 
+    const base =
+        "border px-5 py-2.5 font-mono text-[11px] tracking-[0.22em] backdrop-blur-sm " +
+        "transition-[border-color,color,box-shadow] duration-300";
+
+    const tone = accent
+        ? "border-[#477346] bg-[#477346]/15 text-[#B3E0F2] crt-glow " +
+          "shadow-[0_0_20px_rgba(71,115,70,0.3)] hover:border-[#B3E0F2] " +
+          "hover:shadow-[0_0_28px_rgba(71,115,70,0.5)]"
+        : "border-[#5D91A6]/40 bg-[#112026]/40 text-[#B3E0F2] crt-glow " +
+          "hover:border-[#477346] hover:shadow-[0_0_18px_rgba(71,115,70,0.25)]";
+
     return (
         <motion.button
             type="button"
@@ -44,17 +57,17 @@ function Chip({ id, label, delay, booted }) {
             initial={{ opacity: 0, y: 14 }}
             animate={booted ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
-            className="border border-[#5D91A6]/30 bg-[#112026]/40 px-4 py-2 font-mono text-[10px] tracking-[0.22em] text-[#5D91A6] backdrop-blur-sm transition-[border-color,color,box-shadow] duration-300 hover:border-[#477346] hover:text-[#B3E0F2] hover:shadow-[0_0_18px_rgba(71,115,70,0.25)]"
+            className={`${base} ${tone}`}
         >
             {text}
         </motion.button>
     );
 }
 
-export default function WeekChips({ booted }) {
+export default function HeroChips({ booted }) {
     return (
         <div
-            data-testid="week-chips"
+            data-testid="hero-chips"
             className="mb-10 flex flex-wrap items-center justify-center gap-3"
         >
             {CHIPS.map((chip, i) => (
@@ -62,6 +75,7 @@ export default function WeekChips({ booted }) {
                     key={chip.id}
                     id={chip.id}
                     label={chip.label}
+                    accent={chip.accent}
                     delay={0.95 + i * 0.1}
                     booted={booted}
                 />
