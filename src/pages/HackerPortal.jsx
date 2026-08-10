@@ -1,139 +1,261 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import TerminalCard from '../components/ui/TerminalCard';
+import { useState } from 'react';
 import CyberGrid from '../components/ui/CyberGrid';
 import CyberHeader from '../components/ui/CyberHeader';
+import { PANEL } from '../components/auth/authStyles';
 import CreateTeamForm from '../components/auth/CreateTeamForm';
 import JoinTeamForm from '../components/auth/JoinTeamForm';
-import { PANEL } from '../components/auth/authStyles';
+import TrackGrid from '../components/hacker/TrackGrid';
+import SubmissionLog from '../components/hacker/SubmissionLog';
+import { useHackerData } from '../hooks/useHackerData';
 
-export default function HackerPortal() {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+// ─── Loading screen ──────────────────────────────────────────────────────────
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen bg-[#080D0C] flex items-center justify-center">
+      <span
+        style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 13,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: '#5D91A6',
+          animation: 'pulse 1.8s ease-in-out infinite',
+        }}
+      >
+        Fetching operative record…
+      </span>
+    </div>
+  );
+}
+
+// ─── Onboarding screen (no team yet) ─────────────────────────────────────────
+function OnboardingScreen({ user }) {
   const [activeTab, setActiveTab] = useState('create');
-  const [team, setTeam] = useState(null);
+
+  const TAB_BASE  = 'px-6 py-2 uppercase font-bold text-sm border transition-all font-mono';
+  const TAB_ON    = 'border-[#5D91A6] bg-[#5D91A6]/10 text-[#B3E0F2] shadow-[0_0_10px_rgba(93,145,166,0.25)]';
+  const TAB_OFF   = 'border-[#B3E0F2]/10 text-[#56707B] hover:border-[#B3E0F2]/25 hover:text-[#8AA5AE]';
+
+  return (
+    <div className="min-h-screen bg-[#080D0C] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-[var(--pet-lane)]">
+      <CyberGrid variant="cyan" />
+
+      <div className="z-10 w-full max-w-4xl flex flex-col items-center mt-10">
+        <p
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 10,
+            letterSpacing: '0.24em',
+            textTransform: 'uppercase',
+            color: '#5D91A6',
+            marginBottom: 12,
+          }}
+        >
+          Operative portal
+        </p>
+        <h1
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            color: '#E4EEF2',
+            marginBottom: 32,
+            textAlign: 'center',
+          }}
+        >
+          Awaiting squad assignment
+        </h1>
+
+        <div className="flex gap-4 mb-8">
+          <button onClick={() => setActiveTab('create')} className={`${TAB_BASE} ${activeTab === 'create' ? TAB_ON : TAB_OFF}`}>
+            Forge squad
+          </button>
+          <button onClick={() => setActiveTab('join')} className={`${TAB_BASE} ${activeTab === 'join' ? TAB_ON : TAB_OFF}`}>
+            Enlist
+          </button>
+        </div>
+
+        <div className="w-full flex justify-center max-w-md">
+          {activeTab === 'create' && (
+            <div className={`${PANEL} p-7 sm:p-8 w-full`}>
+              <CreateTeamForm user={user} />
+            </div>
+          )}
+          {activeTab === 'join' && (
+            <div className={`${PANEL} p-7 sm:p-8 w-full`}>
+              <JoinTeamForm user={user} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Status card (existing terminal block, kept) ──────────────────────────────
+function StatusCard({ profile, team }) {
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      setUser(user);
+  const copyCode = () => {
+    navigator.clipboard.writeText(team?.invite_code ?? '');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      setProfile(profileData);
-
-      if (profileData?.team_name) {
-        const { data: teamData } = await supabase
-          .from('teams')
-          .select('*')
-          .eq('name', profileData.team_name)
-          .single();
-        setTeam(teamData);
-      }
-
-      setLoading(false);
-    };
-
-    fetchProfile();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <span className="text-[#00F0FF] font-mono animate-pulse uppercase tracking-widest text-xl">
-          FETCHING OPERATIVE RECORD...
-        </span>
-      </div>
-    );
-  }
-
-  // If they don't have a team yet (role is unassigned)
-  if (profile?.role === 'unassigned') {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-[var(--pet-lane)]">
-        <CyberGrid variant="cyan" />
-        
-        <div className="z-10 w-full max-w-4xl flex flex-col items-center mt-10">
-          <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] to-[#00FF00] mb-8 tracking-tighter uppercase">
-            Awaiting Squad Assignment
-          </h1>
-
-          <div className="flex gap-4 mb-8 font-mono">
-            <button 
-              onClick={() => setActiveTab('create')}
-              className={`px-6 py-2 uppercase font-bold text-sm border transition-all ${
-                activeTab === 'create' 
-                  ? 'border-[#00FF00] bg-[#00FF00]/10 text-[#00FF00] shadow-[0_0_10px_rgba(0,255,0,0.3)]' 
-                  : 'border-gray-800 text-gray-500 hover:border-gray-500 hover:text-gray-300'
-              }`}
-            >
-              Forge Squad
-            </button>
-            <button 
-              onClick={() => setActiveTab('join')}
-              className={`px-6 py-2 uppercase font-bold text-sm border transition-all ${
-                activeTab === 'join' 
-                  ? 'border-white bg-white/10 text-white shadow-[0_0_10px_rgba(255,255,255,0.3)]' 
-                  : 'border-gray-800 text-gray-500 hover:border-gray-500 hover:text-gray-300'
-              }`}
-            >
-              Enlist
-            </button>
-          </div>
-
-          <div className="w-full flex justify-center mt-4 transition-all max-w-md">
-            {activeTab === 'create' && <div className={`${PANEL} p-7 sm:p-8 w-full`}><CreateTeamForm user={user} /></div>}
-            {activeTab === 'join' && <div className={`${PANEL} p-7 sm:p-8 w-full`}><JoinTeamForm user={user} /></div>}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Dashboard for members and leads
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#FFFFFF] flex flex-col items-center p-4 pb-[var(--pet-lane)]">
+    <div
+      style={{
+        background: '#0A191F',
+        border: '1px solid rgba(179,224,242,0.10)',
+        borderRadius: 3,
+        padding: '20px 22px',
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 12,
+        color: '#8AA5AE',
+        lineHeight: 1.9,
+      }}
+    >
+      <span style={{ color: '#5D91A6' }}>root@clonefest:~$</span> ./status_check.sh
+      <br /><br />
+      [+] SQUAD LINK ONLINE: <span style={{ color: '#E4EEF2' }}>{profile?.team_name ?? 'UNKNOWN'}</span><br />
+      [+] ROLE: <span style={{ color: '#E4EEF2' }}>{profile?.role?.toUpperCase() ?? 'UNKNOWN'}</span><br />
+      {profile?.role === 'lead' && team?.invite_code && (
+        <>
+          [+] INVITE CODE:{' '}
+          <span style={{ color: '#E4EEF2', background: 'rgba(179,224,242,0.08)', padding: '1px 8px', borderRadius: 2 }}>
+            {team.invite_code}
+          </span>
+          <button
+            onClick={copyCode}
+            style={{
+              marginLeft: 10,
+              padding: '1px 8px',
+              border: `1px solid ${copied ? 'rgba(127,178,126,0.5)' : 'rgba(179,224,242,0.2)'}`,
+              borderRadius: 2,
+              background: copied ? 'rgba(127,178,126,0.1)' : 'transparent',
+              color: copied ? '#7FB27E' : '#5D91A6',
+              cursor: 'pointer',
+              fontSize: 9,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              transition: 'all 0.15s',
+            }}
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+          <br />
+        </>
+      )}
+      <br />
+      {'>'} Standing by for mission briefing…
+    </div>
+  );
+}
+
+// ─── Main dashboard (has a team) ─────────────────────────────────────────────
+function Dashboard({ user, profile, team, tracks, submissions, refetch }) {
+  return (
+    <div
+      className="min-h-screen bg-[#080D0C] text-[#E4EEF2] pb-[var(--pet-lane)]"
+      style={{ position: 'relative' }}
+    >
       <CyberGrid variant="cyan" />
       <CyberHeader variant="cyan" />
-      <TerminalCard variant="cyan" title="Operative Dashboard" className="max-w-2xl w-full text-center mt-20 z-10">
-        <p className="text-xl text-gray-400 mb-8 tracking-wide">
-          <span className="text-[#00F0FF] mr-2">&gt;</span>
-          WELCOME TO THE GRID, {profile?.full_name?.toUpperCase() || 'OPERATIVE'}.
-        </p>
-        <div className="border border-gray-800 p-6 bg-[#050505] text-sm text-left text-gray-400 font-mono">
-          <span className="text-[#00F0FF]">root@clonefest:~$</span> ./status_check.sh<br /><br />
-          [+] SQUAD LINK ONLINE: {profile?.team_name || 'UNKNOWN'}<br />
-          [+] ROLE: {profile?.role?.toUpperCase() || 'UNKNOWN'}<br />
-          {profile?.role === 'lead' && team?.invite_code && (
-            <>
-              [+] SQUAD INVITE CODE: <span className="text-white bg-white/10 px-1 rounded">{team.invite_code}</span>
-              <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(team.invite_code);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-                className={`ml-3 px-2 py-0.5 border ${copied ? 'border-[#00FF00] text-[#00FF00] bg-[#00FF00]/10' : 'border-[#00F0FF]/30 text-[#00F0FF] hover:bg-[#00F0FF]/10'} rounded text-xs transition-all tracking-wider`}
-              >
-                {copied ? 'COPIED!' : 'COPY'}
-              </button>
-              <br />
-            </>
-          )}
-          <br />
-          &gt; Standing by for mission briefing...
+
+      <div
+        style={{
+          position: 'relative', zIndex: 10,
+          maxWidth: 1100, margin: '0 auto',
+          padding: '100px 20px 60px',
+        }}
+      >
+        {/* ── Section: Operative status ─────────────────────────────────── */}
+        <div style={{ marginBottom: 48 }}>
+          <SectionLabel>&gt; Operative status</SectionLabel>
+          <StatusCard profile={profile} team={team} />
         </div>
-      </TerminalCard>
+
+        {/* ── Section: Mission dossier (track grid) ─────────────────────── */}
+        <div style={{ marginBottom: 48 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 20, flexWrap: 'wrap', gap: 8 }}>
+            <SectionLabel>&gt; Mission dossier</SectionLabel>
+            {profile?.role === 'lead' && (
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 10,
+                  letterSpacing: '0.16em',
+                  textTransform: 'uppercase',
+                  color: '#5D91A6',
+                }}
+              >
+                Click any mission to submit a PR
+              </span>
+            )}
+            {profile?.role === 'member' && (
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 10,
+                  letterSpacing: '0.16em',
+                  textTransform: 'uppercase',
+                  color: '#56707B',
+                }}
+              >
+                Leads only — contact your lead to submit
+              </span>
+            )}
+          </div>
+
+          <TrackGrid
+            tracks={tracks}
+            submissions={submissions}
+            profile={profile}
+            onRefetch={refetch}
+          />
+        </div>
+
+        {/* ── Section: Submission log ───────────────────────────────────── */}
+        <SubmissionLog submissions={submissions} />
+      </div>
     </div>
+  );
+}
+
+function SectionLabel({ children }) {
+  return (
+    <p
+      style={{
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 10,
+        letterSpacing: '0.22em',
+        textTransform: 'uppercase',
+        color: '#56707B',
+        marginBottom: 14,
+      }}
+    >
+      {children}
+    </p>
+  );
+}
+
+// ─── Root export ──────────────────────────────────────────────────────────────
+export default function HackerPortal() {
+  const { user, profile, team, tracks, submissions, loading, refetch } = useHackerData();
+
+  if (loading) return <LoadingScreen />;
+
+  if (!profile || profile.role === 'unassigned') {
+    return <OnboardingScreen user={user} />;
+  }
+
+  return (
+    <Dashboard
+      user={user}
+      profile={profile}
+      team={team}
+      tracks={tracks}
+      submissions={submissions}
+      refetch={refetch}
+    />
   );
 }
