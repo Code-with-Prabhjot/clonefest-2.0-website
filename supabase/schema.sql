@@ -45,7 +45,7 @@ create table public.submissions (
   pr_url text not null,
   status text default 'pending'::text check (status in ('pending', 'accepted', 'rejected', 'scored')),
   notes text,
-  submitted_by uuid not null references public.profiles(id) on delete set null,
+  submitted_by uuid references public.profiles(id) on delete set null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -82,6 +82,37 @@ $$ language plpgsql;
 create trigger on_submission_updated
   before update on public.submissions
   for each row execute procedure public.handle_updated_at();
+
+-- ==========================================
+-- 4b. TEAM SIZE ENFORCEMENT (max 4 members)
+-- ==========================================
+
+-- Returns the current member count for a given team
+create or replace function public.get_team_member_count(p_team_name text)
+returns integer as $$
+  select count(*)::integer
+  from public.profiles
+  where team_name = p_team_name;
+$$ language sql security definer;
+
+-- Raises an exception if the team is already at capacity (4 members)
+create or replace function public.check_team_capacity()
+returns trigger as $$
+begin
+  -- Only enforce when someone is joining (team_name being set for the first time)
+  if new.team_name is not null and (old.team_name is null or old.team_name <> new.team_name) then
+    if (select public.get_team_member_count(new.team_name)) >= 4 then
+      raise exception 'Squad is full. Maximum 4 operatives per squad.';
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists enforce_team_capacity on public.profiles;
+create trigger enforce_team_capacity
+  before update on public.profiles
+  for each row execute procedure public.check_team_capacity();
 
 -- ==========================================
 -- 4. ROW LEVEL SECURITY (RLS)

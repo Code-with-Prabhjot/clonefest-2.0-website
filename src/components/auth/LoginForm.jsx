@@ -8,6 +8,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -15,6 +16,11 @@ export default function LoginForm() {
     setError(null);
     
     if (isSignUp) {
+      if (password.length < 6) {
+        setError('Access code must be at least 6 characters.');
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -22,8 +28,14 @@ export default function LoginForm() {
       if (error) {
         setError(error.message);
       } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+        // Supabase returns an empty identities array when the email is already registered
         setError('An account with this email already exists.');
+      } else if (data.session === null) {
+        // session is null → Supabase sent a confirmation email, user must click link
+        setEmailSent(true);
       }
+      // If session is non-null, email confirmation is disabled in Supabase settings
+      // and AuthPage's onAuthStateChange listener will redirect automatically.
     } else {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -61,6 +73,35 @@ export default function LoginForm() {
     if (error) setError(error.message);
     setLoading(false);
   };
+
+  // ── Email-sent confirmation screen ─────────────────────────────────────────
+  if (emailSent) {
+    return (
+      <div className="py-2">
+        <div className="flex items-center gap-2.5 mb-4">
+          <span className="h-[7px] w-[7px] flex-none border border-[#7FB27E] bg-[#7FB27E]" />
+          <p className="font-jet text-[10px] uppercase tracking-[0.24em] text-[#7FB27E]">
+            Confirmation transmitted
+          </p>
+        </div>
+        <h2 className="font-clash text-[21px] font-medium text-[#E4EEF2] mt-1">
+          Check your inbox
+        </h2>
+        <p className="mt-3 text-[13px] leading-relaxed text-[#8AA5AE]">
+          We sent a confirmation link to{' '}
+          <span className="text-[#B3E0F2]">{email}</span>.
+          Click it to activate your account, then return here to sign in.
+        </p>
+        <button
+          type="button"
+          onClick={() => { setEmailSent(false); setIsSignUp(false); setPassword(''); }}
+          className={`${PRIMARY} mt-6`}
+        >
+          Back to sign in
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
