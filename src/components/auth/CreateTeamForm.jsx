@@ -19,6 +19,29 @@ export default function CreateTeamForm({ user }) {
     e.preventDefault();
     if (!user) return;
     
+    const trimmedTeamName = teamName.trim();
+    const trimmedLeaderName = leaderName.trim();
+
+    if (trimmedTeamName.length < 3 || trimmedTeamName.length > 25) {
+      setError('Squad designation must be between 3 and 25 characters.');
+      return;
+    }
+    
+    if (!/^[a-zA-Z0-9 _-]+$/.test(trimmedTeamName)) {
+      setError('Squad designation can only contain letters, numbers, spaces, underscores, and hyphens.');
+      return;
+    }
+
+    if (trimmedLeaderName.length < 2 || trimmedLeaderName.length > 20) {
+      setError('Leader callsign must be between 2 and 20 characters.');
+      return;
+    }
+    
+    if (!/^[a-zA-Z0-9 _-]+$/.test(trimmedLeaderName)) {
+      setError('Leader callsign can only contain letters, numbers, spaces, underscores, and hyphens.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -30,7 +53,7 @@ export default function CreateTeamForm({ user }) {
       const { error: teamError } = await supabase
         .from('teams')
         .insert({
-          name: teamName,
+          name: trimmedTeamName,
           invite_code: inviteCode
         });
 
@@ -46,9 +69,9 @@ export default function CreateTeamForm({ user }) {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          full_name: leaderName,
+          full_name: trimmedLeaderName,
           role: 'lead',
-          team_name: teamName
+          team_name: trimmedTeamName
         })
         .eq('id', user.id);
 
@@ -93,6 +116,7 @@ export default function CreateTeamForm({ user }) {
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
             required
+            maxLength={25}
             className={FIELD}
             placeholder="e.g. NEON_SYNDICATE"
           />
@@ -106,6 +130,7 @@ export default function CreateTeamForm({ user }) {
             value={leaderName}
             onChange={(e) => setLeaderName(e.target.value)}
             required
+            maxLength={20}
             className={FIELD}
             placeholder="e.g. zerocool"
           />

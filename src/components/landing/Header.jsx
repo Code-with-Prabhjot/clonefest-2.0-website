@@ -18,7 +18,7 @@ function LogoSlot({ label, url, round, testId }) {
     );
 }
 
-export default function Header({ booted }) {
+export default function Header({ booted, onFaqClick }) {
     return (
         <motion.header
             initial={{ y: -56, opacity: 0 }}
@@ -33,6 +33,16 @@ export default function Header({ booted }) {
                     round
                     testId="college-logo-slot"
                 />
+
+                {booted && (
+                  <button 
+                    onClick={onFaqClick}
+                    className="ml-auto mr-4 border border-[#5D91A6]/40 px-4 py-1.5 text-xs uppercase tracking-widest text-[#5D91A6] hover:bg-[#5D91A6]/10 hover:text-[#B3E0F2] transition-all font-mono shadow-[0_0_10px_rgba(93,145,166,0)] hover:shadow-[0_0_10px_rgba(93,145,166,0.3)]"
+                  >
+                    FAQ
+                  </button>
+                )}
+
                 <LogoSlot
                     label="CODING CLUB"
                     url={CLUB_LOGO_URL}

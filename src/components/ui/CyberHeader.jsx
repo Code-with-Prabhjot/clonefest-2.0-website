@@ -13,10 +13,10 @@ export default function CyberHeader({ variant = 'cyan' }) {
       <div className="max-w-7xl mx-auto flex justify-between items-center relative">
         {/* Left Logo */}
         <div className="flex items-center">
-          <img 
-            src="/logos/rvce.png" 
-            alt="RVCE Logo" 
-            className="h-10 w-10 md:h-12 md:w-12 filter drop-shadow-[0_0_5px_rgba(255,255,255,0.5)] hover:scale-110 transition-transform duration-300" 
+          <img
+            src="/logos/rvce.png"
+            alt="RVCE Logo"
+            className="h-10 w-10 md:h-12 md:w-12 filter drop-shadow-[0_0_5px_rgba(255,255,255,0.5)] hover:scale-110 transition-transform duration-300"
           />
         </div>
 
@@ -29,10 +29,10 @@ export default function CyberHeader({ variant = 'cyan' }) {
 
         {/* Right Logo */}
         <div className="flex items-center">
-          <img 
-            src="/logos/coding-club.png" 
-            alt="Coding Club Logo" 
-            className="h-10 w-auto md:h-12 md:w-auto object-contain filter drop-shadow-[0_0_5px_rgba(255,255,255,0.5)] hover:scale-110 transition-transform duration-300" 
+          <img
+            src="/logos/coding-club.png"
+            alt="Coding Club Logo"
+            className="h-10 w-auto md:h-12 md:w-auto object-contain filter drop-shadow-[0_0_5px_rgba(255,255,255,0.5)] hover:scale-110 transition-transform duration-300"
           />
         </div>
       </div>

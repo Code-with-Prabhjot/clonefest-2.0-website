@@ -12,6 +12,8 @@ export default function HackerPortal() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('create');
+  const [team, setTeam] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -29,6 +31,16 @@ export default function HackerPortal() {
         .single();
       
       setProfile(profileData);
+
+      if (profileData?.team_name) {
+        const { data: teamData } = await supabase
+          .from('teams')
+          .select('*')
+          .eq('name', profileData.team_name)
+          .single();
+        setTeam(teamData);
+      }
+
       setLoading(false);
     };
 
@@ -101,7 +113,24 @@ export default function HackerPortal() {
         <div className="border border-gray-800 p-6 bg-[#050505] text-sm text-left text-gray-400 font-mono">
           <span className="text-[#00F0FF]">root@clonefest:~$</span> ./status_check.sh<br /><br />
           [+] SQUAD LINK ONLINE: {profile?.team_name || 'UNKNOWN'}<br />
-          [+] ROLE: {profile?.role?.toUpperCase() || 'UNKNOWN'}<br /><br />
+          [+] ROLE: {profile?.role?.toUpperCase() || 'UNKNOWN'}<br />
+          {profile?.role === 'lead' && team?.invite_code && (
+            <>
+              [+] SQUAD INVITE CODE: <span className="text-white bg-white/10 px-1 rounded">{team.invite_code}</span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(team.invite_code);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className={`ml-3 px-2 py-0.5 border ${copied ? 'border-[#00FF00] text-[#00FF00] bg-[#00FF00]/10' : 'border-[#00F0FF]/30 text-[#00F0FF] hover:bg-[#00F0FF]/10'} rounded text-xs transition-all tracking-wider`}
+              >
+                {copied ? 'COPIED!' : 'COPY'}
+              </button>
+              <br />
+            </>
+          )}
+          <br />
           &gt; Standing by for mission briefing...
         </div>
       </TerminalCard>

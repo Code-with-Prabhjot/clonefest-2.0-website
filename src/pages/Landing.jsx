@@ -6,9 +6,11 @@ import TerminalBoot from '../components/landing/TerminalBoot';
 import Header from '../components/landing/Header';
 import Hero from '../components/landing/Hero';
 import Marquee from '../components/landing/Marquee';
+import FAQModal from '../components/landing/FAQModal';
 
 export default function Landing() {
   const [booted, setBooted] = useState(false);
+  const [faqOpen, setFaqOpen] = useState(false);
 
   // The landing is a single fixed viewport: it locks body scroll and swaps the
   // cursor. Both are scoped to <html>.landing-active in styles/landing.css so
@@ -38,11 +40,14 @@ export default function Landing() {
       <div className="noise-overlay pointer-events-none absolute inset-0 z-10" aria-hidden="true" />
       <div className="scanlines pointer-events-none absolute inset-0 z-10" aria-hidden="true" />
       <div className="vignette pointer-events-none absolute inset-0 z-10" aria-hidden="true" />
-      <Header booted={booted} />
+      <Header booted={booted} onFaqClick={() => setFaqOpen(true)} />
       <Hero booted={booted} />
       <Marquee booted={booted} />
       <AnimatePresence>
         {!booted && <TerminalBoot onComplete={() => setBooted(true)} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {faqOpen && <FAQModal isOpen={faqOpen} onClose={() => setFaqOpen(false)} />}
       </AnimatePresence>
     </div>
   );
