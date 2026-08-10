@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 
 const faqs = [
   { q: "What is CloneFest?", a: "CloneFest is a cyberpunk-themed hackathon where you build and break modern web tech." },
-  { q: "Who can participate?", a: "Any student with a passion for coding. You can fly solo or form a squad of up to 4 members." },
+  { q: "Who can participate?", a: "The 2025-2029 batch (upcoming second-year students)." },
   { q: "How much does it cost?", a: "Zero. Participation is completely free." },
-  { q: "What if I don't have a team?", a: "No problem! You can register individually and we'll help you find a squad, or you can conquer the grid alone." },
-  { q: "Where is the event located?", a: "CloneFest is a hybrid event. You can participate online from anywhere in the world or join us at our physical HQ if you're local." }
+  { q: "What if I don't have a team?", a: "No problem! We'll help you find a squad." },
+  { q: "Where is the event located?", a: "The event is hybrid, you can participate from anywhere." }
 ];
 
 export default function FAQModal({ isOpen, onClose }) {
@@ -42,12 +42,6 @@ export default function FAQModal({ isOpen, onClose }) {
           ))}
         </div>
 
-        {/* Support Footer */}
-        <div className="mt-8 pt-4 border-t border-[#5D91A6]/20">
-          <p className="text-gray-400 text-sm font-mono text-center">
-            System failure? Contact <a href="mailto:admin@clonefest.com" className="text-[#00F0FF] hover:underline">admin@clonefest.com</a> or query the admins on our <a href="#" className="text-[#00FF00] hover:underline">Discord</a>.
-          </p>
-        </div>
       </motion.div>
     </div>
   );

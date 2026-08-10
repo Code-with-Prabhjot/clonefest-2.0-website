@@ -3,20 +3,35 @@ import { supabase } from '../../lib/supabase';
 import { FIELD, GHOST, LABEL, PRIMARY, FormError, FormHead } from './authStyles';
 
 export default function LoginForm() {
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleLogin = async (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) setError(error.message);
+    
+    if (isSignUp) {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) {
+        setError(error.message);
+      } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+        setError('An account with this email already exists.');
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) setError(error.message);
+    }
+    
     // On success AuthPage's onAuthStateChange listener handles the redirect.
     setLoading(false);
   };
@@ -50,14 +65,14 @@ export default function LoginForm() {
   return (
     <>
       <FormHead
-        kicker="Returning operative"
-        title="System login"
-        blurb="Sign in with the address you registered, or continue with GitHub."
+        kicker={isSignUp ? "New operative" : "Returning operative"}
+        title={isSignUp ? "Initialize access" : "System login"}
+        blurb={isSignUp ? "Register your credentials to enter the grid, or continue with GitHub." : "Sign in with the address you registered, or continue with GitHub."}
       />
 
       <FormError>{error}</FormError>
 
-      <form onSubmit={handleLogin} className="space-y-5">
+      <form onSubmit={handleAuth} className="space-y-5">
         <div>
           <label className={LABEL} htmlFor="login-email">Email address</label>
           <input
@@ -85,8 +100,18 @@ export default function LoginForm() {
         </div>
 
         <button type="submit" disabled={loading} className={PRIMARY}>
-          {loading ? 'Authenticating…' : 'Initiate login'}
+          {loading ? 'Authenticating…' : (isSignUp ? 'Register operative' : 'Initiate login')}
         </button>
+
+        <div className="text-center pt-2">
+          <button
+            type="button"
+            onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
+            className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
+          >
+            {isSignUp ? 'Already registered? System login' : 'New here? Register operative'}
+          </button>
+        </div>
 
         <div className="flex items-center gap-4 py-1">
           <span className="h-px flex-1 bg-[#B3E0F2]/10" />
