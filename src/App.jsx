@@ -3,6 +3,7 @@ import Landing from './pages/Landing';
 import AdminPortal from './pages/AdminPortal';
 import JudgePortal from './pages/JudgePortal';
 import AuthPage from './pages/AuthPage';
+import Leaderboard from './pages/Leaderboard';
 import HackerPortal from './pages/HackerPortal';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { AdminPreview, JudgePreview } from './pages/PortalPreview';
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/portal" element={<ProtectedRoute><HackerPortal /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPortal /></ProtectedRoute>} />
         <Route path="/judge" element={<ProtectedRoute allowedRoles={['judge', 'admin']}><JudgePortal /></ProtectedRoute>} />

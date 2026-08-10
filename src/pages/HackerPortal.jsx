@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import CyberGrid from '../components/ui/CyberGrid';
 import CyberHeader from '../components/ui/CyberHeader';
 import { PANEL } from '../components/auth/authStyles';
@@ -170,7 +171,16 @@ function Dashboard({ user, profile, team, tracks, submissions, refetch }) {
       >
         {/* ── Section: Operative status ─────────────────────────────────── */}
         <div style={{ marginBottom: 48 }}>
-          <SectionLabel>&gt; Operative status</SectionLabel>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
+            <SectionLabel>&gt; Operative status</SectionLabel>
+            <Link
+              to="/leaderboard"
+              className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
+              style={{ marginBottom: 14 }}
+            >
+              View leaderboard →
+            </Link>
+          </div>
           <StatusCard profile={profile} team={team} />
         </div>
 
