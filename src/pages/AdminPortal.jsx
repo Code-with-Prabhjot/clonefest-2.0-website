@@ -125,7 +125,7 @@ export default class AdminPortal extends React.Component {
       panelFlex:PANEL + ';display:flex;flex-direction:column;padding:' + (phone ? '20px 18px 16px' : '24px 26px 20px'),
       panelTimeline:PANEL + ';margin-top:' + (phone ? '26px' : '34px') + ';position:relative;overflow:hidden;animation:rise .5s ease-out .3s both;padding:' +
         (phone ? '20px 18px 16px' : '24px 26px 20px'),
-      timelineGrid:'position:relative;display:grid;gap:' + (phone ? '20px' : '18px') + ';grid-template-columns:' + (phone ? '1fr' : 'repeat(3,1fr)'),
+      timelineGrid:'position:relative;display:grid;gap:' + (phone ? '20px' : '18px') + ';grid-template-columns:' + (phone ? '1fr' : 'repeat(2,1fr)'),
       overviewCols:'display:grid;gap:20px;margin-top:20px;grid-template-columns:' + (narrow ? '1fr' : '1.35fr 1fr'),
       sectionHead:'display:flex;align-items:' + (phone ? 'flex-start' : 'flex-end') + ';justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap',
       h2:"font-family:'Clash Grotesk',sans-serif;font-weight:500;margin:10px 0 0;color:" + TXT + ';font-size:' + (phone ? '24px' : '30px'),
@@ -144,7 +144,7 @@ export default class AdminPortal extends React.Component {
       judgeHead:'display:' + (phone ? 'none' : 'grid') + ';grid-template-columns:' + judgeCols + ';padding:0 22px;border-bottom:1px solid rgba(179,224,242,.08)',
       judgeEmailHead: narrow ? 'display:none' : MONO + ';font-size:10px;letter-spacing:.16em;color:' + DIM + ';padding:14px 8px',
       judgeProgHead: MONO + ';font-size:10px;letter-spacing:.16em;color:' + DIM + ';padding:14px 8px',
-      chalGrid:'display:grid;gap:20px;grid-template-columns:' + (phone ? '1fr' : narrow ? 'repeat(2,1fr)' : 'repeat(3,1fr)'),
+      chalGrid:'display:grid;gap:20px;grid-template-columns:' + (phone ? '1fr' : narrow ? 'repeat(2,1fr)' : 'repeat(2,1fr)'),
       overlay:'position:fixed;inset:0;z-index:80;background:rgba(8,13,12,.82);backdrop-filter:blur(6px);display:grid;place-items:' +
         (phone ? 'end center' : 'center') + ';padding:' + (phone ? '0' : '24px') + ';animation:fade .2s ease-out both',
       modalPad:'position:relative;padding:' + (phone ? '22px 18px 26px' : '28px'),
@@ -173,12 +173,12 @@ export default class AdminPortal extends React.Component {
         name:q.name, lead:q.lead, members:q.members, track:q.track, score:q.score,
         judge:q.judge || 'unassigned',
         judgeColor:q.judge ? TXT : DIM,
-        w1:this.chip(q.w[0]), w2:this.chip(q.w[1]), w3:this.chip(q.w[2]),
+        w1:this.chip(q.w[0]), w2:this.chip(q.w[1]),
         open, invite:q.invite, registered:q.reg, prs:q.prs, roster,
         meterStyle:'position:absolute;inset:0 auto 0 0;background:' + STEEL + ';transition:width .9s cubic-bezier(.22,1,.36,1) ' +
           (0.15 + idx*0.05) + 's;width:' + (on ? q.score + '%' : '0%'),
-        links:q.w.map((st,i) => ({
-          week:'WEEK ' + (i+1),
+        links:q.w.slice(0,2).map((st,i) => ({
+          week:'CHALLENGE 0' + (i+1),
           repo: st === 'none' ? 'no repo' : 'github.com/' + q.lead + '/cf2-w' + (i+1),
           demo: st === 'none' ? 'no demo' : q.name.toLowerCase().replace(/_/g,'-') + '-w' + (i+1) + '.vercel.app',
           linkStyle: MONO + ';font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:' + (st === 'none' ? DIM : ICE)
@@ -197,7 +197,7 @@ export default class AdminPortal extends React.Component {
       };
     });
 
-    const cols = ['Squad','Lead','Mem','Track','Week 1','Week 2','Week 3','Total','Judge','Actions'];
+    const cols = ['Squad','Lead','Mem','Track','Ch 1','Ch 2','Total','Judge','Actions'];
     const trackColors = [ICE, '#8CBCD1', STEEL, '#41707F', '#5C8F5B'];
 
     const tracks = [
@@ -213,18 +213,16 @@ export default class AdminPortal extends React.Component {
     }));
 
     const weeks = [
-      {label:'WEEK 1', count:142, pct:100, color:ICE},
-      {label:'WEEK 2', count:131, pct:92, color:STEEL},
-      {label:'WEEK 3', count:118, pct:83, color:MOSS_LT}
+      {label:'CHALLENGE 01', count:142, pct:100, color:ICE},
+      {label:'CHALLENGE 02', count:131, pct:92, color:MOSS_LT}
     ].map((w,i) => Object.assign(w, {
       barStyle:'width:100%;max-width:64px;background:linear-gradient(180deg,' + w.color + ',rgba(17,32,38,.15));transition:height 1s cubic-bezier(.22,1,.36,1) ' +
         (0.15 + i*0.12) + 's;height:' + (on ? w.pct + 'px' : '0px')
     }));
 
     const timeline = [
-      {title:'Project Alpha', meta:'20–26 JUL', start:1},
-      {title:'Project Beta', meta:'27 JUL–02 AUG', start:8},
-      {title:'Project Gamma & Deployment', meta:'03–09 AUG', start:15}
+      {title:'Challenge 01', meta:'20–25 AUG', start:1},
+      {title:'Challenge 02', meta:'25–30 AUG', start:6}
     ].map((tl, wi) => {
       const days = [];
       for (let i = 0; i < 7; i++){
@@ -269,9 +267,9 @@ export default class AdminPortal extends React.Component {
       goAnn: () => this.setState({section:'announcements'}),
 
       stats:[
-        {label:'Total squads', value:count(142), unit:'', sub:'+18 this week', color:TXT},
+        {label:'Total squads', value:count(142), unit:'', sub:'+18 new', color:TXT},
         {label:'Total hackers', value:count(561), unit:'', sub:'142 leads / 419 members', color:TXT},
-        {label:'Submissions this week', value:count(118), unit:'', sub:'118 of 142 squads', color:ICE},
+        {label:'Submissions', value:count(118), unit:'', sub:'118 of 142 squads', color:ICE},
         {label:'Scoring progress', value:count(68), unit:'%', sub:'96 of 142 squads scored', color:MOSS_LT},
         {label:'Registration closes', value:count(3), unit:'days', sub:'11 Aug 2026 · 23:59 IST', color:STEEL}
       ].map((st,i) => Object.assign(st, {
@@ -322,7 +320,7 @@ export default class AdminPortal extends React.Component {
         cta:'Delete announcement', kind:'danger'
       }}),
       announcements:[
-        {title:'Week 3 unlocks at 09:00 IST', excerpt:'Project Gamma & Deployment goes live Monday. Deploy URLs must resolve over HTTPS before the Wednesday cutoff.', audience:'ALL HACKERS', time:'08 AUG · 09:02', sender:'v_kulkarni', pinned:true},
+        {title:'Challenge 02 unlocks at 23:59 IST', excerpt:'Challenge 02 goes live on 25 August. Deploy URLs must resolve over HTTPS before the Wednesday cutoff.', audience:'ALL HACKERS', time:'08 AUG · 09:02', sender:'v_kulkarni', pinned:true},
         {title:'Canvas repo PR freeze in 48h', excerpt:'Merged-PR points lock on 10 Aug. Anything still in review after that counts for nothing.', audience:'ALL HACKERS', time:'07 AUG · 18:40', sender:'v_kulkarni', pinned:false},
         {title:'Leads: confirm your roster', excerpt:'Any member not accepted by Friday is dropped from the squad and cannot rejoin with the same invite code.', audience:'SQUAD LEADS', time:'05 AUG · 11:15', sender:'r_prasad', pinned:false},
         {title:'T5 problem statement amended', excerpt:'Clause 4b on component parity was ambiguous. Revised text is in the handbook; scoring follows the new version.', audience:'TRACK T5', time:'03 AUG · 20:27', sender:'r_prasad', pinned:false}
@@ -375,9 +373,8 @@ export default class AdminPortal extends React.Component {
       confirmAssign: () => this.toast('Assignment saved', Object.keys(s.picked).filter(k => s.picked[k]).length + ' squads assigned to v_rao.'),
 
       challenges:[
-        {week:1, title:'Project Alpha', points:100, opens:'20 Jul · 09:00', closes:'26 Jul · 23:59', subs:142, pct:100},
-        {week:2, title:'Project Beta', points:100, opens:'27 Jul · 09:00', closes:'02 Aug · 23:59', subs:131, pct:92},
-        {week:3, title:'Project Gamma & Deployment', points:100, opens:'03 Aug · 09:00', closes:'09 Aug · 23:59', subs:118, pct:83}
+        {week:1, title:'Challenge 01', points:100, opens:'20 Aug · 18:00', closes:'25 Aug · 23:59', subs:142, pct:100},
+        {week:2, title:'Challenge 02', points:100, opens:'25 Aug · 23:59', closes:'30 Aug · 23:59', subs:131, pct:92}
       ].map((w,i) => {
         const locked = !!s.locks[w.week];
         return {
@@ -398,7 +395,7 @@ export default class AdminPortal extends React.Component {
 
       exports:[
         {name:'Users', desc:'Profiles, callsigns, emails, roles, squad membership', rows:'561', last:'08 Aug 2026 · 11:40'},
-        {name:'Submissions', desc:'Repo and demo links, status, timestamps, all three weeks', rows:'391', last:'08 Aug 2026 · 11:41'},
+        {name:'Submissions', desc:'Repo and demo links, status, timestamps, both challenges', rows:'391', last:'08 Aug 2026 · 11:41'},
         {name:'Scores', desc:'Per-criterion rubric values, totals, judge comments', rows:'288', last:'07 Aug 2026 · 22:05'},
         {name:'Leaderboard', desc:'Ranked totals including merged-PR points from the canvas repo', rows:'142', last:'never exported'}
       ].map((e,i) => Object.assign(e, {
@@ -460,7 +457,7 @@ export default class AdminPortal extends React.Component {
                 <span style={sx("width:6px;height:6px;background:#7FB27E;border-radius:50%;animation:breathe 2.4s infinite")}></span>
                 <span style={sx("font-size:10px;letter-spacing:.18em;color:#56707B")}>DAY</span>
                 <span style={sx("font-size:13px;color:#B3E0F2")}>{V.eventDay}</span>
-                <span style={sx("font-size:10px;color:#56707B")}>/ 21</span>
+                <span style={sx("font-size:10px;color:#56707B")}>/ 11</span>
               </div>
               <div style={sx(V.L.hideNarrow)}>
                 <div style={sx("width:1px;height:26px;background:rgba(179,224,242,.14)")}></div>
@@ -512,8 +509,8 @@ export default class AdminPortal extends React.Component {
 
               <div style={sx(V.L.hero)}>
                 <div>
-                  <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6;animation:rise .5s ease-out both")}>WEEK 3 IN PROGRESS</div>
-                  <h1 style={sx(V.L.heroTitle)}>Project Gamma &amp; Deployment closes in <span style={sx("color:#B3E0F2")}>2 days</span>.</h1>
+                  <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6;animation:rise .5s ease-out both")}>CHALLENGE 02 IN PROGRESS</div>
+                  <h1 style={sx(V.L.heroTitle)}>Challenge 02 closes in <span style={sx("color:#B3E0F2")}>5 days</span>.</h1>
                   <p style={sx("font-size:14px;line-height:1.7;color:#8AA5AE;margin:14px 0 0;max-width:520px;text-wrap:pretty;animation:rise .5s ease-out .16s both")}>118 of 142 squads have shipped a demo link. 46 squads are still unscored.</p>
                 </div>
                 <div style={sx("display:flex;gap:10px;flex-wrap:wrap;animation:rise .5s ease-out .24s both")}>
@@ -586,7 +583,7 @@ export default class AdminPortal extends React.Component {
 
                 <div style={sx(V.L.panelFlex)}>
                   <div style={sx("display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:26px")}>
-                    <div style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:16px;letter-spacing:.06em;color:#E4EEF2")}>Submissions by week</div>
+                    <div style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:16px;letter-spacing:.06em;color:#E4EEF2")}>Submissions by challenge</div>
                     <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B")}>OF 142</div>
                   </div>
                   <div style={sx("flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:end;min-height:170px")}>
@@ -710,7 +707,7 @@ export default class AdminPortal extends React.Component {
 
                 <div style={sx("overflow-x:auto;-webkit-overflow-scrolling:touch")}>
                   <div style={sx("min-width:1300px")}>
-                    <div style={sx("display:grid;grid-template-columns:24px 196px 124px 62px 154px 118px 118px 118px 126px 116px 128px;align-items:center;padding:0 18px;border-bottom:1px solid rgba(179,224,242,.08)")}>
+                    <div style={sx("display:grid;grid-template-columns:24px 196px 124px 62px 154px 118px 118px 126px 116px 128px;align-items:center;padding:0 18px;border-bottom:1px solid rgba(179,224,242,.08)")}>
                       <div></div>
                       {(V.cols || []).map((c, _i1) => <React.Fragment key={_i1}>
                         <div style={sx(c.style)}>{c.label}</div>
@@ -721,7 +718,7 @@ export default class AdminPortal extends React.Component {
                       <div>
                         {(V.rows || []).map((r, _i2) => <React.Fragment key={_i2}>
                           <div style={sx(r.wrapStyle)}>
-                            <div style={sx("display:grid;grid-template-columns:24px 196px 124px 62px 154px 118px 118px 118px 126px 116px 128px;align-items:center;padding:0 18px;border-bottom:1px solid rgba(179,224,242,.06);transition:background .2s")} data-s="ap19">
+                            <div style={sx("display:grid;grid-template-columns:24px 196px 124px 62px 154px 118px 118px 126px 116px 128px;align-items:center;padding:0 18px;border-bottom:1px solid rgba(179,224,242,.06);transition:background .2s")} data-s="ap19">
                               <button onClick={r.toggle} style={sx(r.caretStyle)}>›</button>
                               <div style={sx("padding:15px 8px;font-size:14px;font-weight:500;color:#E4EEF2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{r.name}</div>
                               <div style={sx("padding:15px 8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#8AA5AE")}>{r.lead}</div>
@@ -857,7 +854,7 @@ export default class AdminPortal extends React.Component {
                     <div style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:20px;color:#E4EEF2;margin-bottom:22px")}>Compose</div>
 
                     <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>TITLE</label>
-                    <input placeholder="Week 3 unlocks at 09:00 IST" style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 15px;font-size:14px;outline:none;transition:all .2s;margin-bottom:20px;border-radius:2px")} data-s="ap27" />
+                    <input placeholder="Challenge 02 unlocks at 23:59 IST" style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 15px;font-size:14px;outline:none;transition:all .2s;margin-bottom:20px;border-radius:2px")} data-s="ap27" />
 
                     <div style={sx("display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px")}>
                       <label style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>BODY</label>
@@ -987,7 +984,7 @@ export default class AdminPortal extends React.Component {
                     <div style={sx("position:relative;padding:26px")}>
                       <div style={sx("display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:20px")}>
                         <div>
-                          <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:#56707B")}>WEEK {c.week}</div>
+                          <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:#56707B")}>CHALLENGE 0{c.week}</div>
                           <div style={sx(`font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:22px;color:${c.titleColor};margin-top:10px;line-height:1.25`)}>{c.title}</div>
                         </div>
                         <div style={sx("text-align:right")}>
@@ -1071,8 +1068,8 @@ export default class AdminPortal extends React.Component {
                 <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:#5D91A6;margin-bottom:12px")}>CONFIRM BROADCAST</div>
                 <div style={sx(V.L.modalTitle)}>This will notify 561 hackers. Send?</div>
                 <div style={sx("margin:22px 0;border:1px solid rgba(179,224,242,.10);background:#0B1519;padding:16px 18px;border-radius:2px")}>
-                  <div style={sx("font-size:14px;font-weight:500;color:#E4EEF2;margin-bottom:7px")}>Week 3 unlocks at 09:00 IST</div>
-                  <div style={sx("font-size:13px;color:#8AA5AE;line-height:1.7")}>Project Gamma &amp; Deployment goes live Monday. Deploy URLs must resolve over HTTPS before the Wednesday cutoff.</div>
+                  <div style={sx("font-size:14px;font-weight:500;color:#E4EEF2;margin-bottom:7px")}>Challenge 02 unlocks at 23:59 IST</div>
+                  <div style={sx("font-size:13px;color:#8AA5AE;line-height:1.7")}>Challenge 02 goes live on 25 August. Deploy URLs must resolve over HTTPS before the Wednesday cutoff.</div>
                   <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#5D91A6;margin-top:12px")}>AUDIENCE: ALL HACKERS · PINNED</div>
                 </div>
                 <div style={sx("display:flex;gap:12px;flex-wrap:wrap")}>

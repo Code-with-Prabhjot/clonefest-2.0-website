@@ -9,31 +9,31 @@ const PANEL = 'background:#112026;border:1px solid rgba(179,224,242,.10);border-
 
 const CRIT = [
   {k:'cq', name:'Code Quality & Architecture', max:20, hint:'Clear module boundaries, honest naming, tests that run, no dead legacy code left behind.'},
-  {k:'fc', name:'Feature Completeness', max:25, hint:'Every requirement in the weekly brief works end to end, not just the happy path.'},
+  {k:'fc', name:'Feature Completeness', max:25, hint:'Every requirement in the challenge brief works end to end, not just the happy path.'},
   {k:'ux', name:'UI/UX & Design', max:20, hint:'A consistent visual system, keyboard and mobile support, sensible empty and error states.'},
   {k:'dd', name:'Deployment & Documentation', max:15, hint:'Live URL reachable, README covers setup, environment variables documented.'},
   {k:'iv', name:'Innovation & Going Beyond', max:20, hint:'Anything past the brief the squad chose to build and can justify in review.'}
 ];
 
 const SQUADS = [
-  {name:'GHOST_IN_SHELL', track:'T4 · Realtime',  subs:3, status:'scored', updated:'08 Aug · 11:20', prPts:19, prMerged:3, prTotal:5, members:[['bashful','LEAD'],['pixelmoth',''],['nulldiv',''],['tracelog','']], late:[0,0,0]},
-  {name:'SEGFAULT_SALLY', track:'T2 · Data',      subs:3, status:'scored', updated:'08 Aug · 10:04', prPts:16, prMerged:3, prTotal:4, members:[['heapdump','LEAD'],['kernelkid',''],['nulldiv','']], late:[0,1,0]},
-  {name:'NULL_POINTER',   track:'T5 · UI Kit',    subs:3, status:'scored', updated:'07 Aug · 19:41', prPts:14, prMerged:2, prTotal:5, members:[['ax0lotl','LEAD'],['pixelmoth',''],['monospace',''],['quackd','']], late:[0,0,0]},
-  {name:'DEEP_THOUGHT',   track:'T1 · CMS',       subs:3, status:'draft',  updated:'09 Aug · 09:12', prPts:19, prMerged:3, prTotal:5, members:[['fortytwo','LEAD'],['nulldiv',''],['tracelog',''],['siglost',''],['quackd','']], late:[0,1,0]},
+  {name:'GHOST_IN_SHELL', track:'T4 · Realtime',  subs:2, status:'scored', updated:'08 Aug · 11:20', prPts:19, prMerged:3, prTotal:5, members:[['bashful','LEAD'],['pixelmoth',''],['nulldiv',''],['tracelog','']], late:[0,0,0]},
+  {name:'SEGFAULT_SALLY', track:'T2 · Data',      subs:2, status:'scored', updated:'08 Aug · 10:04', prPts:16, prMerged:3, prTotal:4, members:[['heapdump','LEAD'],['kernelkid',''],['nulldiv','']], late:[0,1,0]},
+  {name:'NULL_POINTER',   track:'T5 · UI Kit',    subs:2, status:'scored', updated:'07 Aug · 19:41', prPts:14, prMerged:2, prTotal:5, members:[['ax0lotl','LEAD'],['pixelmoth',''],['monospace',''],['quackd','']], late:[0,0,0]},
+  {name:'DEEP_THOUGHT',   track:'T1 · CMS',       subs:2, status:'draft',  updated:'09 Aug · 09:12', prPts:19, prMerged:3, prTotal:5, members:[['fortytwo','LEAD'],['nulldiv',''],['tracelog',''],['siglost',''],['quackd','']], late:[0,1,0]},
   {name:'KERNEL_PANIC',   track:'T3 · Commerce',  subs:2, status:'none',   updated:'06 Aug · 22:15', prPts:8,  prMerged:2, prTotal:3, members:[['siglost','LEAD'],['heapdump',''],['monospace',''],['bashful','']], late:[0,0,0]},
-  {name:'RUBBER_DUCKS',   track:'T1 · CMS',       subs:3, status:'scored', updated:'07 Aug · 15:33', prPts:11, prMerged:2, prTotal:4, members:[['quackd','LEAD'],['tracelog',''],['pixelmoth',''],['notfound',''],['ax0lotl','']], late:[0,0,1]},
+  {name:'RUBBER_DUCKS',   track:'T1 · CMS',       subs:2, status:'scored', updated:'07 Aug · 15:33', prPts:11, prMerged:2, prTotal:4, members:[['quackd','LEAD'],['tracelog',''],['pixelmoth',''],['notfound',''],['ax0lotl','']], late:[0,0,1]},
   {name:'TABS_OVER_SPACES',track:'T5 · UI Kit',   subs:2, status:'draft',  updated:'09 Aug · 08:02', prPts:6,  prMerged:1, prTotal:3, members:[['monospace','LEAD'],['nulldiv','']], late:[0,0,0]},
   {name:'FOUR_OH_FOUR',   track:'T2 · Data',      subs:1, status:'none',   updated:'05 Aug · 17:50', prPts:3,  prMerged:1, prTotal:2, members:[['notfound','LEAD'],['siglost',''],['kernelkid','']], late:[1,0,0]},
-  {name:'STACK_OVERFLOW', track:'T3 · Commerce',  subs:3, status:'scored', updated:'06 Aug · 13:27', prPts:13, prMerged:2, prTotal:5, members:[['dupequest','LEAD'],['heapdump',''],['bashful','']], late:[0,0,0]},
-  {name:'YAK_SHAVERS',    track:'T4 · Realtime',  subs:3, status:'scored', updated:'05 Aug · 20:11', prPts:9,  prMerged:2, prTotal:3, members:[['razorwire','LEAD'],['quackd',''],['tracelog',''],['notfound','']], late:[0,0,0]}
+  {name:'STACK_OVERFLOW', track:'T3 · Commerce',  subs:2, status:'scored', updated:'06 Aug · 13:27', prPts:13, prMerged:2, prTotal:5, members:[['dupequest','LEAD'],['heapdump',''],['bashful','']], late:[0,0,0]},
+  {name:'YAK_SHAVERS',    track:'T4 · Realtime',  subs:2, status:'scored', updated:'05 Aug · 20:11', prPts:9,  prMerged:2, prTotal:3, members:[['razorwire','LEAD'],['quackd',''],['tracelog',''],['notfound','']], late:[0,0,0]}
 ];
 
-const WEEK_TITLES = ['Project Alpha', 'Project Beta', 'Project Gamma & Deployment'];
-const WEEK_AT = ['26 Jul · 22:41', '03 Aug · 00:47', '09 Aug · 01:12'];
-const WEEK_DEADLINE = ['26 Jul · 23:59', '02 Aug · 23:59', '09 Aug · 23:59'];
+const WEEK_TITLES = ['Challenge 01', 'Challenge 02'];
+const WEEK_AT = ['25 Aug · 22:41', '30 Aug · 22:07'];
+const WEEK_DEADLINE = ['25 Aug · 23:59', '30 Aug · 23:59'];
 const NOTES = [
   'Rewrote the legacy PHP templates as server components. Auth is session based for now; the migration script is in /scripts and is idempotent. Two known gaps: no pagination on the archive view, and image uploads cap at 4MB.',
-  'Ported the whole data layer to Postgres with row level security. Seed data ships in the repo. The old CSV importer is kept behind a feature flag because the org still runs it weekly.',
+  'Ported the whole data layer to Postgres with row level security. Seed data ships in the repo. The old CSV importer is kept behind a feature flag because the org still runs it regularly.',
   'Deployed on Fly with a Neon database and a GitHub Actions pipeline. Lighthouse is 96/100 on mobile. The realtime channel falls back to polling when websockets are blocked on campus wifi.'
 ];
 
@@ -49,7 +49,7 @@ const SEED = {
 };
 const SEED_FB = {
   DEEP_THOUGHT:'Strongest CMS rebuild in my group so far. The editor is genuinely pleasant and the migration script is the only one I trusted enough to run twice. ',
-  GHOST_IN_SHELL:'Exceptional across all three weeks. The realtime layer degrades gracefully on campus wifi, which nobody else handled, and the docs read like a real product.'
+  GHOST_IN_SHELL:'Exceptional across both challenges. The realtime layer degrades gracefully on campus wifi, which nobody else handled, and the docs read like a real product.'
 };
 
 const PRS = [
@@ -179,7 +179,7 @@ export default class JudgePortal extends React.Component {
       detailStatus:PANEL + ';padding:18px 20px;animation:rise .45s ease-out .1s both',
       sectionHead:'display:flex;align-items:' + (phone ? 'flex-start' : 'flex-end') + ';justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap',
       h2:"font-family:'Clash Grotesk',sans-serif;font-weight:500;margin:10px 0 0;color:" + TXT + ';font-size:' + (phone ? '24px' : '30px'),
-      weekGrid:'display:grid;gap:' + (phone ? '14px' : '18px') + ';grid-template-columns:' + (narrow ? '1fr' : 'repeat(3,1fr)'),
+      weekGrid:'display:grid;gap:' + (phone ? '14px' : '18px') + ';grid-template-columns:' + (narrow ? '1fr' : 'repeat(2,1fr)'),
       prPanel:PANEL + ';position:relative;overflow:hidden;margin-top:' + (phone ? '30px' : '40px') + ';padding:' + (phone ? '20px 18px' : '26px 28px'),
       prHead:'display:grid;grid-template-columns:' + prCols + ';' + MONO + ';font-size:10px;letter-spacing:.16em;color:' + DIM + ';border-bottom:1px solid rgba(179,224,242,.08)',
       prHeadAuthor: narrow ? 'display:none' : 'padding:0 0 12px',
@@ -231,9 +231,9 @@ export default class JudgePortal extends React.Component {
       const m = STATUS[r.st];
       const sc = r.st === 'none' ? '—' : String(r.total);
       return {
-        name:r.q.name, track:r.q.track, subs:r.q.subs + ' of 3', updated:r.q.updated,
+        name:r.q.name, track:r.q.track, subs:r.q.subs + ' of 2', updated:r.q.updated,
         subLine:(narrow ? r.q.track + ' · ' : '') + r.q.subs + '/3 SUBMITTED' + (narrow ? ' · ' + r.q.updated : ''),
-        subsColor: r.q.subs === 3 ? MUTE : CLAY,
+        subsColor: r.q.subs >= 2 ? MUTE : CLAY,
         chipLabel:m.label,
         chipDot:'width:7px;height:7px;flex:none;border:1px solid ' + m.border + ';background:' + m.fill,
         chipText:'font-size:12px;white-space:nowrap;color:' + m.c,
@@ -302,14 +302,14 @@ export default class JudgePortal extends React.Component {
     const fb = s.feedback[name] || '';
     const prOk = prState === 'ready';
 
-    const weeks = [0,1,2].map(i => {
+    const weeks = [0,1].map(i => {
       const submitted = i < q.subs;
       const late = submitted && !!q.late[i];
       const chip = !submitted ? {label:'Not submitted', c:DIM, fill:'transparent', border:DIM}
         : locked ? {label:'Scored', c:ICE, fill:ICE, border:ICE}
         : {label:'Accepted', c:MOSS_LT, fill:MOSS_LT, border:MOSS_LT};
       return {
-        label:'WEEK ' + (i+1), title:WEEK_TITLES[i], submitted, missing:!submitted,
+        label:'SUBMISSION', title:WEEK_TITLES[i], submitted, missing:!submitted,
         repo:'github.com/' + q.members[0][0] + '/cf2-w' + (i+1),
         repoUrl:'https://github.com/' + q.members[0][0] + '/cf2-w' + (i+1),
         demo:name.toLowerCase().replace(/_/g,'-') + '-w' + (i+1) + '.vercel.app',
@@ -399,7 +399,7 @@ export default class JudgePortal extends React.Component {
       detail:{
         name, track:q.track, teamId:'t_' + (1040 + s.idx),
         position:String(s.idx + 1).padStart(2,'0') + ' / 20',
-        subsMeta:q.subs + ' OF 3 SUBMITTED',
+        subsMeta:q.subs + ' OF 2 SUBMITTED',
         statusMeta: locked ? 'FINAL · ' + s.locked[name] : (statFor(q) === 'draft' ? 'DRAFT SAVED ' + q.updated : 'NO RUBRIC ENTERED'),
         chipLabel:STATUS[statFor(q)].label,
         chipColor:STATUS[statFor(q)].c,
@@ -571,7 +571,7 @@ export default class JudgePortal extends React.Component {
 
           <div style={sx(V.L.hero)}>
             <div>
-              <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6;animation:rise .5s ease-out both")}>YOUR QUEUE · WEEK 3 REVIEW WINDOW</div>
+              <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6;animation:rise .5s ease-out both")}>YOUR QUEUE · REVIEW WINDOW</div>
               <h1 style={sx(V.L.heroTitle)}>8 squads still need a final score.</h1>
               <p style={sx("font-size:14px;line-height:1.7;color:#8AA5AE;margin:14px 0 0;max-width:540px;text-wrap:pretty;animation:rise .5s ease-out .16s both")}>Final scores lock on 10 August at 18:00 IST. Drafts left unsubmitted at that point are discarded and the squad is marked unscored.</p>
             </div>
@@ -726,7 +726,7 @@ export default class JudgePortal extends React.Component {
           <div style={sx(V.L.sectionHead)}>
             <div>
               <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6")}>SUBMISSIONS</div>
-              <h2 style={sx(V.L.h2)}>Three weekly builds</h2>
+              <h2 style={sx(V.L.h2)}>Two challenges</h2>
             </div>
             <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>{V.detail.subsMeta}</span>
           </div>
@@ -768,7 +768,7 @@ export default class JudgePortal extends React.Component {
                 {(w.missing) ? <>
                   <div style={sx("margin-top:18px;border:1px dashed rgba(179,224,242,.20);background:rgba(8,13,12,.5);padding:22px 16px;text-align:center;border-radius:2px")}>
                     <div style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;color:#56707B")}>NOT SUBMITTED</div>
-                    <p style={sx("font-size:12px;line-height:1.6;color:#8AA5AE;margin:10px 0 0;text-wrap:pretty")}>Nothing was pushed before the deadline. Score this week on the rubric as delivered, or raise it with an admin if you believe an extension applies.</p>
+                    <p style={sx("font-size:12px;line-height:1.6;color:#8AA5AE;margin:10px 0 0;text-wrap:pretty")}>Nothing was pushed before the deadline. Score this challenge on the rubric as delivered, or raise it with an admin if you believe an extension applies.</p>
                   </div>
                   <div style={sx("flex:1")}></div>
                   <div style={sx("margin-top:20px;padding-top:14px;border-top:1px solid rgba(179,224,242,.08);font-family:'JetBrains Mono',monospace;font-size:10px;color:#56707B")}>DEADLINE PASSED {w.at}</div>
