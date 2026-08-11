@@ -10,10 +10,30 @@ export default function LoginForm() {
   const [error, setError] = useState(null);
   const [emailSent, setEmailSent] = useState(false);
 
+  // ── RVCE email validation ────────────────────────────────────────────────
+  // Format: name.branch25@rvce.edu.in  (exactly ONE dot)
+  // name   = letters only, no dots
+  // branch = exactly 2 letters
+  // year   = exactly 2 digits (must be 25)
+  const validateRvceEmail = (addr) => {
+    const rvcePattern = /^[a-z]+\.[a-z]{2}(\d{2})@rvce\.edu\.in$/i;
+    const match = addr.trim().match(rvcePattern);
+    if (!match) return 'Enter a correct email id';
+    if (match[1] !== '25') return 'Only First Years can participate';
+    return null; // valid
+  };
+
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    const emailErr = validateRvceEmail(email);
+    if (emailErr) {
+      setError(emailErr);
+      setLoading(false);
+      return;
+    }
     
     if (isSignUp) {
       if (password.length < 6) {
@@ -123,7 +143,7 @@ export default function LoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             required
             className={FIELD}
-            placeholder="operative@rvce.edu.in"
+            placeholder="name.cs25@rvce.edu.in"
           />
         </div>
 
