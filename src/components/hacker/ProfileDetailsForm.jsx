@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '../../lib/supabase';
 import {
   FIELD, HINT, LABEL, PRIMARY, FormError, FormHead,
 } from '../auth/authStyles';
@@ -7,9 +8,8 @@ import {
  * Collected once, straight after a hacker's first sign-in and before they can
  * forge or join a squad.
  *
- * FRONTEND ONLY. `profiles` has no usn / branch / batch columns yet, so
- * onComplete() just advances the flow — see the marked seam in handleSubmit
- * for where the Supabase write belongs once those columns exist.
+ * Writes usn, branch, and batch to the `profiles` table (patch_004 must be
+ * applied first). onComplete() is called only after a successful DB write.
  */
 
 const BRANCHES = ['CS', 'CD', 'CY', 'CI', 'BT', 'EC', 'ET', 'EE', 'ME', 'IE', 'CV', 'CH', 'AS'];
@@ -37,10 +37,16 @@ export default function ProfileDetailsForm({ onComplete }) {
 
     setLoading(true);
     try {
-      // ── BACKEND SEAM ──────────────────────────────────────────────────
-      // await supabase.from('profiles')
-      //   .update({ usn: usnClean, branch, batch })
-      //   .eq('id', user.id);
+      const { data: { user }, error: authErr } = await supabase.auth.getUser();
+      if (authErr || !user) throw new Error('Not authenticated. Please sign in again.');
+
+      const { error: updateErr } = await supabase
+        .from('profiles')
+        .update({ usn: usnClean, branch, batch })
+        .eq('id', user.id);
+
+      if (updateErr) throw updateErr;
+
       onComplete({ usn: usnClean, branch, batch });
     } catch (err) {
       setError(err.message);
@@ -73,7 +79,7 @@ export default function ProfileDetailsForm({ onComplete }) {
             maxLength={10}
             autoComplete="off"
             className={`${FIELD} font-jet tracking-[0.14em]`}
-            placeholder="1RV24CS001"
+            placeholder="1RV25CS001"
           />
           <p className={HINT}>10 CHARACTERS, AS PRINTED ON YOUR ID CARD</p>
         </div>

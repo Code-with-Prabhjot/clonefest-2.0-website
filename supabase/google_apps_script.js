@@ -1,12 +1,12 @@
 /**
  * Clonefest 2.0 — Google Apps Script
- * 
+ *
  * HOW TO USE:
  * 1. Open your Google Sheet
  * 2. Extensions → Apps Script
  * 3. Replace everything in Code.gs with this file
  * 4. Click Save (floppy disk icon)
- * 5. Click Deploy → New deployment
+ * 5. Click Deploy → New deployment  (or Manage deployments → edit existing one)
  *    - Type: Web app
  *    - Execute as: Me
  *    - Who has access: Anyone
@@ -15,7 +15,12 @@
  *    and re-run the patch in Supabase.
  *
  * SHEET LAYOUT (auto-created on first run):
- * Col A: Timestamp | B: Event | C: Full Name | D: Role | E: Team Name | F: User ID
+ * Col A: Timestamp | B: Event | C: Full Name | D: USN | E: Branch | F: Batch
+ * Col G: Role | H: Team Name | I: User ID
+ *
+ * NOTE: If your sheet already exists with the old 6-column layout, either:
+ *   (a) Delete the 'Registrations' sheet so it is recreated with new headers, OR
+ *   (b) Manually insert the 3 new columns (USN, Branch, Batch) after Full Name.
  */
 
 const SHEET_NAME = 'Registrations';
@@ -32,22 +37,30 @@ function doPost(e) {
         'Timestamp',
         'Event',
         'Full Name',
+        'USN',
+        'Branch',
+        'Batch',
         'Role',
         'Team Name',
         'User ID',
       ]);
       // Bold the header row
-      sheet.getRange(1, 1, 1, 6).setFontWeight('bold');
+      sheet.getRange(1, 1, 1, 9).setFontWeight('bold');
+      // Freeze header row
+      sheet.setFrozenRows(1);
     }
 
     // Parse the JSON payload from Supabase
     const data = JSON.parse(e.postData.contents);
 
-    // Append a new row
+    // Append a new row with all profile fields
     sheet.appendRow([
       new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
       data.event     || '',
       data.full_name || '',
+      data.usn       || '',
+      data.branch    || '',
+      data.batch     || '',
       data.role      || '',
       data.team_name || '',
       data.id        || '',
