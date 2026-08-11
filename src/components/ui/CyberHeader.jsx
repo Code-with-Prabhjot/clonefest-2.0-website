@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-export default function CyberHeader({ variant = 'cyan' }) {
+export default function CyberHeader({ variant = 'cyan', customLogo = '/logos/coding-club.png' }) {
   const colorMap = {
     cyan: { border: 'border-[#00F0FF]', shadow: 'shadow-[0_0_15px_rgba(0,240,255,0.2)]', text: 'text-[#00F0FF] drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]' },
     green: { border: 'border-[#00FF00]', shadow: 'shadow-[0_0_15px_rgba(0,255,0,0.2)]', text: 'text-[#00FF00] drop-shadow-[0_0_8px_rgba(0,255,0,0.8)]' },
@@ -30,7 +30,7 @@ export default function CyberHeader({ variant = 'cyan' }) {
         {/* Right Logo */}
         <div className="flex items-center">
           <img
-            src="/logos/coding-club.png"
+            src={customLogo}
             alt="Coding Club Logo"
             className="h-10 w-auto md:h-12 md:w-auto object-contain filter drop-shadow-[0_0_5px_rgba(255,255,255,0.5)] hover:scale-110 transition-transform duration-300"
           />

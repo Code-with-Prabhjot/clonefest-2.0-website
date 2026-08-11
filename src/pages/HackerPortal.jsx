@@ -160,7 +160,7 @@ function Dashboard({ user, profile, team, tracks, submissions, refetch }) {
       style={{ position: 'relative' }}
     >
       <CyberGrid variant="cyan" />
-      <CyberHeader variant="cyan" />
+      <CyberHeader variant="cyan" customLogo="/assets/cc%20new%20logo.jpeg" />
 
       <div
         style={{
