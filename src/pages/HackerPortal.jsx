@@ -7,6 +7,8 @@ import CreateTeamForm from '../components/auth/CreateTeamForm';
 import JoinTeamForm from '../components/auth/JoinTeamForm';
 import TrackGrid from '../components/hacker/TrackGrid';
 import SubmissionLog from '../components/hacker/SubmissionLog';
+import SquadCard from '../components/hacker/SquadCard';
+import ProfileDetailsForm from '../components/hacker/ProfileDetailsForm';
 import { useHackerData } from '../hooks/useHackerData';
 
 // ─── Loading screen ──────────────────────────────────────────────────────────
@@ -181,7 +183,10 @@ function Dashboard({ user, profile, team, tracks, submissions, refetch }) {
               View leaderboard →
             </Link>
           </div>
-          <StatusCard profile={profile} team={team} />
+          <div className="grid items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,320px)]">
+            <StatusCard profile={profile} team={team} />
+            <SquadCard profile={profile} />
+          </div>
         </div>
 
         {/* ── Section: Mission dossier (track grid) ─────────────────────── */}
@@ -231,6 +236,29 @@ function Dashboard({ user, profile, team, tracks, submissions, refetch }) {
   );
 }
 
+function OnboardingShell({ children }) {
+  return (
+    <div className="min-h-screen bg-[#080D0C] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-[var(--pet-lane)]">
+      <CyberGrid variant="cyan" />
+      <div className="z-10 w-full max-w-md flex flex-col items-center mt-10">
+        <p
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 10, letterSpacing: '0.24em', textTransform: 'uppercase',
+            color: '#5D91A6', marginBottom: 12,
+          }}
+        >
+          Operative portal
+        </p>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: '#E4EEF2', marginBottom: 32, textAlign: 'center' }}>
+          Registration
+        </h1>
+        <div className={`${PANEL} p-7 sm:p-8 w-full`}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
 function SectionLabel({ children }) {
   return (
     <p
@@ -251,10 +279,21 @@ function SectionLabel({ children }) {
 // ─── Root export ──────────────────────────────────────────────────────────────
 export default function HackerPortal() {
   const { user, profile, team, tracks, submissions, loading, refetch } = useHackerData();
+  const [detailsDone, setDetailsDone] = useState(false);
 
   if (loading) return <LoadingScreen />;
 
+  // Registration details are collected once, before squad setup. `usn` does
+  // not exist on profiles yet, so detailsDone carries it for now; once the
+  // column lands this gate becomes persistent with no other change.
   if (!profile || profile.role === 'unassigned') {
+    if (!profile?.usn && !detailsDone) {
+      return (
+        <OnboardingShell step="Step 1 of 2">
+          <ProfileDetailsForm onComplete={() => setDetailsDone(true)} />
+        </OnboardingShell>
+      );
+    }
     return <OnboardingScreen user={user} />;
   }
 
