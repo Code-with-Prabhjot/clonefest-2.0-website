@@ -59,9 +59,9 @@ export default function SurvivalGuide() {
                     
                     <Panel kicker="REGISTRATION PROTOCOL" className="md:col-span-2 lg:col-span-3">
                         <ul className="mt-4 grid gap-4 md:grid-cols-3 font-mono text-sm leading-relaxed text-[#B3E0F2]/90">
-                            <li><span className="text-[#477346] mr-2">01.</span>Leader logs in & clicks 'Forge a Squad'.</li>
-                            <li><span className="text-[#477346] mr-2">02.</span>Leader copies generated 3-part hex Invite Code.</li>
-                            <li><span className="text-[#477346] mr-2">03.</span>Teammates log in, click 'Enlist' & paste code.</li>
+                            <li><span className="text-[#477346] mr-2">01.</span>The Team Leader logs in first and clicks the 'Forge a Squad' button to create your team.</li>
+                            <li><span className="text-[#477346] mr-2">02.</span>The Leader copies the unique Invite Code from their dashboard and sends it to the rest of the group.</li>
+                            <li><span className="text-[#477346] mr-2">03.</span>The other teammates log in, click 'Enlist', and paste that exact code to officially join the squad.</li>
                         </ul>
                     </Panel>
 
