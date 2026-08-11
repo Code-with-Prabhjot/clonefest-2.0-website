@@ -270,7 +270,6 @@ export default class JudgePortal extends React.Component {
       if (attempted && (v === '' || v === undefined)) return 'Required before a final score can be submitted.';
       return '';
     };
-    const errors = CRIT.map(errFor).filter(Boolean);
     const overMax = CRIT.some(c => vals[c.k] !== '' && vals[c.k] !== undefined && Number(vals[c.k]) > c.max);
     const blanks = CRIT.filter(c => vals[c.k] === '' || vals[c.k] === undefined).length;
 

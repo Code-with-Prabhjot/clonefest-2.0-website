@@ -5,15 +5,18 @@ export default function TypewriterText({ text, speed = 50, className = '' }) {
 
   useEffect(() => {
     let index = 0;
-    setDisplayedText('');
-    const interval = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText(text.slice(0, index + 1));
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, speed);
+    let interval;
+    (async () => {
+      setDisplayedText('');
+      interval = setInterval(() => {
+        if (index < text.length) {
+          setDisplayedText(text.slice(0, index + 1));
+          index++;
+        } else {
+          clearInterval(interval);
+        }
+      }, speed);
+    })();
 
     return () => clearInterval(interval);
   }, [text, speed]);

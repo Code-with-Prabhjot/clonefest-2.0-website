@@ -121,18 +121,23 @@ export default function About() {
                     WHAT IS CLONEFEST 2.0?
                 </h2>
 
+                <div className="my-10 border-y border-[#B3E0F2]/20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#5D91A6]/20 via-[#080D0C] to-[#080D0C] py-12 text-center shadow-[0_0_40px_rgba(93,145,166,0.15)]">
+                    <p className="font-mono text-[12px] tracking-[0.4em] text-[#5D91A6] uppercase mb-4">
+                        Rewards System Online
+                    </p>
+                    <h3 className="crt-glow font-display text-[clamp(2.5rem,6vw,4.5rem)] font-black leading-none text-[#B3E0F2]">
+                        ₹7,000
+                    </h3>
+                    <p className="mt-4 font-mono text-sm tracking-[0.1em] text-[#B3E0F2]/80 uppercase">
+                        Total Prize Pool
+                    </p>
+                </div>
+
                 <div className="mt-8 grid gap-5 md:grid-cols-2">
                     <Panel kicker="THE SPRINT">
                         <p className="mt-4 font-mono text-sm leading-relaxed text-[#B3E0F2]/90">
                             A 10-day open-source sprint to build, improve, and
-                            contribute to real-world codebases.
-                        </p>
-                        <p className="mt-4 font-mono text-sm leading-relaxed text-[#B3E0F2]/90">
-                            Win from a{" "}
-                            <span className="crt-glow font-bold text-[#B3E0F2]">
-                                ₹7,000 prize pool
-                            </span>{" "}
-                            - gain hands-on open-source experience for your resume.
+                            contribute to real-world codebases. Gain hands-on open-source experience for your resume.
                         </p>
                     </Panel>
 

@@ -21,7 +21,10 @@ export default function TerminalBoot({ onComplete }) {
     const [count, setCount] = useState(0);
     const done = useRef(false);
     const finishRef = useRef(onComplete);
-    finishRef.current = onComplete;
+    
+    useEffect(() => {
+        finishRef.current = onComplete;
+    }, [onComplete]);
 
     useEffect(() => {
         const iv = setInterval(

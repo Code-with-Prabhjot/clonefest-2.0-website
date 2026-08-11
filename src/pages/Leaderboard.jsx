@@ -88,7 +88,9 @@ export default function Leaderboard() {
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      load();
+    })();
     // Highlighting your own squad is a nicety — never block the board on it.
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data?.user) return;

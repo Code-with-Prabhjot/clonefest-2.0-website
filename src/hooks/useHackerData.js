@@ -84,7 +84,9 @@ export function useHackerData() {
   }, []);
 
   useEffect(() => {
-    fetchAll();
+    (async () => {
+      fetchAll();
+    })();
   }, [fetchAll]);
 
   return { user, profile, team, tracks, submissions, loading, refetch: fetchAll };
