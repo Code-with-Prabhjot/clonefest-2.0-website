@@ -42,8 +42,9 @@ function OnboardingScreen({ user }) {
   return (
     <div className="min-h-screen bg-[#080D0C] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-[var(--pet-lane)]">
       <CyberGrid variant="cyan" />
+      <CyberHeader variant="cyan" />
 
-      <div className="z-10 w-full max-w-4xl flex flex-col items-center mt-10">
+      <div className="z-10 w-full max-w-4xl flex flex-col items-center pt-28 sm:pt-24">
         <p
           style={{
             fontFamily: "'JetBrains Mono', monospace",
@@ -240,7 +241,8 @@ function OnboardingShell({ children }) {
   return (
     <div className="min-h-screen bg-[#080D0C] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-[var(--pet-lane)]">
       <CyberGrid variant="cyan" />
-      <div className="z-10 w-full max-w-md flex flex-col items-center mt-10">
+      <CyberHeader variant="cyan" />
+      <div className="z-10 w-full max-w-md flex flex-col items-center pt-28 sm:pt-24">
         <p
           style={{
             fontFamily: "'JetBrains Mono', monospace",
