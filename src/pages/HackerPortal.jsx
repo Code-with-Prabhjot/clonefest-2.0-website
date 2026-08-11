@@ -155,7 +155,7 @@ function StatusCard({ profile, team }) {
 }
 
 // ─── Main dashboard (has a team) ─────────────────────────────────────────────
-function Dashboard({ user, profile, team, tracks, submissions, refetch }) {
+function Dashboard({ profile, team, tracks, submissions, refetch }) {
   return (
     <div
       className="min-h-screen bg-[#080D0C] text-[#E4EEF2] pb-[var(--pet-lane)]"

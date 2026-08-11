@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Lenis from 'lenis';
 import { AnimatePresence } from 'framer-motion';
-import BackgroundCanvas from '../components/landing/BackgroundCanvas';
 import TerminalBoot from '../components/landing/TerminalBoot';
 import Header from '../components/landing/Header';
 import Hero from '../components/landing/Hero';
@@ -55,12 +54,6 @@ export default function Landing() {
 
   return (
     <div className="relative w-full bg-[#080D0C] text-[#B3E0F2]">
-      {/* Fixed, so the canvas and CRT treatment stay put as the page scrolls
-          rather than scrolling away above the About section. */}
-      <BackgroundCanvas />
-      <div className="noise-overlay pointer-events-none fixed inset-0 z-10" aria-hidden="true" />
-      <div className="scanlines pointer-events-none fixed inset-0 z-10" aria-hidden="true" />
-      <div className="vignette pointer-events-none fixed inset-0 z-10" aria-hidden="true" />
 
       <Header
         booted={booted}
