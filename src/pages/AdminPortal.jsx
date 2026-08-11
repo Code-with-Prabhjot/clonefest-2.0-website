@@ -1,6 +1,142 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { sx } from '../lib/sx';
+import { supabase } from '../lib/supabase';
 import './AdminPortal.css';
+
+// ── Submission Timer Panel ────────────────────────────────────────────────────
+// Standalone functional component so it can use React hooks.
+function SubmissionTimerPanel() {
+  const [deadline, setDeadline]     = useState('');
+  const [open, setOpen]             = useState(true);
+  const [saving, setSaving]         = useState(false);
+  const [saved, setSaved]           = useState(false);
+  const [errMsg, setErrMsg]         = useState(null);
+  const [loaded, setLoaded]         = useState(false);
+
+  // Load current settings
+  useEffect(() => {
+    supabase
+      .from('event_settings')
+      .select('submission_deadline, submissions_open')
+      .eq('id', 1)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) { console.error('[AdminTimer] load error:', error); return; }
+        if (data) {
+          // Convert UTC timestamptz → local datetime-local value
+          if (data.submission_deadline) {
+            const d = new Date(data.submission_deadline);
+            // datetime-local needs YYYY-MM-DDTHH:mm
+            const pad = n => String(n).padStart(2, '0');
+            const local = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            setDeadline(local);
+          }
+          setOpen(data.submissions_open ?? true);
+        }
+        setLoaded(true);
+      });
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaved(false);
+    setErrMsg(null);
+    const deadlineIso = deadline ? new Date(deadline).toISOString() : null;
+    const { error } = await supabase
+      .from('event_settings')
+      .update({ submission_deadline: deadlineIso, submissions_open: open })
+      .eq('id', 1);
+    setSaving(false);
+    if (error) { setErrMsg(error.message); return; }
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleClear = async () => {
+    setDeadline('');
+    const { error } = await supabase
+      .from('event_settings')
+      .update({ submission_deadline: null })
+      .eq('id', 1);
+    if (error) setErrMsg(error.message);
+    else { setSaved(true); setTimeout(() => setSaved(false), 2000); }
+  };
+
+  if (!loaded) return null;
+
+  const MONO  = "font-family:'JetBrains Mono',monospace";
+  const ICE   = '#B3E0F2', STEEL = '#5D91A6', DIM = '#56707B', TXT = '#E4EEF2';
+  const CLAY  = '#C2564B', MOSS  = '#7FB27E';
+
+  return (
+    <div style={{ marginTop: 32, background: '#112026', border: '1px solid rgba(179,224,242,.14)', borderRadius: 3, overflow: 'hidden', animation: 'rise .45s ease-out .2s both' }}>
+      {/* Header */}
+      <div style={{ padding: '18px 24px 14px', borderBottom: '1px solid rgba(179,224,242,.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: STEEL, marginBottom: 6 }}>SUBMISSION WINDOW</div>
+          <div style={{ fontFamily: "'Clash Grotesk',sans-serif", fontWeight: 500, fontSize: 20, color: TXT }}>Timer Control</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ width: 8, height: 8, background: open ? MOSS : CLAY, borderRadius: '50%', display: 'inline-block', boxShadow: open ? `0 0 10px ${MOSS}88` : 'none' }} />
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', color: open ? MOSS : CLAY }}>
+            {open ? 'Submissions open' : 'Submissions closed'}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ padding: '20px 24px 24px', display: 'grid', gap: 20 }}>
+        {/* Kill switch */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#0B1519', border: '1px solid rgba(179,224,242,.10)', borderRadius: 2 }}>
+          <div>
+            <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: DIM, marginBottom: 4 }}>KILL SWITCH</div>
+            <div style={{ fontSize: 13, color: '#8AA5AE' }}>Force-close submissions regardless of deadline</div>
+          </div>
+          <button
+            onClick={() => setOpen(o => !o)}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px 6px 8px', background: 'transparent', cursor: 'pointer', transition: 'all .3s', borderRadius: 2, border: `1px solid ${open ? 'rgba(179,224,242,.4)' : 'rgba(194,86,75,.4)'}` }}
+          >
+            <span style={{ width: 20, height: 12, display: 'block', transition: 'all .3s cubic-bezier(.22,1,.36,1)', border: `1px solid ${open ? ICE : CLAY}`, background: open ? ICE : CLAY, boxShadow: open ? `0 0 12px rgba(179,224,242,.5)` : 'none' }} />
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', transition: 'color .3s', color: open ? ICE : CLAY }}>{open ? 'OPEN' : 'CLOSED'}</span>
+          </button>
+        </div>
+
+        {/* Deadline picker */}
+        <div>
+          <label style={{ display: 'block', fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: DIM, marginBottom: 8 }}>SUBMISSION DEADLINE</label>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <input
+              type="datetime-local"
+              value={deadline}
+              onChange={e => setDeadline(e.target.value)}
+              style={{ flex: 1, minWidth: 200, background: '#0B1519', border: '1px solid rgba(179,224,242,.15)', borderRadius: 2, padding: '11px 14px', fontFamily: MONO, fontSize: 13, color: TXT, outline: 'none', colorScheme: 'dark' }}
+            />
+            {deadline && (
+              <button onClick={handleClear} style={{ padding: '11px 14px', background: 'transparent', border: `1px solid rgba(194,86,75,.35)`, borderRadius: 2, color: CLAY, fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', cursor: 'pointer' }}>CLEAR</button>
+            )}
+          </div>
+          <p style={{ fontFamily: MONO, fontSize: 9, color: '#2E4A54', letterSpacing: '.1em', marginTop: 6 }}>Set to local time — stored as UTC, synced in realtime to all hacker portals</p>
+        </div>
+
+        {/* Error */}
+        {errMsg && (
+          <div style={{ background: 'rgba(194,86,75,.1)', border: '1px solid rgba(194,86,75,.4)', borderLeft: `2px solid ${CLAY}`, borderRadius: 2, padding: '10px 14px' }}>
+            <p style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', textTransform: 'uppercase', color: CLAY, marginBottom: 4 }}>Save failed</p>
+            <p style={{ fontSize: 12.5, color: '#E6A79E', margin: 0 }}>{errMsg}</p>
+          </div>
+        )}
+
+        {/* Save */}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          style={{ padding: '13px 0', background: saved ? 'rgba(127,178,126,.15)' : ICE, color: saved ? MOSS : '#080D0C', border: `1px solid ${saved ? MOSS : ICE}`, borderRadius: 2, fontFamily: "'Satoshi',sans-serif", fontSize: 13, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.65 : 1, transition: 'all .25s', letterSpacing: '.02em' }}
+        >
+          {saving ? 'Saving…' : saved ? '✓ Settings saved — hackers see this instantly' : 'Save timer settings'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const ICE = '#B3E0F2', STEEL = '#5D91A6', MOSS_LT = '#7FB27E',
       CLAY = '#C2564B', TXT = '#E4EEF2', MUTE = '#8AA5AE', DIM = '#56707B';
@@ -1026,6 +1162,7 @@ export default class AdminPortal extends React.Component {
                   </div>
                 </React.Fragment>)}
               </div>
+              <SubmissionTimerPanel />
             </div>
           </> : null}
 
