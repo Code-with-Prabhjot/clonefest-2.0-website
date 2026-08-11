@@ -78,8 +78,8 @@ export default function CreateTeamForm({ user }) {
       if (profileError) throw profileError;
 
       setSuccess(true);
-      // Give it a short delay then reload to update portal state
-      setTimeout(() => window.location.reload(), 1500);
+      // Give it a short delay then redirect to the team page
+      setTimeout(() => window.location.href = '/portal/team', 1500);
     } catch (err) {
       setError('Transaction Failed: ' + err.message);
     } finally {

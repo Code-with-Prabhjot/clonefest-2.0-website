@@ -42,7 +42,7 @@ export default function JoinTeamForm({ user }) {
       if (profileError) throw profileError;
 
       setSuccess(true);
-      setTimeout(() => window.location.reload(), 1500);
+      setTimeout(() => window.location.href = '/portal/team', 1500);
     } catch (err) {
       setError('Enlistment Failed: ' + err.message);
     } finally {

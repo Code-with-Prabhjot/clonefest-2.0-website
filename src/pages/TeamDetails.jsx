@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import CyberGrid from '../components/ui/CyberGrid';
 import CyberHeader from '../components/ui/CyberHeader';
 import { supabase } from '../lib/supabase';
@@ -133,23 +133,7 @@ export default function TeamDetails() {
   }
 
   if (!profile?.team_name) {
-    return shell(
-      <div className="py-20 text-center">
-        <Kicker>No squad</Kicker>
-        <h1 className="font-clash mt-3 text-[26px] font-medium text-[#E4EEF2]">
-          You are not in a squad yet
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-[13.5px] leading-relaxed text-[#8AA5AE]">
-          Forge a squad or enlist with an invite code, then come back here.
-        </p>
-        <Link
-          to="/portal"
-          className="mt-6 inline-block rounded-[2px] border border-[#B3E0F2]/24 px-4 py-2.5 font-jet text-[10px] uppercase tracking-[0.16em] text-[#8AA5AE] transition-colors hover:border-[#B3E0F2]/45 hover:text-[#E4EEF2]"
-        >
-          Back to portal
-        </Link>
-      </div>,
-    );
+    return <Navigate to="/portal" replace />;
   }
 
   const isLead = profile?.role === 'lead';
