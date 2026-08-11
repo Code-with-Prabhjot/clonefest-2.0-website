@@ -31,41 +31,49 @@ export function useHackerData() {
     setUser(authUser);
 
     // 2. Profile
-    const { data: profileData } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', authUser.id)
       .maybeSingle();
+
+    if (profileError) console.error('Supabase fetch error:', profileError);
 
     setProfile(profileData);
 
     // Fetch team directly using team_name
     let teamData = null;
     if (profileData?.team_name) {
-      const { data: tData } = await supabase
+      const { data: tData, error: teamError } = await supabase
         .from('teams')
         .select('*')
         .eq('name', profileData.team_name)
         .maybeSingle();
+      
+      if (teamError) console.error('Supabase fetch error:', teamError);
       teamData = tData;
     }
     setTeam(teamData);
 
     // 3. All tracks (problem statements)
-    const { data: trackData } = await supabase
+    const { data: trackData, error: trackError } = await supabase
       .from('tracks')
       .select('*')
       .order('id');
+
+    if (trackError) console.error('Supabase fetch error:', trackError);
 
     setTracks(trackData ?? []);
 
     // 4. Submissions for this team (only if they belong to one)
     if (profileData?.team_name) {
-      const { data: subData } = await supabase
+      const { data: subData, error: subError } = await supabase
         .from('submissions')
         .select('*')
         .eq('team_name', profileData.team_name)
         .order('created_at', { ascending: false });
+
+      if (subError) console.error('Supabase fetch error:', subError);
 
       setSubmissions(subData ?? []);
     } else {
