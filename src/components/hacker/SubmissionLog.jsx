@@ -114,7 +114,7 @@ export default function SubmissionLog({ submissions }) {
         >
           <thead>
             <tr>
-              {['Track', 'PR URL', 'Status', 'Date'].map(col => (
+              {['Track', 'GitHub repository URL', 'Status', 'Date'].map(col => (
                 <th
                   key={col}
                   style={{

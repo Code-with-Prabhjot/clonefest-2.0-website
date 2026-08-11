@@ -203,7 +203,7 @@ function Dashboard({ profile, team, tracks, submissions, refetch }) {
                   color: '#5D91A6',
                 }}
               >
-                Click any mission to submit a PR
+                Click any mission to submit a GitHub repository
               </span>
             )}
             {profile?.role === 'member' && (

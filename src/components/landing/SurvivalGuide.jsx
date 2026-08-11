@@ -70,13 +70,13 @@ export default function SurvivalGuide() {
                             <li><span className="text-[#477346] mr-2">&gt;</span>Aug 20: Mission 01 Drops.</li>
                             <li><span className="text-[#477346] mr-2">&gt;</span>Aug 25: Mission 01 Ends / Mission 02 Drops.</li>
                             <li><span className="text-[#477346] mr-2">&gt;</span>Aug 30: Mission 02 Ends.</li>
-                            <li className="text-[#C2564B] mt-2"><span className="mr-2">!</span>Strict 23:59 deadlines. No late PRs.</li>
+                            <li className="text-[#C2564B] mt-2"><span className="mr-2">!</span>Strict 23:59 deadlines. No late GitHub repositories.</li>
                         </ul>
                     </Panel>
 
                     <Panel kicker="ENFORCEMENT" className="md:col-span-1">
                         <ul className="mt-4 space-y-2 font-mono text-sm leading-relaxed text-[#B3E0F2]/90">
-                            <li><span className="text-[#477346] mr-2">&gt;</span>Only Team Leads can submit PRs.</li>
+                            <li><span className="text-[#477346] mr-2">&gt;</span>Only Team Leads can submit GitHub repositories.</li>
                             <li className="text-[#C2564B]"><span className="text-[#477346] mr-2">&gt;</span>Plagiarism = immediate disqualification.</li>
                         </ul>
                     </Panel>

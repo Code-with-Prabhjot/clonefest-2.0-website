@@ -223,7 +223,7 @@ export default function SubmitPRModal({
   }, [onClose]);
 
   const validateGitHub = (url) =>
-    /^https?:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+/.test(url.trim());
+    /^https?:\/\/github\.com\/[^/]+\/[^/]+/.test(url.trim());
 
   const validateUrl = (url) => {
     if (!url.trim()) return true; // optional field
@@ -236,7 +236,7 @@ export default function SubmitPRModal({
     setError(null);
 
     if (!validateGitHub(prUrl)) {
-      setError('GitHub PR link required — e.g. github.com/owner/repo/pull/42');
+      setError('GitHub repository link required — e.g. github.com/owner/repo');
       return;
     }
     if (!validateUrl(deployedUrl)) {
@@ -334,7 +334,7 @@ export default function SubmitPRModal({
               </span>
             </div>
             <p style={{ color: '#E4EEF2', fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
-              PR logged to grid
+              GitHub repository logged to grid
             </p>
             <p style={{ color: '#8AA5AE', fontSize: 13.5, lineHeight: 1.6 }}>
               Your submission is pending review. Closing…
@@ -625,8 +625,8 @@ export default function SubmitPRModal({
 
               {/* GitHub PR URL */}
               <Field
-                label="> GitHub PR URL"
-                hint="Must be a valid pull request link — github.com/owner/repo/pull/123"
+                label="> GitHub URL"
+                hint="Must be a valid repository link — github.com/owner/repo"
               >
                 <input
                   ref={prRef}
@@ -634,7 +634,7 @@ export default function SubmitPRModal({
                   value={prUrl}
                   onChange={(e) => setPrUrl(e.target.value)}
                   disabled={!canSubmit || loading}
-                  placeholder="https://github.com/owner/repo/pull/42"
+                  placeholder="https://github.com/owner/repo"
                   style={{
                     ...INPUT_BASE,
                     opacity: !canSubmit ? 0.45 : 1,
