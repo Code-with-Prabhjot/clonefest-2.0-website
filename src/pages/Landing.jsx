@@ -6,6 +6,7 @@ import Header from '../components/landing/Header';
 import Hero from '../components/landing/Hero';
 import Marquee from '../components/landing/Marquee';
 import About from '../components/landing/About';
+import SurvivalGuide from '../components/landing/SurvivalGuide';
 import FAQModal from '../components/landing/FAQModal';
 
 export default function Landing() {
@@ -52,6 +53,14 @@ export default function Landing() {
     }
   };
 
+  const scrollToRules = () => {
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo('#rules', { duration: 1.2 });
+    } else {
+      document.getElementById('rules')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="relative w-full bg-[#080D0C] text-[#B3E0F2]">
 
@@ -59,6 +68,7 @@ export default function Landing() {
         booted={booted}
         onFaqClick={() => setFaqOpen(true)}
         onAboutClick={scrollToAbout}
+        onRulesClick={scrollToRules}
       />
 
       {/* The hero keeps its own full viewport, so About sits entirely below the
@@ -68,6 +78,7 @@ export default function Landing() {
       </section>
 
       <About />
+      <SurvivalGuide />
 
       <Marquee booted={booted} />
 

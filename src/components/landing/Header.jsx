@@ -8,7 +8,7 @@ const NAV_BUTTON =
     "bg-transparent font-mono text-[13px] uppercase tracking-[0.2em] " +
     "text-[#B3E0F2]/70 transition-colors duration-300 hover:text-[#B3E0F2] sm:text-sm";
 
-export default function Header({ booted, onFaqClick, onAboutClick }) {
+export default function Header({ booted, onFaqClick, onAboutClick, onRulesClick }) {
     return (
         <motion.header
             initial={{ y: -56, opacity: 0 }}
@@ -37,6 +37,13 @@ export default function Header({ booted, onFaqClick, onAboutClick }) {
                             className={NAV_BUTTON}
                         >
                             About Event
+                        </button>
+                        <button
+                            data-testid="nav-rules"
+                            onClick={onRulesClick}
+                            className={NAV_BUTTON}
+                        >
+                            Rules
                         </button>
                         <button
                             data-testid="nav-faq"
