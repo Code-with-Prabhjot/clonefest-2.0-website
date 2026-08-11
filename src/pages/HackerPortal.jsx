@@ -7,7 +7,6 @@ import CreateTeamForm from '../components/auth/CreateTeamForm';
 import JoinTeamForm from '../components/auth/JoinTeamForm';
 import TrackGrid from '../components/hacker/TrackGrid';
 import SubmissionLog from '../components/hacker/SubmissionLog';
-import SquadCard from '../components/hacker/SquadCard';
 import ProfileDetailsForm from '../components/hacker/ProfileDetailsForm';
 import { useHackerData } from '../hooks/useHackerData';
 
@@ -176,18 +175,22 @@ function Dashboard({ user, profile, team, tracks, submissions, refetch }) {
         <div style={{ marginBottom: 48 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
             <SectionLabel>&gt; Operative status</SectionLabel>
-            <Link
-              to="/leaderboard"
-              className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
-              style={{ marginBottom: 14 }}
-            >
-              View leaderboard →
-            </Link>
+            <span className="flex items-center gap-5" style={{ marginBottom: 14 }}>
+              <Link
+                to="/portal/team"
+                className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
+              >
+                Squad detail →
+              </Link>
+              <Link
+                to="/leaderboard"
+                className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
+              >
+                View leaderboard →
+              </Link>
+            </span>
           </div>
-          <div className="grid items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,320px)]">
-            <StatusCard profile={profile} team={team} />
-            <SquadCard profile={profile} />
-          </div>
+          <StatusCard profile={profile} team={team} />
         </div>
 
         {/* ── Section: Mission dossier (track grid) ─────────────────────── */}
