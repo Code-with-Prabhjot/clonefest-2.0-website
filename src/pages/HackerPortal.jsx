@@ -171,26 +171,22 @@ function Dashboard({ profile, team, tracks, submissions, refetch }) {
           padding: '100px 20px 60px',
         }}
       >
-        {/* ── Section: Operative status ─────────────────────────────────── */}
-        <div style={{ marginBottom: 48 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
-            <SectionLabel>&gt; Operative status</SectionLabel>
-            <span className="flex items-center gap-5" style={{ marginBottom: 14 }}>
-              <Link
-                to="/portal/team"
-                className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
-              >
-                Squad detail →
-              </Link>
-              <Link
-                to="/leaderboard"
-                className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
-              >
-                View leaderboard →
-              </Link>
-            </span>
+        {/* ── Section: Top Links ─────────────────────────────────── */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32, marginBottom: 56 }}>
+          <div className="flex items-center gap-8">
+            <Link
+              to="/portal/team"
+              className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
+            >
+              Team portal →
+            </Link>
+            <Link
+              to="/leaderboard"
+              className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
+            >
+              View leaderboard →
+            </Link>
           </div>
-          <StatusCard profile={profile} team={team} />
         </div>
 
         {/* ── Section: Mission dossier (track grid) ─────────────────────── */}

@@ -146,9 +146,14 @@ export default function Leaderboard() {
             </p>
           </div>
           <div className="flex-1" />
-          <Link to="/" className="font-jet text-[10px] uppercase tracking-[0.18em] text-[#56707B] transition-colors hover:text-[#B3E0F2]">
-            ← Back to site
-          </Link>
+          <div className="flex items-center gap-5">
+            <Link to="/portal/team" className="font-jet text-[10px] uppercase tracking-[0.18em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]">
+              Team dashboard
+            </Link>
+            <Link to="/portal" className="font-jet text-[10px] uppercase tracking-[0.18em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]">
+              Challenges dashboard
+            </Link>
+          </div>
         </div>
       </header>
 

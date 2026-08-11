@@ -11,14 +11,14 @@ export default function AuthPage() {
     // Check if session already exists
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate('/portal'); // Route to the standard squad portal
+        navigate('/portal/team'); // Route to the standard squad portal
       }
     });
 
     // Listen for auth state changes (crucial for OAuth redirects)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        navigate('/portal'); // Route to the standard squad portal
+        navigate('/portal/team'); // Route to the standard squad portal
       }
     });
 

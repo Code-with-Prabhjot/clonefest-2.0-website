@@ -4,7 +4,7 @@ import CyberGrid from '../components/ui/CyberGrid';
 import CyberHeader from '../components/ui/CyberHeader';
 import { supabase } from '../lib/supabase';
 import { useHackerData } from '../hooks/useHackerData';
-import SubmissionCards from '../components/hacker/SubmissionCards';
+
 
 /**
  * Squad detail page.
@@ -167,7 +167,7 @@ export default function TeamDetails() {
           to="/portal"
           className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
         >
-          ← Back to portal
+          Challenge portal →
         </Link>
       </div>
 
@@ -254,15 +254,7 @@ export default function TeamDetails() {
           )}
         </div>
 
-        <div>
-          <div className="mb-3 flex items-baseline justify-between gap-3">
-            <Kicker>Submission history</Kicker>
-            <span className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#8AA5AE]">
-              {(submissions || []).length} total
-            </span>
-          </div>
-          <SubmissionCards submissions={submissions} />
-        </div>
+
         </div>
 
         {/* Identity */}
