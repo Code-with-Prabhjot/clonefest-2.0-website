@@ -19,7 +19,7 @@ export default function LoginForm() {
     const rvcePattern = /^[a-z]+\.[a-z]{2}(\d{2})@rvce\.edu\.in$/i;
     const match = addr.trim().match(rvcePattern);
     if (!match) return 'Enter a correct email id';
-    if (match[1] !== '25') return 'Only First Years can participate';
+    if (match[1] !== '25') return 'Only Second Years can participate';
     return null; // valid
   };
 
