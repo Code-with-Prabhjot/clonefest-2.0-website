@@ -16,42 +16,7 @@ const CRIT = [
   {k:'iv', name:'Innovation & Going Beyond', max:20, hint:'Anything past the brief the squad chose to build and can justify in review.'}
 ];
 
-const SQUADS_FALLBACK = [
-  {name:'GHOST_IN_SHELL', track:'T4 · Realtime',  subs:2, status:'scored', updated:'08 Aug · 11:20', prPts:19, prMerged:3, prTotal:5, members:[['bashful','LEAD'],['pixelmoth',''],['nulldiv',''],['tracelog','']], late:[0,0,0]},
-  {name:'SEGFAULT_SALLY', track:'T2 · Data',      subs:2, status:'scored', updated:'08 Aug · 10:04', prPts:16, prMerged:3, prTotal:4, members:[['heapdump','LEAD'],['kernelkid',''],['nulldiv','']], late:[0,1,0]},
-  {name:'NULL_POINTER',   track:'T5 · UI Kit',    subs:2, status:'scored', updated:'07 Aug · 19:41', prPts:14, prMerged:2, prTotal:5, members:[['ax0lotl','LEAD'],['pixelmoth',''],['monospace',''],['quackd','']], late:[0,0,0]},
-  {name:'DEEP_THOUGHT',   track:'T1 · CMS',       subs:2, status:'draft',  updated:'09 Aug · 09:12', prPts:19, prMerged:3, prTotal:5, members:[['fortytwo','LEAD'],['nulldiv',''],['tracelog',''],['siglost',''],['quackd','']], late:[0,1,0]},
-  {name:'KERNEL_PANIC',   track:'T3 · Commerce',  subs:2, status:'none',   updated:'06 Aug · 22:15', prPts:8,  prMerged:2, prTotal:3, members:[['siglost','LEAD'],['heapdump',''],['monospace',''],['bashful','']], late:[0,0,0]},
-  {name:'RUBBER_DUCKS',   track:'T1 · CMS',       subs:2, status:'scored', updated:'07 Aug · 15:33', prPts:11, prMerged:2, prTotal:4, members:[['quackd','LEAD'],['tracelog',''],['pixelmoth',''],['notfound',''],['ax0lotl','']], late:[0,0,1]},
-  {name:'TABS_OVER_SPACES',track:'T5 · UI Kit',   subs:2, status:'draft',  updated:'09 Aug · 08:02', prPts:6,  prMerged:1, prTotal:3, members:[['monospace','LEAD'],['nulldiv','']], late:[0,0,0]},
-  {name:'FOUR_OH_FOUR',   track:'T2 · Data',      subs:1, status:'none',   updated:'05 Aug · 17:50', prPts:3,  prMerged:1, prTotal:2, members:[['notfound','LEAD'],['siglost',''],['kernelkid','']], late:[1,0,0]},
-  {name:'STACK_OVERFLOW', track:'T3 · Commerce',  subs:2, status:'scored', updated:'06 Aug · 13:27', prPts:13, prMerged:2, prTotal:5, members:[['dupequest','LEAD'],['heapdump',''],['bashful','']], late:[0,0,0]},
-  {name:'YAK_SHAVERS',    track:'T4 · Realtime',  subs:2, status:'scored', updated:'05 Aug · 20:11', prPts:9,  prMerged:2, prTotal:3, members:[['razorwire','LEAD'],['quackd',''],['tracelog',''],['notfound','']], late:[0,0,0]}
-];
 
-const WEEK_TITLES = ['Challenge 01', 'Challenge 02'];
-const WEEK_AT = ['25 Aug · 22:41', '30 Aug · 22:07'];
-const WEEK_DEADLINE = ['25 Aug · 23:59', '30 Aug · 23:59'];
-const NOTES = [
-  'Rewrote the legacy PHP templates as server components. Auth is session based for now; the migration script is in /scripts and is idempotent. Two known gaps: no pagination on the archive view, and image uploads cap at 4MB.',
-  'Ported the whole data layer to Postgres with row level security. Seed data ships in the repo. The old CSV importer is kept behind a feature flag because the org still runs it regularly.',
-  'Deployed on Fly with a Neon database and a GitHub Actions pipeline. Lighthouse is 96/100 on mobile. The realtime channel falls back to polling when websockets are blocked on campus wifi.'
-];
-
-const SEED = {
-  GHOST_IN_SHELL:{cq:18,fc:23,ux:19,dd:14,iv:20},
-  SEGFAULT_SALLY:{cq:17,fc:23,ux:18,dd:14,iv:19},
-  NULL_POINTER:{cq:16,fc:22,ux:18,dd:13,iv:18},
-  DEEP_THOUGHT:{cq:15,fc:20,ux:'',dd:12,iv:''},
-  RUBBER_DUCKS:{cq:12,fc:17,ux:13,dd:10,iv:12},
-  TABS_OVER_SPACES:{cq:9,fc:28,ux:11,dd:'',iv:6},
-  STACK_OVERFLOW:{cq:15,fc:20,ux:16,dd:12,iv:16},
-  YAK_SHAVERS:{cq:13,fc:19,ux:15,dd:11,iv:15}
-};
-const SEED_FB = {
-  DEEP_THOUGHT:'Strongest CMS rebuild in my group so far. The editor is genuinely pleasant and the migration script is the only one I trusted enough to run twice. ',
-  GHOST_IN_SHELL:'Exceptional across both challenges. The realtime layer degrades gracefully on campus wifi, which nobody else handled, and the docs read like a real product.'
-};
 
 const PRS = [
   {title:'Fix collision detection after canvas resize', num:212, author:'fortytwo', state:'Merged', files:6,  merged:'04 Aug · 18:22', pts:8},
@@ -151,7 +116,7 @@ class JudgePortalView extends React.Component {
           _subs: q.subs,
           _submissionId: q.latestSubmissionId,
         }))
-      : (this.props.loading ? [] : SQUADS_FALLBACK);
+      : [];
   }
 
   sq(){
@@ -303,10 +268,10 @@ class JudgePortalView extends React.Component {
     });
 
     const statDefs = [
-      {label:'Assigned to you', n:20, unit:'squads', note:'By admin v_kulkarni'},
-      {label:'Scored', n:12, unit:'final', note:'Locked and visible to admins'},
-      {label:'In progress', n:3, unit:'drafts', note:'Not yet submitted'},
-      {label:'Not started', n:5, unit:'squads', note:'No rubric entered'}
+      {label:'Assigned to you', n:this.props.progress?.assigned || 0, unit:'squads', note:'Assigned for review'},
+      {label:'Scored', n:this.props.progress?.scored || 0, unit:'final', note:'Locked and visible to admins'},
+      {label:'In progress', n:this.props.progress?.drafts || 0, unit:'drafts', note:'Not yet submitted'},
+      {label:'Not started', n:Math.max(0, (this.props.progress?.assigned || 0) - ((this.props.progress?.scored || 0) + (this.props.progress?.drafts || 0))), unit:'squads', note:'No rubric entered'}
     ];
 
     // ── detail ────────────────────────────────────────────
@@ -355,20 +320,29 @@ class JudgePortalView extends React.Component {
     const fb = s.feedback[name] || '';
     const prOk = prState === 'ready';
 
-    const weeks = [0,1].map(i => {
-      const submitted = i < q.subs;
-      const late = submitted && !!q.late[i];
+    const subsArray = (q._subs && q._subs.length > 0) ? q._subs : [null];
+    const weeks = subsArray.map((sub, i) => {
+      const submitted = !!sub;
+      const late = false;
       const chip = !submitted ? {label:'Not submitted', c:DIM, fill:'transparent', border:DIM}
         : locked ? {label:'Scored', c:ICE, fill:ICE, border:ICE}
         : {label:'Accepted', c:MOSS_LT, fill:MOSS_LT, border:MOSS_LT};
+        
+      const demoUrl = sub?.deployed_url || '';
+      const demoHost = demoUrl ? demoUrl.replace(/^https?:\/\//, '') : '';
+      const repoUrl = sub?.pr_url || '';
+      const repoHost = repoUrl ? repoUrl.replace(/^https?:\/\//, '') : '';
+
       return {
-        label:'SUBMISSION', title:WEEK_TITLES[i], submitted, missing:!submitted,
-        repo:'github.com/' + q.members[0][0] + '/cf2-w' + (i+1),
-        repoUrl:'https://github.com/' + q.members[0][0] + '/cf2-w' + (i+1),
-        demo:name.toLowerCase().replace(/_/g,'-') + '-w' + (i+1) + '.vercel.app',
-        demoUrl:'https://' + name.toLowerCase().replace(/_/g,'-') + '-w' + (i+1) + '.vercel.app',
-        notes:NOTES[i], at: submitted ? WEEK_AT[i] : WEEK_DEADLINE[i], lateBy:'48 MIN PAST DEADLINE',
-        lateStyle: late ? MONO + ';font-size:9px;letter-spacing:.14em;padding:3px 7px;border:1px solid rgba(194,86,75,.55);color:' + CLAY : 'display:none',
+        label:'SUBMISSION', title:sub?.track_id || q.track || 'Unknown Track', submitted, missing:!submitted,
+        repo:repoHost,
+        repoUrl:repoUrl,
+        demo:demoHost,
+        demoUrl:demoUrl,
+        notes:sub?.app_notes || '', 
+        at: sub ? new Date(sub.created_at).toLocaleString('en-GB', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) : 'PENDING', 
+        lateBy:'',
+        lateStyle: 'display:none',
         chipLabel:chip.label,
         chipDot:'width:7px;height:7px;flex:none;border:1px solid ' + chip.border + ';background:' + chip.fill,
         chipText:'font-size:12px;white-space:nowrap;color:' + chip.c,
@@ -403,7 +377,7 @@ class JudgePortalView extends React.Component {
     return {
       L, isPhone:phone,
       isList: view === 'list', isDetail: view === 'detail', isDenied: view === 'denied', notDenied: view !== 'denied',
-      progressStyle:'height:100%;background:' + ICE + ';box-shadow:0 0 12px rgba(179,224,242,.5);transition:width 1.1s cubic-bezier(.22,1,.36,1) .2s;width:' + (on ? '60%' : '0%'),
+      progressStyle:'height:100%;background:' + ICE + ';box-shadow:0 0 12px rgba(179,224,242,.5);transition:width 1.1s cubic-bezier(.22,1,.36,1) .2s;width:' + (on ? `${this.props.progress?.assigned ? Math.round(((this.props.progress.scored || 0) / this.props.progress.assigned) * 100) : 0}%` : '0%'),
 
       stats:statDefs.map((d, i) => ({
         label:d.label, value:count(d.n), unit:d.unit, note:d.note,
@@ -439,7 +413,7 @@ class JudgePortalView extends React.Component {
       emptyBtn: emptyAssignments ? 'Contact an admin' : 'Clear filters',
       emptyBtnStyle:'margin-top:22px;padding:11px 20px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(179,224,242,.24);color:' + MUTE + ';cursor:pointer;border-radius:2px;transition:all .25s',
       clearFilters: () => this.setState({search:'', tab:'All'}),
-      pagerText:'SHOWING ' + rows.length + ' OF 20 ASSIGNED',
+      pagerText:'SHOWING ' + rows.length + ' OF ' + (this.props.progress?.assigned || 0) + ' ASSIGNED',
       openNextUnscored: () => {
         const i = SQUADS.findIndex(x => statFor(x) === 'none');
         this.setState({view:'detail', idx: i < 0 ? 0 : i});
@@ -451,8 +425,8 @@ class JudgePortalView extends React.Component {
 
       detail:{
         name, track:q.track, teamId:'t_' + (1040 + s.idx),
-        position:String(s.idx + 1).padStart(2,'0') + ' / 20',
-        subsMeta:q.subs + ' OF 2 SUBMITTED',
+        position:String(s.idx + 1).padStart(2,'0') + ' / ' + (this.props.progress?.assigned || 0),
+        subsMeta:q.subs + ' SUBMISSION(S)',
         statusMeta: locked ? 'FINAL · ' + s.locked[name] : (statFor(q) === 'draft' ? 'DRAFT SAVED ' + q.updated : 'NO RUBRIC ENTERED'),
         chipLabel:STATUS[statFor(q)].label,
         chipColor:STATUS[statFor(q)].c,
@@ -593,12 +567,12 @@ class JudgePortalView extends React.Component {
               <div style={sx("min-width:230px;padding-right:22px;border-right:1px solid rgba(179,224,242,.14);margin-right:4px")}>
                 <div style={sx("display:flex;align-items:baseline;justify-content:space-between;gap:10px")}>
                   <span style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;color:#56707B")}>SCORING PROGRESS</span>
-                  <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#B3E0F2")}>60%</span>
+                  <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#B3E0F2")}>{this.props.progress?.assigned ? Math.round(((this.props.progress.scored || 0) / this.props.progress.assigned) * 100) : 0}%</span>
                 </div>
                 <div style={sx("height:4px;background:rgba(179,224,242,.10);margin:8px 0 6px;overflow:hidden")}>
                   <div style={sx(V.progressStyle)}></div>
                 </div>
-                <div style={sx("font-size:11px;color:#8AA5AE")}>12 of 20 squads scored</div>
+                <div style={sx("font-size:11px;color:#8AA5AE")}>{this.props.progress?.scored || 0} of {this.props.progress?.assigned || 0} squads scored</div>
               </div>
             </div>
 
@@ -606,13 +580,13 @@ class JudgePortalView extends React.Component {
               <div style={sx(V.L.hidePhone)}>
                 <div style={sx("text-align:right;line-height:1.35")}>
                   <div style={sx("display:flex;align-items:center;gap:8px;justify-content:flex-end")}>
-                    <span style={sx("font-size:13px;font-weight:500;color:#E4EEF2")}>r_shastri</span>
+                    <span style={sx("font-size:13px;font-weight:500;color:#E4EEF2")}>{this.props.me?.full_name || this.props.me?.id || 'JUDGE'}</span>
                     <span style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;padding:3px 7px;border:1px solid rgba(179,224,242,.45);color:#B3E0F2")}>JUDGE</span>
                   </div>
                   <div style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;color:#56707B;margin-top:4px")}>ASSIGNED SQUADS ONLY</div>
                 </div>
               </div>
-              <div style={sx("width:34px;height:34px;background:#B3E0F2;color:#080D0C;display:grid;place-items:center;font-family:'Clash Grotesk',sans-serif;font-weight:600;font-size:13px;transition:transform .3s")} data-s="jp3">RS</div>
+              <div style={sx("width:34px;height:34px;background:#B3E0F2;color:#080D0C;display:grid;place-items:center;font-family:'Clash Grotesk',sans-serif;font-weight:600;font-size:13px;transition:transform .3s")} data-s="jp3">{(this.props.me?.full_name || 'JU').substring(0, 2).toUpperCase()}</div>
               <div style={sx(V.L.hidePhone)}>
                 <button style={sx("padding:9px 16px;font-size:12px;font-weight:500;white-space:nowrap;background:transparent;cursor:pointer;transition:all .25s;border:1px solid rgba(179,224,242,.16);color:#8AA5AE;border-radius:2px")} data-s="jp4">Sign out</button>
               </div>
@@ -621,8 +595,8 @@ class JudgePortalView extends React.Component {
 
           <div style={sx(V.L.headPhoneProgress)}>
             <div style={sx("display:flex;align-items:baseline;justify-content:space-between;gap:10px")}>
-              <span style={sx("font-size:11px;color:#8AA5AE")}>12 of 20 squads scored</span>
-              <span style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;color:#B3E0F2")}>60%</span>
+              <span style={sx("font-size:11px;color:#8AA5AE")}>{this.props.progress?.scored || 0} of {this.props.progress?.assigned || 0} squads scored</span>
+              <span style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;color:#B3E0F2")}>{this.props.progress?.assigned ? Math.round(((this.props.progress.scored || 0) / this.props.progress.assigned) * 100) : 0}%</span>
             </div>
             <div style={sx("height:4px;background:rgba(179,224,242,.10);margin-top:7px;overflow:hidden")}>
               <div style={sx(V.progressStyle)}></div>
@@ -666,7 +640,7 @@ class JudgePortalView extends React.Component {
               <span style={sx("font-size:13px;color:#E4EEF2")}>You are seeing only the 20 squads an admin assigned to you.</span>
               <span style={sx("font-size:13px;color:#8AA5AE")}> Squads outside your assignment list, other judges' scores, and the combined leaderboard are not visible from this console.</span>
             </div>
-            <span style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B;white-space:nowrap")}>judge_assignment · r_shastri</span>
+            <span style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B;white-space:nowrap")}>judge_assignment · {this.props.me?.full_name || 'judge'}</span>
           </div>
 
           <div style={sx(V.L.panelFlush)}>
@@ -1110,7 +1084,7 @@ class JudgePortalView extends React.Component {
  * write to public.scores.
  */
 export default function JudgePortal(props) {
-  const { squads, progress, status, error, migrationMissing, saveScore, refetch } = useJudgeData();
+  const { me, squads, progress, status, error, migrationMissing, saveScore, refetch } = useJudgeData();
 
   return (
     <>
@@ -1133,6 +1107,7 @@ export default function JudgePortal(props) {
         error={status === 'error' ? error : null}
         onSaveScore={saveScore}
         onRefetch={refetch}
+        me={me}
       />
     </>
   );

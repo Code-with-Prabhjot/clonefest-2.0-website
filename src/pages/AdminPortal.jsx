@@ -206,7 +206,10 @@ class AdminPortalView extends React.Component {
     search:'', bodyLen:0, pinned:true, tick:0,
     annTitle:'', annBody:'', annAudience:'all', judgeId:'',
     picked:{'NULL_POINTER':true,'DEEP_THOUGHT':true,'TABS_OVER_SPACES':true},
-    locks:{1:false,2:false,3:true}
+    locks:{1:false,2:false},
+    trackFilter:'all', statusFilter:'Any status', judgeFilter:'All judges', sortFilter:'Score · high to low',
+    page: 1, pageSize: 25,
+    trackEditId: null, trackEditTitle: '', trackEditDesc: '', trackEditDiff: 'Medium', trackEditRepo: '',
   };
 
   componentDidMount(){ ANIM.host = this; startAnim(); }
@@ -232,6 +235,20 @@ class AdminPortalView extends React.Component {
     const res = await this.props.onDeleteAnnouncement(id);
     if (!res.ok) return this.toast('Could not delete', res.error);
     this.toast('Announcement deleted', title);
+  }
+
+  async saveTrackEdit(){
+    const { trackEditId, trackEditTitle, trackEditDesc, trackEditDiff, trackEditRepo } = this.state;
+    if (!trackEditId) return;
+    const res = await this.props.onUpdateTrack(trackEditId, {
+      title: trackEditTitle,
+      description: trackEditDesc,
+      difficulty: trackEditDiff,
+      repo_url: trackEditRepo
+    });
+    if (!res.ok) return this.toast('Update failed', res.error);
+    this.setState({ modal: null, trackEditId: null });
+    this.toast('Challenge updated', 'Details have been successfully saved.');
   }
 
   async moderate(id, next, squadName){
@@ -280,7 +297,8 @@ class AdminPortalView extends React.Component {
     const vw = ANIM.vw || (typeof window !== 'undefined' ? window.innerWidth : 1440);
     const phone = vw < 760, narrow = vw < 1140;
     const tableState = s.stateOverride || this.props.tableState || 'ready';
-    const day = Math.max(1, Math.min(21, this.props.eventDay ?? 9));
+    const computedDay = Math.floor((Date.now() - new Date('2026-08-20T00:00:00+05:30').getTime()) / 86400000) + 1;
+    const day = Math.max(1, Math.min(11, this.props.eventDay ?? computedDay));
     const t = ANIM.t, on = ANIM.on;
     const count = n => String(Math.round(n * t));
 
@@ -344,7 +362,41 @@ class AdminPortalView extends React.Component {
     L.modalWide = modalShell('520px', 'rgba(179,224,242,.2)');
     L.modalAssign = modalShell('640px', 'rgba(179,224,242,.2)');
 
-    const rows = SQUADS.map((q, idx) => {
+    let squadList = this.props.squads && this.props.squads.length > 0 ? this.props.squads.slice() : SQUADS.slice();
+    
+    if (s.search) {
+      const q = s.search.toLowerCase();
+      squadList = squadList.filter(sq => sq.name.toLowerCase().includes(q) || (sq.lead && sq.lead.toLowerCase().includes(q)));
+    }
+    if (s.trackFilter !== 'all') {
+      squadList = squadList.filter(sq => (sq.track || '').includes(s.trackFilter));
+    }
+    if (s.statusFilter !== 'Any status') {
+      const target = s.statusFilter.toLowerCase();
+      squadList = squadList.filter(sq => 
+        (target === 'not submitted' && sq.c1 === 'none' && sq.c2 === 'none') || 
+        sq.c1 === target || sq.c2 === target
+      );
+    }
+    if (s.judgeFilter !== 'All judges') {
+      const target = s.judgeFilter === 'Unassigned' ? '' : s.judgeFilter;
+      squadList = squadList.filter(sq => (sq.judge || '') === target);
+    }
+    
+    if (s.sortFilter.includes('Score')) {
+      squadList.sort((a, b) => (b.score || 0) - (a.score || 0));
+    } else if (s.sortFilter.includes('Name')) {
+      squadList.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (s.sortFilter.includes('Date')) {
+      squadList.sort((a, b) => new Date(b.registered || 0).getTime() - new Date(a.registered || 0).getTime());
+    }
+
+    const totalFiltered = squadList.length;
+    const totalPages = Math.max(1, Math.ceil(totalFiltered / s.pageSize));
+    const currentPage = Math.max(1, Math.min(s.page, totalPages));
+    squadList = squadList.slice((currentPage - 1) * s.pageSize, currentPage * s.pageSize);
+
+    const rows = squadList.map((q, idx) => {
       const open = s.expanded === q.name;
       const roster = (q.roster && q.roster.length
         ? q.roster.map(m => ({ role:m.role, callsign:m.callsign, email:m.usn || EMAIL(m.callsign) }))
@@ -358,11 +410,11 @@ class AdminPortalView extends React.Component {
         score: q.score === null || q.score === undefined ? '\u2014' : q.score,
         judge:q.judge || 'unassigned',
         judgeColor:q.judge ? TXT : DIM,
-        w1:this.chip(q.w[0]), w2:this.chip(q.w[1]),
-        open, invite:q.invite, registered:q.reg, prs:q.prs, roster,
+        w1:this.chip(q.c1 || (q.w && q.w[0]) || 'none'), w2:this.chip(q.c2 || (q.w && q.w[1]) || 'none'),
+        open, invite:q.invite, registered:q.registered || q.reg, prs:q.total || q.prs || 0, roster,
         meterStyle:'position:absolute;inset:0 auto 0 0;background:' + STEEL + ';transition:width .9s cubic-bezier(.22,1,.36,1) ' +
           (0.15 + idx*0.05) + 's;width:' + (on && q.score != null ? q.score + '%' : '0%'),
-        links:(q._subs || []).map((sub) => {
+        links:(q.subs || q._subs || []).map((sub) => {
           const chip = this.chip(sub.status);
           const act = (ok, tone) => 'padding:5px 10px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;' +
             MONO + ';border-radius:2px;background:transparent;cursor:' + (ok ? 'pointer' : 'not-allowed') +
@@ -401,30 +453,41 @@ class AdminPortalView extends React.Component {
     const cols = ['Squad','Lead','Mem','Track','Ch 1','Ch 2','Total','Judge','Actions'];
     const trackColors = [ICE, '#8CBCD1', STEEL, '#41707F', '#5C8F5B'];
 
-    const tracks = [
-      {code:'T1', name:'CMS Revival', count:38, pct:'27%'},
-      {code:'T2', name:'Data Pipeline', count:31, pct:'22%'},
-      {code:'T3', name:'Commerce Rebuild', count:26, pct:'18%'},
-      {code:'T4', name:'Realtime Rewrite', count:22, pct:'15%'},
-      {code:'T5', name:'UI Kit Port', count:25, pct:'18%'}
-    ].map((tr,i) => Object.assign(tr, {
-      color: trackColors[i],
+    const tracks = (this.props.trackDistribution && this.props.trackDistribution.length > 0
+      ? this.props.trackDistribution.map(t => ({ code: t.id, name: t.title, count: t.count, pct: t.pct + '%' }))
+      : this.props.tracks && this.props.tracks.length > 0
+        ? this.props.tracks.map((t) => ({ code: t.id, name: t.title, count: 0, pct: '0%' }))
+        : [
+            {code:'T1', name:'Challenge 1', count:0, pct:'0%'},
+            {code:'T2', name:'Challenge 2', count:0, pct:'0%'}
+          ]).map((tr,i) => Object.assign(tr, {
+      color: trackColors[i % trackColors.length],
       barStyle:'background:' + trackColors[i] + ';opacity:.85;transition:flex 1s cubic-bezier(.22,1,.36,1) ' + (i*0.08) + 's;flex:' + (on ? tr.count : 0.001),
       rowStyle:'display:grid;grid-template-columns:12px 34px 1fr 52px 46px;align-items:center;gap:12px;padding:11px 0;border-top:1px solid rgba(179,224,242,.07);transition:background .2s;animation:rise .4s ease-out ' + (0.1 + i*0.06) + 's both'
     }));
 
-    const weeks = [
-      {label:'CHALLENGE 01', count:142, pct:100, color:ICE},
-      {label:'CHALLENGE 02', count:131, pct:92, color:MOSS_LT}
-    ].map((w,i) => Object.assign(w, {
+    const weeks = (this.props.tracks || []).map((tr, i) => {
+      const c = this.props.submissions ? this.props.submissions.filter(sub => sub.track_id === tr.id).length : 0;
+      return {
+        label: tr.title.toUpperCase(),
+        count: c,
+        pct: Math.min(100, Math.round(c / Math.max(1, ST.squads) * 100)),
+        color: i === 0 ? ICE : MOSS_LT
+      };
+    }).map((w,i) => Object.assign(w, {
       barStyle:'width:100%;max-width:64px;background:linear-gradient(180deg,' + w.color + ',rgba(17,32,38,.15));transition:height 1s cubic-bezier(.22,1,.36,1) ' +
         (0.15 + i*0.12) + 's;height:' + (on ? w.pct + 'px' : '0px')
     }));
 
-    const timeline = [
+    const tlData = this.props.tracks && this.props.tracks.length >= 2 ? [
+      {title: this.props.tracks[0].title, meta:'20–25 AUG', start:1},
+      {title: this.props.tracks[1].title, meta:'25–30 AUG', start:6}
+    ] : [
       {title:'Challenge 01', meta:'20–25 AUG', start:1},
       {title:'Challenge 02', meta:'25–30 AUG', start:6}
-    ].map((tl, wi) => {
+    ];
+
+    const timeline = tlData.map((tl, wi) => {
       const days = [];
       for (let i = 0; i < 7; i++){
         const n = tl.start + i, past = n < day, now = n === day;
@@ -462,12 +525,14 @@ class AdminPortalView extends React.Component {
           " 12px;font-family:'Satoshi',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:color .25s,border-color .25s"
       })),
 
+      tracks,
       isOverview:s.section==='overview', isSquads:s.section==='squads', isAnn:s.section==='announcements',
       isJudges:s.section==='judges', isChal:s.section==='challenges', isExports:s.section==='exports',
       goSquads: () => this.setState({section:'squads'}),
       goAnn: () => this.setState({section:'announcements'}),
 
       squadCount:String(ST.squads), trackCount:String(ST.tracks),
+      hackerCount:String(ST.hackers), leadCount:String(ST.leads), judgeCount:String(ST.judges),
       stats:[
         {label:'Total squads', value:count(ST.squads), unit:'',
          sub: ST.unassigned + ' operatives without a squad', color:TXT},
@@ -488,7 +553,8 @@ class AdminPortalView extends React.Component {
         numStyle:"font-family:'Clash Grotesk',sans-serif;font-weight:500;line-height:.85;font-variant-numeric:tabular-nums;color:" + st.color +
           ';font-size:' + (phone ? '32px' : '42px')
       })),
-      prOpened:count(318), prMerged:count(204),
+      prOpened:count(this.props.submissions ? this.props.submissions.length : 318),
+      prMerged:count(this.props.submissions ? this.props.submissions.filter(sub => CLEARED.has(sub.status)).length : 204),
       timeline, tracks, weeks,
 
       cols:cols.map((label,i) => ({
@@ -498,19 +564,23 @@ class AdminPortalView extends React.Component {
       })),
 
       search:s.search,
-      onSearch: e => this.setState({search:e.target.value}),
+      onSearch: e => this.setState({search:e.target.value, page:1}),
+      trackFilter: s.trackFilter, statusFilter: s.statusFilter, judgeFilter: s.judgeFilter, sortFilter: s.sortFilter, pageSize: s.pageSize,
+      onFilterChange: (key, val) => this.setState({[key]: val, page: 1}),
       isReady:tableState==='ready', isLoading:tableState==='loading',
-      isEmpty:tableState==='empty', isError:tableState==='error',
-      resetFilters: () => this.setState({stateOverride:'ready', search:''}),
+      isEmpty:totalFiltered === 0, isError:tableState==='error',
+      totalFiltered, totalPages, currentPage,
+      resetFilters: () => this.setState({stateOverride:'ready', search:'', trackFilter:'all', statusFilter:'Any status', judgeFilter:'All judges', sortFilter:'Score · high to low', page: 1}),
       skeleton:[0,1,2,3,4,5].map(i => ({op:String(1 - i*0.13)})),
       rows,
-      pages:[1,2,3,4,5,6].map(n => ({
+      pages:Array.from({length: totalPages}, (_, i) => i + 1).map(n => ({
         n:String(n),
-        style:'padding:8px 12px;font-size:12px;background:' + (n===1 ? ICE : 'transparent') +
-          ';border:1px solid ' + (n===1 ? ICE : 'rgba(179,224,242,.10)') + ';color:' + (n===1 ? '#080D0C' : DIM) +
+        go: () => this.setState({page: n}),
+        style:'padding:8px 12px;font-size:12px;background:' + (n===currentPage ? ICE : 'transparent') +
+          ';border:1px solid ' + (n===currentPage ? ICE : 'rgba(179,224,242,.10)') + ';color:' + (n===currentPage ? '#080D0C' : DIM) +
           ';cursor:pointer;transition:all .25s;border-radius:2px'
       })),
-      exportToast: () => this.toast('Export queued', 'CSV will download in a moment · 142 rows.'),
+      exportToast: (rowsCount) => this.toast('Export queued', `CSV will download in a moment · ${rowsCount} rows.`),
 
       bodyLen:s.bodyLen,
       countColor: s.bodyLen > 460 ? CLAY : DIM,
@@ -568,7 +638,7 @@ class AdminPortalView extends React.Component {
         }
         return Object.assign(j, {
           ticks, pct:Math.round(ratio*100) + '%', pctColor:col,
-          initials:j.callsign.slice(0,1).toUpperCase() + j.callsign.split('_')[1].slice(0,1).toUpperCase(),
+          initials: j.callsign ? (j.callsign.includes('_') ? (j.callsign.split('_')[0][0] + j.callsign.split('_')[1][0]) : j.callsign.includes(' ') ? (j.callsign.split(' ')[0][0] + j.callsign.split(' ')[1][0]) : j.callsign.substring(0, 2)).toUpperCase() : 'JU',
           avatar:'width:26px;height:26px;flex:none;display:grid;place-items:center;font-size:10px;font-weight:700;transition:transform .3s;color:' + col + ';border:1px solid ' + col + '55',
           rowStyle:'display:grid;align-items:center;padding:0 ' + (phone ? '16px' : '22px') +
             ';border-bottom:1px solid rgba(179,224,242,.06);transition:background .25s;animation:rise .4s ease-out ' + (0.1 + ji*0.07) +
@@ -578,11 +648,14 @@ class AdminPortalView extends React.Component {
         });
       }),
       openAssign: () => this.setState({modal:'assign'}),
-      openAuto: () => this.setState({modal:'confirm', confirm:{
-        kicker:'BULK REASSIGNMENT', color:STEEL, title:'Redistribute 142 squads across 5 judges?',
-        body:'Existing assignments are discarded and rebuilt at 28–29 squads per judge. Drafts stay attached to their submissions; 34 finalised scores are unaffected.',
+      openAuto: () => {
+        const jCount = Math.max(1, ST.judges);
+        const per = Math.floor(ST.squads / jCount);
+        this.setState({modal:'confirm', confirm:{
+        kicker:'BULK REASSIGNMENT', color:STEEL, title:`Redistribute ${ST.squads} squads across ${ST.judges} judges?`,
+        body:`Existing assignments are discarded and rebuilt at ${per}–${per + 1} squads per judge. Drafts stay attached to their submissions; ${ST.scoredSquads} finalised scores are unaffected.`,
         cta:'Auto-distribute', kind:'safe'
-      }}),
+      }})},
       pickList:SQUADS.map(q => {
         const sel = !!s.picked[q.name];
         return {
@@ -610,14 +683,28 @@ class AdminPortalView extends React.Component {
         this.toast('Assignment saved', names.length + ' squads assigned.');
       },
 
-      challenges:[
-        {week:1, title:'Challenge 01', points:100, opens:'20 Aug · 18:00', closes:'25 Aug · 23:59', subs:142, pct:100},
-        {week:2, title:'Challenge 02', points:100, opens:'25 Aug · 23:59', closes:'30 Aug · 23:59', subs:131, pct:92}
-      ].map((w,i) => {
+      challenges:(this.props.tracks || []).map((tr, i) => {
+        const c = this.props.submissions ? this.props.submissions.filter(sub => sub.track_id === tr.id).length : 0;
+        return {
+          id: tr.id,
+          week: i + 1, title: tr.title, desc: tr.description || '', diff: tr.difficulty || 'Medium', repo: tr.repo_url || '', points: 100, 
+          opens: i === 0 ? '20 Aug · 18:00' : '25 Aug · 23:59', 
+          closes: i === 0 ? '25 Aug · 23:59' : '30 Aug · 23:59', 
+          subs: c, pct: Math.min(100, Math.round(c / Math.max(1, ST.squads) * 100))
+        };
+      }).map((w,i) => {
         const locked = !!s.locks[w.week];
         return {
-          week:String(w.week), title:w.title, points:String(w.points),
+          id: w.id, week:String(w.week), title:w.title, points:String(w.points),
           opens:w.opens, closes:w.closes, subs:String(w.subs),
+          openEditModal: () => this.setState({
+            modal: 'editTrack',
+            trackEditId: w.id,
+            trackEditTitle: w.title,
+            trackEditDesc: w.desc,
+            trackEditDiff: w.diff,
+            trackEditRepo: w.repo
+          }),
           titleColor: locked ? MUTE : ICE,
           barStyle:'position:absolute;inset:0 auto 0 0;transition:width 1s cubic-bezier(.22,1,.36,1) ' + (0.2 + i*0.1) +
             's,background .3s;width:' + (on ? w.pct + '%' : '0%') + ';background:' + (locked ? STEEL : MOSS_LT),
@@ -633,13 +720,13 @@ class AdminPortalView extends React.Component {
 
       exports:[
         {name:'Users', desc:'Profiles, callsigns, USN, branch, roles, squad membership',
-         rows:String(EX.users), last:'ready', go:() => this.props.onExport('users')},
+         rows:String(EX.users), last:'ready', go:() => { this.props.onExport('users'); this.toast('Export queued', `CSV will download in a moment · ${EX.users} rows.`); }},
         {name:'Submissions', desc:'PR links, track, status, timestamps',
-         rows:String(EX.submissions), last:'ready', go:() => this.props.onExport('submissions')},
+         rows:String(EX.submissions), last:'ready', go:() => { this.props.onExport('submissions'); this.toast('Export queued', `CSV will download in a moment · ${EX.submissions} rows.`); }},
         {name:'Squads', desc:'Squad name, lead, members, invite code, submission counts',
-         rows:String(EX.squads), last:'ready', go:() => this.props.onExport('squads')},
+         rows:String(EX.squads), last:'ready', go:() => { this.props.onExport('squads'); this.toast('Export queued', `CSV will download in a moment · ${EX.squads} rows.`); }},
         {name:'Leaderboard', desc:'Ranked standings by cleared submissions',
-         rows:String(EX.squads), last:'ready', go:() => this.props.onExport('leaderboard')}
+         rows:String(EX.squads), last:'ready', go:() => { this.props.onExport('leaderboard'); this.toast('Export queued', `CSV will download in a moment · ${EX.squads} rows.`); }}
       ].map((e,i) => Object.assign(e, {
         lastColor: e.last === 'never exported' ? DIM : TXT,
         rowStyle:'display:grid;align-items:center;gap:' + (phone ? '12px' : '18px') + ';padding:' + (phone ? '18px 16px' : '22px 24px') +
@@ -649,19 +736,32 @@ class AdminPortalView extends React.Component {
         lastStyle: (phone || narrow) ? 'display:none' : MONO + ';font-size:11px;color:' + DIM
       })),
 
-      modalBroadcast:s.modal==='broadcast', modalAssign:s.modal==='assign', modalConfirm:s.modal==='confirm',
+      modalBroadcast:s.modal==='broadcast', modalAssign:s.modal==='assign', modalConfirm:s.modal==='confirm', modalEditTrack:s.modal==='editTrack',
       confirmKicker:c.kicker || '', confirmTitle:c.title || '', confirmBody:c.body || '',
       confirmCta:c.cta || '', confirmColor:c.color || ICE,
       confirmShell:modalShell('500px', isDanger ? 'rgba(194,86,75,.4)' : 'rgba(179,224,242,.2)'),
       confirmBtn:'flex:1.6;min-width:150px;padding:12px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all .25s;border-radius:2px;color:#080D0C;background:' +
         (isDanger ? CLAY : ICE) + ';border:1px solid ' + (isDanger ? CLAY : ICE),
-      confirmGeneric: () => this.toast(isDanger ? 'Action completed' : 'Distribution complete',
-        isDanger ? 'Record updated and written to the audit log.' : '142 squads spread across 5 judges.'),
+      confirmGeneric: () => {
+        this.setState({modal:null});
+        this.toast(isDanger ? 'Action completed' : 'Distribution complete',
+        isDanger ? 'Record updated and written to the audit log.' : `${ST.squads} squads spread across ${ST.judges} judges.`);
+      },
       closeModal: () => this.setState({modal:null}),
+      saveTrackEdit: () => this.saveTrackEdit(),
 
       toast:s.toast, toastTitle:s.toastTitle,
       toastBar:'position:absolute;left:0;bottom:0;height:2px;background:' + MOSS_LT + ';width:100%;transform-origin:left;animation:sweepBar 4.6s linear forwards',
-      hideToast: () => this.setState({toast:null})
+      hideToast: () => this.setState({toast:null}),
+      
+      trackEditTitle: s.trackEditTitle,
+      trackEditDesc: s.trackEditDesc,
+      trackEditDiff: s.trackEditDiff,
+      trackEditRepo: s.trackEditRepo,
+      setTrackEditTitle: (e) => this.setState({ trackEditTitle: e.target.value }),
+      setTrackEditDesc: (e) => this.setState({ trackEditDesc: e.target.value }),
+      setTrackEditDiff: (e) => this.setState({ trackEditDiff: e.target.value }),
+      setTrackEditRepo: (e) => this.setState({ trackEditRepo: e.target.value }),
     };
   }
 
@@ -695,23 +795,14 @@ class AdminPortalView extends React.Component {
             <div style={sx("flex:1")}></div>
 
             <div style={sx("display:flex;align-items:center;gap:14px")}>
-              <div style={sx(V.L.dayChip)}>
-                <span style={sx("width:6px;height:6px;background:#7FB27E;border-radius:50%;animation:breathe 2.4s infinite")}></span>
-                <span style={sx("font-size:10px;letter-spacing:.18em;color:#56707B")}>DAY</span>
-                <span style={sx("font-size:13px;color:#B3E0F2")}>{V.eventDay}</span>
-                <span style={sx("font-size:10px;color:#56707B")}>/ 11</span>
-              </div>
-              <div style={sx(V.L.hideNarrow)}>
-                <div style={sx("width:1px;height:26px;background:rgba(179,224,242,.14)")}></div>
-              </div>
               <div style={sx("display:flex;align-items:center;gap:11px")}>
                 <div style={sx(V.L.hidePhone)}>
                   <div style={sx("text-align:right;line-height:1.35")}>
-                    <div style={sx("font-size:13px;font-weight:500;color:#E4EEF2")}>v_kulkarni</div>
-                    <div style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;color:#56707B")}>ADMIN · FULL ACCESS</div>
+                    <div style={sx("font-size:13px;font-weight:500;color:#E4EEF2")}>ADMIN</div>
+                    <div style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;color:#56707B")}>FULL ACCESS</div>
                   </div>
                 </div>
-                <div style={sx("width:34px;height:34px;background:#B3E0F2;color:#080D0C;display:grid;place-items:center;font-family:'Clash Grotesk',sans-serif;font-weight:600;font-size:13px;transition:transform .3s")} data-s="ap3">VK</div>
+                <div style={sx("width:34px;height:34px;background:#B3E0F2;color:#080D0C;display:grid;place-items:center;font-family:'Clash Grotesk',sans-serif;font-weight:600;font-size:13px;transition:transform .3s")} data-s="ap3">AM</div>
               </div>
               <div style={sx(V.L.hidePhone)}>
                 <button style={sx("padding:9px 16px;font-size:12px;font-weight:500;white-space:nowrap;background:transparent;cursor:pointer;transition:all .25s;border:1px solid rgba(179,224,242,.16);color:#8AA5AE;border-radius:2px")} data-s="ap4">Sign out</button>
@@ -730,19 +821,7 @@ class AdminPortalView extends React.Component {
           </div>
         </header>
 
-        {(V.banner) ? <>
-          <div style={sx(V.L.bannerWrap)}>
-            <div style={sx(V.L.bannerBox)}>
-              <span style={sx("width:22px;height:22px;border:1px solid rgba(194,86,75,.6);color:#C2564B;display:grid;place-items:center;font-size:12px;flex:none;animation:breathe 2.6s infinite")}>!</span>
-              <div style={sx("flex:1;min-width:200px")}>
-                <div style={sx("font-size:13px;font-weight:500;color:#E6A79E")}>Score sync failed for 3 submissions</div>
-                <div style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#8AA5AE;margin-top:4px")}>judge_assignment · KERNEL_PANIC, FOUR_OH_FOUR, DEEP_THOUGHT → 409 CONFLICT · 14:02 IST</div>
-              </div>
-              <button onClick={V.retry} style={sx("padding:8px 14px;font-size:12px;font-weight:500;white-space:nowrap;background:transparent;border:1px solid rgba(194,86,75,.5);color:#C2564B;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap6">Retry sync</button>
-              <button onClick={V.dismissBanner} style={sx("background:transparent;border:none;color:#56707B;cursor:pointer;font-size:14px;padding:4px")} data-s="ap7">✕</button>
-            </div>
-          </div>
-        </> : null}
+
 
         <main style={sx(V.L.main)}>
 
@@ -751,9 +830,9 @@ class AdminPortalView extends React.Component {
 
               <div style={sx(V.L.hero)}>
                 <div>
-                  <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6;animation:rise .5s ease-out both")}>CHALLENGE 02 IN PROGRESS</div>
-                  <h1 style={sx(V.L.heroTitle)}>Challenge 02 closes in <span style={sx("color:#B3E0F2")}>5 days</span>.</h1>
-                  <p style={sx("font-size:14px;line-height:1.7;color:#8AA5AE;margin:14px 0 0;max-width:520px;text-wrap:pretty;animation:rise .5s ease-out .16s both")}>118 of 142 squads have shipped a demo link. 46 squads are still unscored.</p>
+                  <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6;animation:rise .5s ease-out both")}>EVENT IN PROGRESS</div>
+                  <h1 style={sx(V.L.heroTitle)}>Tracking <span style={sx("color:#B3E0F2")}>{V.squadCount} squads</span> across {V.tracks ? V.tracks.length : 0} challenges.</h1>
+                  <p style={sx("font-size:14px;line-height:1.7;color:#8AA5AE;margin:14px 0 0;max-width:520px;text-wrap:pretty;animation:rise .5s ease-out .16s both")}>{V.prMerged} of {V.squadCount} squads have cleared a submission. {V.squadCount - (this.props.stats ? this.props.stats.scoredSquads : 0)} squads are still unscored.</p>
                 </div>
                 <div style={sx("display:flex;gap:10px;flex-wrap:wrap;animation:rise .5s ease-out .24s both")}>
                   <button onClick={V.goAnn} style={sx("padding:12px 20px;font-size:13px;font-weight:500;white-space:nowrap;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap8">Broadcast</button>
@@ -826,7 +905,7 @@ class AdminPortalView extends React.Component {
                 <div style={sx(V.L.panelFlex)}>
                   <div style={sx("display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:26px")}>
                     <div style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:16px;letter-spacing:.06em;color:#E4EEF2")}>Submissions by challenge</div>
-                    <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B")}>OF 142</div>
+                    <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B")}>OF {V.squadCount}</div>
                   </div>
                   <div style={sx("flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:end;min-height:170px")}>
                     {(V.weeks || []).map((w, _i1) => <React.Fragment key={_i1}>
@@ -839,17 +918,17 @@ class AdminPortalView extends React.Component {
                   </div>
                   <div style={sx("border-top:1px solid rgba(179,224,242,.07);margin-top:20px;padding-top:16px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap")}>
                     <div>
-                      <div style={sx("font-size:12px;color:#8AA5AE")}>Canvas repo pull requests</div>
-                      <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;color:#56707B;margin-top:4px")}>READ-ONLY · SCORED SEPARATELY</div>
+                      <div style={sx("font-size:12px;color:#8AA5AE")}>Total submissions</div>
+                      <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;color:#56707B;margin-top:4px")}>ACROSS ALL TRACKS</div>
                     </div>
                     <div style={sx("display:flex;gap:18px;text-align:right")}>
                       <div>
                         <div style={sx("font-family:'Clash Grotesk',sans-serif;font-size:20px;color:#E4EEF2")}>{V.prOpened}</div>
-                        <div style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;color:#56707B")}>OPENED</div>
+                        <div style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;color:#56707B")}>SUBMITTED</div>
                       </div>
                       <div>
                         <div style={sx("font-family:'Clash Grotesk',sans-serif;font-size:20px;color:#7FB27E")}>{V.prMerged}</div>
-                        <div style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;color:#56707B")}>MERGED</div>
+                        <div style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;color:#56707B")}>CLEARED</div>
                       </div>
                     </div>
                   </div>
@@ -866,8 +945,8 @@ class AdminPortalView extends React.Component {
                   <h2 style={sx(V.L.h2)}>Squads</h2>
                 </div>
                 <div style={sx("display:flex;align-items:center;gap:10px")}>
-                  <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>142 RECORDS</span>
-                  <button onClick={() => this.props.onExport('squads')} style={sx("padding:11px 18px;font-size:13px;font-weight:500;white-space:nowrap;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap12">Export CSV</button>
+                  <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>{V.squadCount} RECORDS</span>
+                  <button onClick={() => { this.props.onExport('squads'); V.exportToast(V.squadCount); }} style={sx("padding:11px 18px;font-size:13px;font-weight:500;white-space:nowrap;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap12">Export CSV</button>
                 </div>
               </div>
 
@@ -881,10 +960,11 @@ class AdminPortalView extends React.Component {
                   <div style={sx(V.L.filterCell)}>
                     <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>TRACK</label>
                     <div style={sx("position:relative")}>
-                      <select value={V.annAudience} onChange={V.onAudience} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 30px 12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap29">
-                            <option value="all">All hackers</option>
-                            <option value="leads">Squad leads only</option>
-                            <option value="judges">Judges only</option>
+                      <select value={V.trackFilter} onChange={e => V.onFilterChange('trackFilter', e.target.value)} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 30px 12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap29">
+                            <option value="all">All tracks</option>
+                            {(V.tracks || []).map(t => (
+                              <option key={t.code} value={t.code}>{t.name}</option>
+                            ))}
                           </select>
                       <span style={sx("position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#5D91A6;font-size:8px")}>▼</span>
                     </div>
@@ -892,7 +972,7 @@ class AdminPortalView extends React.Component {
                   <div style={sx(V.L.filterCell)}>
                     <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>STATUS</label>
                     <div style={sx("position:relative")}>
-                      <select style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 28px 11px 13px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap15">
+                      <select value={V.statusFilter} onChange={e => V.onFilterChange('statusFilter', e.target.value)} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 28px 11px 13px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap15">
                         <option>Any status</option>
                         <option>Not submitted</option>
                         <option>Pending</option>
@@ -906,12 +986,12 @@ class AdminPortalView extends React.Component {
                   <div style={sx(V.L.filterCell)}>
                     <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>JUDGE</label>
                     <div style={sx("position:relative")}>
-                      <select style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 28px 11px 13px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap16">
+                      <select value={V.judgeFilter} onChange={e => V.onFilterChange('judgeFilter', e.target.value)} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 28px 11px 13px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap16">
                         <option>All judges</option>
                         <option>Unassigned</option>
-                        <option>v_rao</option>
-                        <option>k_iyer</option>
-                        <option>a_menon</option>
+                        {(V.judges || []).map(j => (
+                          <option key={j.callsign} value={j.callsign}>{j.callsign}</option>
+                        ))}
                       </select>
                       <span style={sx("position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#5D91A6;font-size:8px")}>▼</span>
                     </div>
@@ -919,7 +999,7 @@ class AdminPortalView extends React.Component {
                   <div style={sx(V.L.filterCell)}>
                     <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>SORT</label>
                     <div style={sx("position:relative")}>
-                      <select style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 28px 11px 13px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap17">
+                      <select value={V.sortFilter} onChange={e => V.onFilterChange('sortFilter', e.target.value)} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 28px 11px 13px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap17">
                         <option>Score · high to low</option>
                         <option>Name · A to Z</option>
                         <option>Date registered · newest</option>
@@ -930,10 +1010,10 @@ class AdminPortalView extends React.Component {
                   <div style={sx(V.L.rowsCell)}>
                     <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>ROWS</label>
                     <div style={sx("position:relative")}>
-                      <select style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 26px 11px 13px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap18">
-                        <option>25</option>
-                        <option>50</option>
-                        <option>100</option>
+                      <select value={String(V.pageSize)} onChange={e => V.onFilterChange('pageSize', parseInt(e.target.value, 10))} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 26px 11px 13px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap18">
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
                       </select>
                       <span style={sx("position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:#5D91A6;font-size:8px")}>▼</span>
                     </div>
@@ -965,7 +1045,6 @@ class AdminPortalView extends React.Component {
                               <div style={sx("padding:15px 8px;font-size:12px;color:#8AA5AE")}>{r.track}</div>
                               <div style={sx("padding:15px 8px;display:flex;align-items:center;gap:7px")}><span style={sx(r.w1.dot)}></span><span style={sx(r.w1.text)}>{r.w1.label}</span></div>
                               <div style={sx("padding:15px 8px;display:flex;align-items:center;gap:7px")}><span style={sx(r.w2.dot)}></span><span style={sx(r.w2.text)}>{r.w2.label}</span></div>
-                              <div style={sx("padding:15px 8px;display:flex;align-items:center;gap:7px")}><span style={sx(r.w3.dot)}></span><span style={sx(r.w3.text)}>{r.w3.label}</span></div>
                               <div style={sx("padding:15px 8px;display:flex;align-items:center;gap:10px")}>
                                 <span style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:18px;color:#B3E0F2;font-variant-numeric:tabular-nums")}>{r.score}</span>
                                 <span style={sx("flex:1;height:3px;background:rgba(179,224,242,.12);position:relative")}><span style={sx(r.meterStyle)}></span></span>
@@ -1052,7 +1131,7 @@ class AdminPortalView extends React.Component {
                       <div style={sx("padding:80px 20px;text-align:center;animation:pop .35s ease-out both")}>
                         <div style={sx("width:54px;height:54px;margin:0 auto 20px;border:1px solid rgba(179,224,242,.18);display:grid;place-items:center;color:#56707B;font-family:'Clash Grotesk',sans-serif;font-size:20px")}>∅</div>
                         <div style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:20px;color:#E4EEF2")}>No squads match these filters</div>
-                        <div style={sx("font-size:13px;color:#8AA5AE;margin-top:10px")}>0 of 142 records returned for the current query.</div>
+                        <div style={sx("font-size:13px;color:#8AA5AE;margin-top:10px")}>0 of {V.squadCount} records returned for the current query.</div>
                         <button onClick={V.resetFilters} style={sx("margin-top:22px;padding:11px 22px;font-size:13px;font-weight:500;white-space:nowrap;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap24">Reset filters</button>
                       </div>
                     </> : null}
@@ -1069,13 +1148,13 @@ class AdminPortalView extends React.Component {
                 </div>
 
                 <div style={sx(V.L.pager)}>
-                  <div style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>SHOWING <span style={sx("color:#E4EEF2")}>1–25</span> OF <span style={sx("color:#E4EEF2")}>142</span></div>
+                  <div style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>SHOWING <span style={sx("color:#E4EEF2")}>{Math.min(V.totalFiltered, (V.currentPage - 1) * V.pageSize + 1)}–{Math.min(V.totalFiltered, V.currentPage * V.pageSize)}</span> OF <span style={sx("color:#E4EEF2")}>{V.totalFiltered}</span></div>
                   <div style={sx("display:flex;align-items:center;gap:6px;flex-wrap:wrap")}>
-                    <button style={sx("padding:8px 14px;font-size:12px;background:transparent;border:1px solid rgba(179,224,242,.10);color:#56707B;cursor:not-allowed;border-radius:2px")}>Previous</button>
+                    <button onClick={() => V.onFilterChange('page', Math.max(1, V.currentPage - 1))} disabled={V.currentPage <= 1} style={sx("padding:8px 14px;font-size:12px;background:transparent;border:1px solid rgba(179,224,242,.10);color:#56707B;cursor:" + (V.currentPage <= 1 ? "not-allowed" : "pointer") + ";border-radius:2px")}>Previous</button>
                     {(V.pages || []).map((p, _i1) => <React.Fragment key={_i1}>
-                      <button style={sx(p.style)}>{p.n}</button>
+                      <button onClick={p.go} style={sx(p.style)}>{p.n}</button>
                     </React.Fragment>)}
-                    <button style={sx("padding:8px 14px;font-size:12px;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap26">Next</button>
+                    <button onClick={() => V.onFilterChange('page', Math.min(V.totalPages, V.currentPage + 1))} disabled={V.currentPage >= V.totalPages} style={sx("padding:8px 14px;font-size:12px;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:" + (V.currentPage >= V.totalPages ? "not-allowed" : "pointer") + ";transition:all .25s;border-radius:2px")} data-s="ap26">Next</button>
                   </div>
                 </div>
               </div>
@@ -1089,7 +1168,7 @@ class AdminPortalView extends React.Component {
                   <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6")}>BROADCAST</div>
                   <h2 style={sx(V.L.h2)}>Announcements</h2>
                 </div>
-                <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>561 HACKERS REACHABLE</span>
+                <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>{V.hackerCount} HACKERS REACHABLE</span>
               </div>
 
               <div style={sx(V.L.annCols)}>
@@ -1113,12 +1192,13 @@ class AdminPortalView extends React.Component {
                       <div>
                         <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>AUDIENCE</label>
                         <div style={sx("position:relative")}>
-                          <select style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 30px 12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap29">
-                            <option>All hackers · 561</option>
-                            <option>Squad leads only · 142</option>
-                            <option>Single track — T1 CMS Revival · 152</option>
-                            <option>Single track — T2 Data Pipeline · 124</option>
-                            <option>Single track — T5 UI Kit Port · 98</option>
+                          <select value={V.annAudience} onChange={V.onAudience} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 30px 12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap29">
+                            <option value="all">All hackers · {V.hackerCount}</option>
+                            <option value="leads">Squad leads only · {V.leadCount}</option>
+                            <option value="judges">Judges only · {V.judgeCount}</option>
+                            {(V.tracks || []).map(t => (
+                              <option key={t.code} value={t.code}>Single track — {t.code} {t.name} · {t.count}</option>
+                            ))}
                           </select>
                           <span style={sx("position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#5D91A6;font-size:8px")}>▼</span>
                         </div>
@@ -1142,7 +1222,7 @@ class AdminPortalView extends React.Component {
                 <div style={sx("background:#112026;border:1px solid rgba(179,224,242,.10);border-radius:3px;animation:rise .45s ease-out .1s both")}>
                   <div style={sx("display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:20px 24px;border-bottom:1px solid rgba(179,224,242,.08)")}>
                     <div style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:16px;color:#E4EEF2")}>Sent history</div>
-                    <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B")}>LAST 30 DAYS · 14</div>
+                    <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B")}>ALL TIME · {V.announcements ? V.announcements.length : 0}</div>
                   </div>
                   {(V.announcements || []).map((a, _i1) => <React.Fragment key={_i1}>
                     <div style={sx(a.wrapStyle)} data-s="ap32">
@@ -1220,7 +1300,7 @@ class AdminPortalView extends React.Component {
                   <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6")}>SCHEDULE</div>
                   <h2 style={sx(V.L.h2)}>Challenges</h2>
                 </div>
-                <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>3 WEEKS · 300 PTS</span>
+                <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>{(V.tracks || []).length} WEEKS · {(V.tracks || []).length * 100} PTS</span>
               </div>
 
               <div style={sx(V.L.chalGrid)}>
@@ -1262,12 +1342,12 @@ class AdminPortalView extends React.Component {
                       <div style={sx("margin-bottom:22px")}>
                         <div style={sx("display:flex;align-items:baseline;gap:8px;margin-bottom:8px")}>
                           <span style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:20px;color:#B3E0F2")}>{c.subs}</span>
-                          <span style={sx("font-size:12px;color:#8AA5AE")}>of 142 squads submitted</span>
+                          <span style={sx("font-size:12px;color:#8AA5AE")}>of {V.squadCount} squads submitted</span>
                         </div>
                         <div style={sx("height:4px;background:rgba(179,224,242,.10);position:relative;overflow:hidden")}><div style={sx(c.barStyle)}></div></div>
                       </div>
 
-                      <button style={sx("width:100%;padding:11px 18px;font-size:13px;font-weight:500;white-space:nowrap;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap39">Edit details</button>
+                      <button onClick={c.openEditModal} style={sx("width:100%;padding:11px 18px;font-size:13px;font-weight:500;white-space:nowrap;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap39">Edit details</button>
                     </div>
                   </div>
                 </React.Fragment>)}
@@ -1340,11 +1420,10 @@ class AdminPortalView extends React.Component {
                 <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>JUDGE</label>
                 <div style={sx("position:relative;margin-bottom:20px")}>
                   <select style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 30px 12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap45">
-                    <option>v_rao · 24 assigned</option>
-                    <option>k_iyer · 24 assigned</option>
-                    <option>a_menon · 22 assigned</option>
-                    <option>s_deshpande · 18 assigned</option>
-                    <option>b_nair · 20 assigned</option>
+                    <option value="">Overview (Select a judge below to re-assign)</option>
+                    {(V.judges || []).map(j => (
+                      <option key={j.id} value={j.id}>{j.callsign} · {j.assigned} assigned</option>
+                    ))}
                   </select>
                   <span style={sx("position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#5D91A6;font-size:8px")}>▼</span>
                 </div>
@@ -1398,6 +1477,53 @@ class AdminPortalView extends React.Component {
           </div>
         </> : null}
 
+        {(V.modalEditTrack) ? <>
+          <div style={sx(V.L.overlay)}>
+            <div style={sx(V.L.modalWide)}>
+              <div style={sx("position:absolute;inset:0;background:linear-gradient(150deg,rgba(93,145,166,.2),transparent 55%);pointer-events:none")}></div>
+              <div style={sx(V.L.modalPad)}>
+                <div style={sx("display:flex;justify-content:space-between;align-items:center;margin-bottom:22px")}>
+                  <div style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:22px;color:#E4EEF2")}>Edit Challenge</div>
+                  <button onClick={V.closeModal} style={sx("background:transparent;border:none;color:#56707B;cursor:pointer;font-size:15px")}>✕</button>
+                </div>
+
+                <div style={sx("display:grid;gap:16px;margin-bottom:24px")}>
+                  <div>
+                    <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>TITLE</label>
+                    <input value={V.trackEditTitle} onChange={V.setTrackEditTitle} placeholder="Challenge Title" style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 14px;font-size:13px;outline:none;border-radius:2px")} />
+                  </div>
+                  <div>
+                    <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>DESCRIPTION</label>
+                    <textarea value={V.trackEditDesc} onChange={V.setTrackEditDesc} rows="3" placeholder="Challenge Description" style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 14px;font-size:13px;outline:none;border-radius:2px;resize:vertical")}></textarea>
+                  </div>
+                  <div style={sx("display:grid;grid-template-columns:1fr 1fr;gap:16px")}>
+                    <div>
+                      <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>DIFFICULTY</label>
+                      <div style={sx("position:relative")}>
+                        <select value={V.trackEditDiff} onChange={V.setTrackEditDiff} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 30px 11px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")}>
+                          <option value="Easy">Easy</option>
+                          <option value="Medium">Medium</option>
+                          <option value="Hard">Hard</option>
+                        </select>
+                        <span style={sx("position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#5D91A6;font-size:8px")}>▼</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>GITHUB REPO URL</label>
+                      <input value={V.trackEditRepo} onChange={V.setTrackEditRepo} placeholder="https://github.com/..." style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 14px;font-size:13px;outline:none;border-radius:2px")} />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={sx("display:flex;gap:12px;flex-wrap:wrap")}>
+                  <button onClick={V.closeModal} style={sx("flex:1;min-width:110px;padding:12px 18px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(179,224,242,.16);color:#8AA5AE;cursor:pointer;transition:all .25s;border-radius:2px")}>Cancel</button>
+                  <button onClick={V.saveTrackEdit} style={sx("flex:1.6;min-width:150px;padding:12px 18px;font-size:13px;font-weight:700;white-space:nowrap;background:#B3E0F2;border:1px solid #B3E0F2;color:#080D0C;cursor:pointer;transition:all .25s;border-radius:2px")}>Save Changes</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </> : null}
+
         {(V.toast) ? <>
           <div style={sx(V.L.toast)}>
             <span style={sx("width:20px;height:20px;flex:none;border:1px solid rgba(127,178,126,.5);color:#7FB27E;display:grid;place-items:center;font-size:11px")}>✓</span>
@@ -1422,7 +1548,7 @@ class AdminPortalView extends React.Component {
 export default function AdminPortal() {
   const { squads, stats, trackDistribution, tracks, settings, profiles, submissions,
           announcements, judges, status, error, fetchedAt, refetch, setSubmissionStatus,
-          createAnnouncement, deleteAnnouncement, assignSquads } = useEventData();
+          createAnnouncement, deleteAnnouncement, assignSquads, updateTrack } = useEventData();
 
   // Exports are built from data already in memory — no server round trip.
   const handleExport = (kind) => {
@@ -1454,6 +1580,7 @@ export default function AdminPortal() {
       fetchedAt={fetchedAt}
       onRefetch={refetch}
       onSetSubmissionStatus={setSubmissionStatus}
+      onUpdateTrack={updateTrack}
     />
   );
 }

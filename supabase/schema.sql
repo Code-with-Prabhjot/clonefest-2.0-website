@@ -148,6 +148,17 @@ create policy "Tracks are viewable by everyone"
   on public.tracks for select 
   using (true);
 
+create policy "Admins can update tracks" 
+  on public.tracks for update 
+  to authenticated 
+  using (
+    exists (
+      select 1 from public.profiles 
+      where profiles.id = auth.uid() 
+      and profiles.role = 'admin'
+    )
+  );
+
 -- Submissions: 
 -- Anyone can view submissions (or restrict to own team/judges/admins if desired, 
 -- but for transparency, let's allow all authenticated to view)
@@ -187,9 +198,5 @@ create policy "Judges and Admins can update submissions"
 
 insert into public.tracks (id, title, description, difficulty, repo_url) values 
 ('T1', 'CMS', 'Rebuild the legacy PHP templates as server components.', 'Hard', 'https://github.com/clonefest/cms-starter'),
-('T2', 'Data', 'Port the data layer to Postgres with RLS.', 'Medium', 'https://github.com/clonefest/data-starter'),
-('T3', 'Commerce', 'E-commerce API and integrations.', 'Medium', 'https://github.com/clonefest/commerce-starter'),
-('T4', 'Realtime', 'Realtime collaboration and fallback polling.', 'Hard', 'https://github.com/clonefest/realtime-starter'),
-('T5', 'UI Kit', 'Reusable cyberpunk component library.', 'Easy', 'https://github.com/clonefest/uikit-starter'),
-('BUGGY', 'Buggy Repo', 'Fix memory leaks and rendering issues in the custom repository.', 'Medium', 'https://github.com/clonefest/buggy-repo-challenge')
+('T2', 'Data', 'Port the data layer to Postgres with RLS.', 'Medium', 'https://github.com/clonefest/data-starter')
 on conflict (id) do nothing;

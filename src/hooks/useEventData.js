@@ -216,6 +216,20 @@ export function useEventData() {
     return { ok: true, count: inserted.length };
   }, []);
 
+  const updateTrack = useCallback(async (id, updates) => {
+    const before = tracks;
+    setTracks((rows) => rows.map((r) => (r.id === id ? { ...r, ...updates } : r)));
+    const { error: err } = await supabase
+      .from('tracks')
+      .update(updates)
+      .eq('id', id);
+    if (err) {
+      setTracks(before);
+      return { ok: false, error: err.message };
+    }
+    return { ok: true };
+  }, [tracks]);
+
   const squads = useMemo(
     () => buildSquads({ teams, profiles, submissions, totals }),
     [teams, profiles, submissions, totals],
@@ -282,6 +296,6 @@ export function useEventData() {
     status, error, fetchedAt,
     refetch: load,
     setSubmissionStatus,
-    createAnnouncement, deleteAnnouncement, assignSquads,
+    createAnnouncement, deleteAnnouncement, assignSquads, updateTrack,
   };
 }
