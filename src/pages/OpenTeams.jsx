@@ -19,9 +19,12 @@ export default function OpenTeams() {
 
     async function fetchTeams() {
       try {
+        // Single query: teams + server-side member count from the Postgres view.
+        // The view (team_member_counts) does COUNT() on the server so we never
+        // download the whole profiles table just to count rows.
         const { data: teamsData, error: teamsError } = await supabase
           .from('teams')
-          .select('name, created_at')
+          .select('name, created_at, team_member_counts(member_count)')
           .eq('is_open', true);
 
         if (teamsError) throw teamsError;
@@ -37,26 +40,6 @@ export default function OpenTeams() {
 
         if (!alive) return;
 
-        // Fetch all profiles belonging to these teams to count members
-        const teamNames = teamsData.map(t => t.name);
-        let profilesData = [];
-        if (teamNames.length > 0) {
-          const { data, error: profilesError } = await supabase
-            .from('profiles')
-            .select('team_name')
-            .in('team_name', teamNames);
-          if (!profilesError && data) {
-            profilesData = data;
-          }
-        }
-
-        const counts = {};
-        profilesData.forEach(p => {
-          if (p.team_name) {
-            counts[p.team_name] = (counts[p.team_name] || 0) + 1;
-          }
-        });
-
         const initialRequestStatus = {};
         userRequests.forEach(req => {
           initialRequestStatus[req.team_name] = req.status;
@@ -66,7 +49,8 @@ export default function OpenTeams() {
         const openTeams = teamsData
           .map(team => ({
             name: team.name,
-            memberCount: counts[team.name] || 0,
+            // team_member_counts is a 1:1 view — Supabase returns it as an object
+            memberCount: team.team_member_counts?.member_count ?? 0,
             createdAt: team.created_at,
           }))
           .filter(team => team.memberCount < 4)
