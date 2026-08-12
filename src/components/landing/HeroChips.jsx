@@ -5,9 +5,9 @@ const CHARS = "01<>/{}[]#$%&*+=@XKF";
 
 // The three known facts about the event. Formerly the Week 1/2/3 chips.
 const CHIPS = [
-    { id: "chip-fork", label: "FORK // COMMIT // PUSH" },
-    { id: "chip-public", label: "BUILD IN PUBLIC" },
-    { id: "chip-ship", label: "SHIP IT" },
+    { id: "chip-prize", label: "7K PRIZE POOL" },
+    { id: "chip-year", label: "10TH YEAR OF CODING CLUB" },
+    { id: "chip-batch", label: "2025-2029 BATCH" },
 ];
 
 function Chip({ id, label, delay, booted, accent }) {
@@ -18,18 +18,21 @@ function Chip({ id, label, delay, booted, accent }) {
         if (busy.current) return;
         busy.current = true;
         let step = 0;
+        
+        // Use spread syntax [...label] to properly handle multi-byte emojis
+        const charsArray = [...label];
+        
         const iv = setInterval(() => {
             step++;
             setText(
-                label
-                    .split("")
+                charsArray
                     .map((ch, i) => {
                         if (ch === " " || ch === "/" || i < step) return ch;
                         return CHARS[(Math.random() * CHARS.length) | 0];
                     })
                     .join(""),
             );
-            if (step >= label.length) {
+            if (step >= charsArray.length) {
                 clearInterval(iv);
                 setText(label);
                 busy.current = false;
@@ -38,15 +41,15 @@ function Chip({ id, label, delay, booted, accent }) {
     };
 
     const base =
-        "border px-5 py-2.5 font-mono text-[11px] tracking-[0.22em] backdrop-blur-sm " +
-        "transition-[border-color,color,box-shadow] duration-300";
+        "border px-5 py-2.5 font-mono text-[12px] font-semibold tracking-[0.22em] backdrop-blur-sm " +
+        "transition-[border-color,color,box-shadow,transform] duration-300 hover:scale-[1.03]";
 
     const tone = accent
-        ? "border-[#477346] bg-[#477346]/15 text-[#B3E0F2] crt-glow " +
-          "shadow-[0_0_20px_rgba(71,115,70,0.3)] hover:border-[#B3E0F2] " +
-          "hover:shadow-[0_0_28px_rgba(71,115,70,0.5)]"
-        : "border-[#5D91A6]/40 bg-[#112026]/40 text-[#B3E0F2] crt-glow " +
-          "hover:border-[#477346] hover:shadow-[0_0_18px_rgba(71,115,70,0.25)]";
+        ? "border-[#7FB27E]/80 bg-[#477346]/25 text-[#E4EEF2] crt-glow " +
+          "shadow-[0_0_20px_rgba(127,178,126,0.4)] hover:border-[#B3E0F2] " +
+          "hover:shadow-[0_0_30px_rgba(127,178,126,0.6)]"
+        : "border-[#5D91A6]/70 bg-[#112026]/60 text-[#E4EEF2] crt-glow " +
+          "shadow-[0_0_10px_rgba(93,145,166,0.2)] hover:border-[#7FB27E]/80 hover:shadow-[0_0_20px_rgba(127,178,126,0.4)]";
 
     return (
         <motion.button
