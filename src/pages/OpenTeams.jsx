@@ -19,15 +19,28 @@ export default function OpenTeams() {
 
     async function fetchTeams() {
       try {
-        // Single query: teams + server-side member count from the Postgres view.
-        // The view (team_member_counts) does COUNT() on the server so we never
-        // download the whole profiles table just to count rows.
+        // Query 1: open teams list
         const { data: teamsData, error: teamsError } = await supabase
           .from('teams')
-          .select('name, created_at, team_member_counts(member_count)')
+          .select('name, created_at')
           .eq('is_open', true);
 
         if (teamsError) throw teamsError;
+
+        // Query 2: server-side member counts from the Postgres view.
+        // PostgREST can't auto-detect FK relationships on views, so we
+        // query the view directly and merge — still O(1) rows per team.
+        const teamNames = teamsData.map(t => t.name);
+        let countsMap = {};
+        if (teamNames.length > 0) {
+          const { data: countsData } = await supabase
+            .from('team_member_counts')
+            .select('team_name, member_count')
+            .in('team_name', teamNames);
+          (countsData || []).forEach(row => {
+            countsMap[row.team_name] = row.member_count;
+          });
+        }
 
         let userRequests = [];
         if (user) {
@@ -49,8 +62,7 @@ export default function OpenTeams() {
         const openTeams = teamsData
           .map(team => ({
             name: team.name,
-            // team_member_counts is a 1:1 view — Supabase returns it as an object
-            memberCount: team.team_member_counts?.member_count ?? 0,
+            memberCount: countsMap[team.name] ?? 0,
             createdAt: team.created_at,
           }))
           .filter(team => team.memberCount < 4)
