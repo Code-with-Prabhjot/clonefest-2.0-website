@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import CyberGrid from '../components/ui/CyberGrid';
 import CyberHeader from '../components/ui/CyberHeader';
-import { PANEL } from '../components/auth/authStyles';
+import { PANEL, FIELD, LABEL, PRIMARY, FormError, FormHead } from '../components/auth/authStyles';
 import CreateTeamForm from '../components/auth/CreateTeamForm';
 import JoinTeamForm from '../components/auth/JoinTeamForm';
 import TrackGrid from '../components/hacker/TrackGrid';
 import SubmissionLog from '../components/hacker/SubmissionLog';
 import ProfileDetailsForm from '../components/hacker/ProfileDetailsForm';
+import { supabase } from '../lib/supabase';
 import { useHackerData } from '../hooks/useHackerData';
 
 // ─── Loading screen ──────────────────────────────────────────────────────────
@@ -30,13 +31,87 @@ function LoadingScreen() {
   );
 }
 
+// ─── Find-a-Squad form — 3rd tab, matches Create/Join in structure ────────────
+function FindSquadForm({ user, profile }) {
+  const [name, setName] = useState(profile?.full_name || '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  const alreadyHasName = !!profile?.full_name;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (!alreadyHasName) {
+      if (trimmed.length < 2 || trimmed.length > 30) {
+        return setError('Callsign must be 2–30 characters.');
+      }
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      if (!alreadyHasName) {
+        const { error: dbErr } = await supabase
+          .from('profiles')
+          .update({ full_name: trimmed })
+          .eq('id', user.id);
+        if (dbErr) throw dbErr;
+      }
+      navigate('/teams');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <FormHead
+        kicker="Scout"
+        title="Find a squad"
+        blurb={
+          alreadyHasName
+            ? `You're browsing as ${profile.full_name}. Browse open squads and request to join one.`
+            : 'Set your callsign so squads know who’s requesting, then browse open squads.'
+        }
+      />
+
+      <FormError>{error}</FormError>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {!alreadyHasName && (
+          <div>
+            <label className={LABEL} htmlFor="find-callsign">Operative callsign</label>
+            <input
+              id="find-callsign"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              maxLength={30}
+              autoFocus
+              className={FIELD}
+              placeholder="e.g. nulldiv"
+            />
+          </div>
+        )}
+        <button type="submit" disabled={loading} className={PRIMARY}>
+          {loading ? 'Saving…' : 'Find a Squad →'}
+        </button>
+      </form>
+    </>
+  );
+}
+
 // ─── Onboarding screen (no team yet) ─────────────────────────────────────────
-function OnboardingScreen({ user }) {
+function OnboardingScreen({ user, profile }) {
   const [activeTab, setActiveTab] = useState('create');
 
-  const TAB_BASE  = 'px-6 py-2 uppercase font-bold text-sm border transition-all font-mono';
-  const TAB_ON    = 'border-[#5D91A6] bg-[#5D91A6]/10 text-[#B3E0F2] shadow-[0_0_10px_rgba(93,145,166,0.25)]';
-  const TAB_OFF   = 'border-[#B3E0F2]/10 text-[#56707B] hover:border-[#B3E0F2]/25 hover:text-[#8AA5AE]';
+  const TAB_BASE = 'px-6 py-2 uppercase font-bold text-sm border transition-all font-mono';
+  const TAB_ON   = 'border-[#5D91A6] bg-[#5D91A6]/10 text-[#B3E0F2] shadow-[0_0_10px_rgba(93,145,166,0.25)]';
+  const TAB_OFF  = 'border-[#B3E0F2]/10 text-[#56707B] hover:border-[#B3E0F2]/25 hover:text-[#8AA5AE]';
 
   return (
     <div className="min-h-screen bg-[#080D0C] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-[var(--pet-lane)]">
@@ -69,15 +144,24 @@ function OnboardingScreen({ user }) {
         </h1>
 
         <div className="flex gap-4 mb-8">
-          <button onClick={() => setActiveTab('create')} className={`${TAB_BASE} ${activeTab === 'create' ? TAB_ON : TAB_OFF}`}>
+          <button
+            onClick={() => setActiveTab('create')}
+            className={`${TAB_BASE} ${activeTab === 'create' ? TAB_ON : TAB_OFF}`}
+          >
             Forge squad
           </button>
-          <button onClick={() => setActiveTab('join')} className={`${TAB_BASE} ${activeTab === 'join' ? TAB_ON : TAB_OFF}`}>
+          <button
+            onClick={() => setActiveTab('join')}
+            className={`${TAB_BASE} ${activeTab === 'join' ? TAB_ON : TAB_OFF}`}
+          >
             Enlist
           </button>
-          <Link to="/teams" className={`${TAB_BASE} ${TAB_OFF} flex items-center`}>
+          <button
+            onClick={() => setActiveTab('find')}
+            className={`${TAB_BASE} ${activeTab === 'find' ? TAB_ON : TAB_OFF}`}
+          >
             Find a Squad
-          </Link>
+          </button>
         </div>
 
         <div className="w-full flex justify-center max-w-md">
@@ -89,6 +173,11 @@ function OnboardingScreen({ user }) {
           {activeTab === 'join' && (
             <div className={`${PANEL} p-7 sm:p-8 w-full`}>
               <JoinTeamForm user={user} />
+            </div>
+          )}
+          {activeTab === 'find' && (
+            <div className={`${PANEL} p-7 sm:p-8 w-full`}>
+              <FindSquadForm user={user} profile={profile} />
             </div>
           )}
         </div>
@@ -298,7 +387,7 @@ export default function HackerPortal() {
         </OnboardingShell>
       );
     }
-    return <OnboardingScreen user={user} />;
+    return <OnboardingScreen user={user} profile={profile} />;
   }
 
   return (

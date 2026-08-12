@@ -69,6 +69,8 @@ export default function TeamDetails() {
   const [rosterState, setRosterState] = useState('loading');
   const [pendingRequests, setPendingRequests] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [isOpen, setIsOpen] = useState(null);       // null = not yet loaded
+  const [togglingOpen, setTogglingOpen] = useState(false);
 
   useEffect(() => {
     if (!profile?.team_name) return;
@@ -94,12 +96,31 @@ export default function TeamDetails() {
         if (profile.role === 'lead') {
           const { data: reqData, error: reqError } = await supabase
             .from('team_requests')
-            .select('id, user_id, status, profiles(full_name)')
+            .select('id, user_id, status')
             .eq('team_name', profile.team_name)
             .eq('status', 'pending');
             
-          if (!reqError && alive) {
-            setPendingRequests(reqData || []);
+          if (!reqError && alive && reqData && reqData.length > 0) {
+            // Explicitly fetch requester profiles by their IDs so we
+            // always get the full_name even if the FK join returns null.
+            const userIds = reqData.map(r => r.user_id);
+            const { data: requesterProfiles } = await supabase
+              .from('profiles')
+              .select('id, full_name')
+              .in('id', userIds);
+
+            const profileMap = Object.fromEntries(
+              (requesterProfiles || []).map(p => [p.id, p])
+            );
+
+            setPendingRequests(
+              reqData.map(r => ({
+                ...r,
+                profiles: profileMap[r.user_id] || null,
+              }))
+            );
+          } else if (!reqError && alive) {
+            setPendingRequests([]);
           }
         }
       } catch (err) {
@@ -111,6 +132,33 @@ export default function TeamDetails() {
 
     return () => { alive = false; };
   }, [profile?.team_name, profile?.role]);
+
+  // Sync is_open from team object once it loads
+  useEffect(() => {
+    if (team && isOpen === null) {
+      setIsOpen(!!team.is_open);
+    }
+  }, [team, isOpen]);
+
+  const handleToggleListing = async () => {
+    if (togglingOpen) return;
+    const next = !isOpen;
+    setIsOpen(next);
+    setTogglingOpen(true);
+    try {
+      const { error } = await supabase
+        .from('teams')
+        .update({ is_open: next })
+        .eq('name', profile.team_name);
+      if (error) throw error;
+    } catch (err) {
+      // revert
+      setIsOpen(!next);
+      alert('Failed to update listing: ' + err.message);
+    } finally {
+      setTogglingOpen(false);
+    }
+  };
 
   const handleRequestAction = async (requestId, userId, action) => {
     try {
@@ -283,7 +331,11 @@ export default function TeamDetails() {
                 {pendingRequests.map(req => (
                   <li key={req.id} className="flex items-center justify-between gap-3 py-3">
                     <span className="min-w-0 flex-1 truncate text-[13.5px] text-[#E4EEF2]">
-                      {req.profiles?.full_name || 'operative'}
+                      {req.profiles?.full_name || (
+                        <span className="font-jet text-[11px] text-[#56707B] tracking-[0.1em]">
+                          uid:{req.user_id.slice(0, 8)}
+                        </span>
+                      )}
                     </span>
                     <div className="flex gap-2">
                       <button onClick={() => handleRequestAction(req.id, req.user_id, 'accept')} className="font-jet rounded-[2px] border border-[rgba(127,178,126,0.3)] bg-[rgba(127,178,126,0.1)] px-3 py-1 text-[9px] uppercase tracking-[0.16em] text-[#7FB27E] transition-colors hover:bg-[rgba(127,178,126,0.2)]">
@@ -301,7 +353,6 @@ export default function TeamDetails() {
 
         </div>
 
-        {/* Identity */}
         <div style={CARD} className="p-5 sm:p-6">
           <Kicker>Details</Kicker>
           <div className="mt-3 divide-y divide-[#B3E0F2]/[0.07] border-y border-[#B3E0F2]/[0.07]">
@@ -329,6 +380,30 @@ export default function TeamDetails() {
                   </button>
                 </span>
               </Row>
+            )}
+            {isLead && (
+              <Row label="Squad listing">
+                <button
+                  onClick={handleToggleListing}
+                  disabled={togglingOpen || isOpen === null}
+                  className="font-jet rounded-[2px] border px-3 py-1 text-[9px] uppercase tracking-[0.16em] transition-all"
+                  style={{
+                    borderColor: isOpen ? 'rgba(127,178,126,0.5)' : 'rgba(179,224,242,0.2)',
+                    color: isOpen ? '#7FB27E' : '#56707B',
+                    background: isOpen ? 'rgba(127,178,126,0.1)' : 'transparent',
+                    opacity: togglingOpen ? 0.5 : 1,
+                  }}
+                >
+                  {isOpen ? '● Open' : '○ Private'}
+                </button>
+              </Row>
+            )}
+            {isLead && (
+              <p className="pt-2 pb-1 font-jet text-[9px] uppercase tracking-[0.12em] text-[#56707B]">
+                {isOpen
+                  ? 'Your squad is visible in the Find a Squad directory.'
+                  : 'Your squad is hidden. Toggle to Open so others can find you.'}
+              </p>
             )}
           </div>
 
