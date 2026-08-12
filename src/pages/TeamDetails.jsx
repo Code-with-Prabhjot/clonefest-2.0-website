@@ -290,7 +290,7 @@ export default function TeamDetails() {
           <div className="flex items-baseline justify-between gap-3">
             <Kicker>Roster</Kicker>
             <span className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#8AA5AE]">
-              {rosterState === 'ready' ? `${members.length} of 5` : '—'}
+              {rosterState === 'ready' ? `${members.length} of 4` : '—'}
             </span>
           </div>
 
