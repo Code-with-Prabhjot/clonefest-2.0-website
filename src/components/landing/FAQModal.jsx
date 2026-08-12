@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 
 const faqs = [
-  { q: "What is CloneFest?", a: "A 10-day open-source sprint to build, improve, and contribute to real-world codebases. Gain hands-on open-source experience for your resume." },
+  { q: "What is CloneFest?", a: "CloneFest is an intensive 10-day open-source sprint designed to elevate your skills. You and your squad will build and contribute to live, real-world codebases, gaining the kind of hands-on experience that makes recruiters take notice." },
   { q: "When is the event?", a: "The event runs from 20th to 30th August." },
   { q: "Who can participate?", a: "Students from the 2025-29 batch. You must participate in a team of 3-4 members." },
   { q: "What is the mode of the event?", a: "The event is completely ONLINE." },

@@ -1,7 +1,7 @@
 # CloneFest 2.0 - Event Details & FAQ
 
 **What is CloneFest?**
-A 10-day open-source sprint to build, improve, and contribute to real-world codebases. Gain hands-on open-source experience for your resume.
+CloneFest is an intensive 10-day open-source sprint designed to elevate your skills. You and your squad will build and contribute to live, real-world codebases, gaining the kind of hands-on experience that makes recruiters take notice.
 
 **When is the event?**
 The event runs from 20th to 30th August.
