@@ -1,4 +1,5 @@
 import React from 'react';
+import { useJudgeData } from '../hooks/useJudgeData';
 import { sx } from '../lib/sx';
 import './JudgePortal.css';
 
@@ -15,7 +16,7 @@ const CRIT = [
   {k:'iv', name:'Innovation & Going Beyond', max:20, hint:'Anything past the brief the squad chose to build and can justify in review.'}
 ];
 
-const SQUADS = [
+const SQUADS_FALLBACK = [
   {name:'GHOST_IN_SHELL', track:'T4 · Realtime',  subs:2, status:'scored', updated:'08 Aug · 11:20', prPts:19, prMerged:3, prTotal:5, members:[['bashful','LEAD'],['pixelmoth',''],['nulldiv',''],['tracelog','']], late:[0,0,0]},
   {name:'SEGFAULT_SALLY', track:'T2 · Data',      subs:2, status:'scored', updated:'08 Aug · 10:04', prPts:16, prMerged:3, prTotal:4, members:[['heapdump','LEAD'],['kernelkid',''],['nulldiv','']], late:[0,1,0]},
   {name:'NULL_POINTER',   track:'T5 · UI Kit',    subs:2, status:'scored', updated:'07 Aug · 19:41', prPts:14, prMerged:2, prTotal:5, members:[['ax0lotl','LEAD'],['pixelmoth',''],['monospace',''],['quackd','']], late:[0,0,0]},
@@ -89,15 +90,11 @@ const STATUS = {
   none:  {label:'Not started', c:DIM,     fill:'transparent', border:DIM}
 };
 
-export default class JudgePortal extends React.Component {
+class JudgePortalView extends React.Component {
 
   state = {
     view:null, idx:3, tick:0, search:'', tab:'All', sort:'status',
-    scores:JSON.parse(JSON.stringify(SEED)), feedback:Object.assign({}, SEED_FB),
-    comments:{DEEP_THOUGHT:{fc:'Editor and media library are complete; the scheduled-publish queue is stubbed.'}},
-    attempted:{TABS_OVER_SPACES:true},
-    locked:{GHOST_IN_SHELL:'08 Aug 2026 · 11:20 IST', SEGFAULT_SALLY:'08 Aug 2026 · 10:04 IST', NULL_POINTER:'07 Aug 2026 · 19:41 IST',
-            RUBBER_DUCKS:'07 Aug 2026 · 15:33 IST', STACK_OVERFLOW:'06 Aug 2026 · 13:27 IST', YAK_SHAVERS:'05 Aug 2026 · 20:11 IST'},
+    scores:{}, feedback:{}, comments:{}, attempted:{}, locked:{}, hydrated:false,
     prState:null, modal:false, toast:null, toastTitle:''
   };
 
@@ -110,7 +107,62 @@ export default class JudgePortal extends React.Component {
     this._t = setTimeout(() => this.setState({toast:null}), 4600);
   }
 
-  sq(){ return SQUADS[this.state.idx]; }
+  componentDidUpdate(prev){
+    // Fold saved scores into the editable state the rubric works against.
+    if (!this.state.hydrated && this.props.squads && this.props.squads.length){
+      const scores = {}, feedback = {}, comments = {}, locked = {};
+      for (const sq of this.props.squads){
+        const sc = sq.score;
+        if (!sc) continue;
+        scores[sq.name] = {
+          cq: sc.code_quality ?? '', fc: sc.completeness ?? '', ux: sc.ux_design ?? '',
+          dd: sc.deployment ?? '',   iv: sc.innovation ?? '',
+        };
+        feedback[sq.name] = sc.feedback || '';
+        comments[sq.name] = sc.comments || {};
+        if (sc.status === 'final'){
+          locked[sq.name] = new Date(sc.updated_at || sc.created_at)
+            .toLocaleString('en-GB', {day:'2-digit', month:'short', year:'numeric',
+                                      hour:'2-digit', minute:'2-digit'});
+        }
+      }
+      this.setState({scores, feedback, comments, locked, hydrated:true});
+    }
+  }
+
+  /** Live squads mapped onto the shape this design renders. */
+  squadList(){
+    const live = this.props.squads;
+    // Live squads from useJudgeData, mapped onto the shape this design renders.
+    return (live && live.length)
+      ? live.map((q) => ({
+          name: q.name,
+          track: q.subs[0]?.track_id || '\u2014',
+          subs: q.subs.length,
+          status: q.score?.status === 'final' ? 'scored'
+                : q.score ? 'draft' : 'none',
+          updated: q.updated
+            ? new Date(q.updated).toLocaleDateString('en-GB',
+                { day:'2-digit', month:'short' }).toUpperCase()
+            : '\u2014',
+          prPts: 0, prMerged: 0, prTotal: q.subs.length,
+          members: q.members.length ? q.members : [['operative','LEAD']],
+          late: [0, 0, 0],
+          _subs: q.subs,
+          _submissionId: q.latestSubmissionId,
+        }))
+      : (this.props.loading ? [] : SQUADS_FALLBACK);
+  }
+
+  sq(){
+    const L = this.squadList();
+    // Placeholder must be shape-complete: the detail view reads members[0][0].
+    return L[this.state.idx] || L[0] || {
+      name:'', track:'—', subs:0, status:'none', updated:'—',
+      prPts:0, prMerged:0, prTotal:0,
+      members:[['operative','LEAD']], late:[0,0,0], _subs:[], _submissionId:null,
+    };
+  }
   vals(name){ return this.state.scores[name] || {}; }
 
   setScore(name, k, v){
@@ -131,6 +183,8 @@ export default class JudgePortal extends React.Component {
   }
 
   renderVals(){
+    const SQUADS = this.squadList();
+
     ANIM.host = this;
     startAnim();
     const s = this.state, t = ANIM.t, on = ANIM.on;
@@ -457,7 +511,15 @@ export default class JudgePortal extends React.Component {
       actionNote: locked
         ? 'LOCKED · EDITS REQUIRE AN ADMIN UNLOCK'
         : 'DRAFTS ARE PRIVATE TO YOU · FINAL SCORES ARE VISIBLE TO ADMINS AND CANNOT BE EDITED',
-      saveDraft: () => { if (locked) return; this.toast('Draft saved', name + ' · ' + total + '/100 · only you can see this.'); },
+      saveDraft: async () => {
+        if (locked) return;
+        const res = await this.props.onSaveScore({
+          teamName: name, submissionId: q._submissionId, values: vals,
+          comments: s.comments[name] || {}, feedback: fb, finalise: false,
+        });
+        if (!res.ok) return this.toast('Could not save draft', res.error);
+        this.toast('Draft saved', name + ' · ' + total + '/100 · only you can see this.');
+      },
       resetForm: () => {
         if (locked) return;
         const sc = Object.assign({}, s.scores), f = Object.assign({}, s.feedback), a = Object.assign({}, s.attempted);
@@ -477,11 +539,17 @@ export default class JudgePortal extends React.Component {
         {k:'MERGED PR POINTS', v: prOk ? '+' + prPts : 'unavailable', color: prOk ? MOSS_LT : DIM},
         {k:'COMBINED', v:String(total + (prOk ? prPts : 0)), color:ICE}
       ],
-      confirmSubmit: () => {
+      confirmSubmit: async () => {
+        const res = await this.props.onSaveScore({
+          teamName: name, submissionId: q._submissionId, values: vals,
+          comments: s.comments[name] || {}, feedback: fb, finalise: true,
+        });
+        if (!res.ok) { this.setState({modal:false}); return this.toast('Could not submit', res.error); }
         const lk = Object.assign({}, s.locked);
-        lk[name] = '09 Aug 2026 · 14:07 IST';
+        lk[name] = new Date().toLocaleString('en-GB', {day:'2-digit', month:'short',
+          year:'numeric', hour:'2-digit', minute:'2-digit'});
         this.setState({locked:lk, modal:false});
-        this.toast('Score submitted', name + ' · ' + (total + (prOk ? prPts : 0)) + ' combined · locked and sent to admins.');
+        this.toast('Score submitted', name + ' · ' + total + '/100 · locked and sent to admins.');
       },
 
       goDashboard: () => this.setState({view:'list'}),
@@ -510,7 +578,7 @@ export default class JudgePortal extends React.Component {
             <div style={sx("display:flex;align-items:center;gap:14px")}>
               <div style={sx("display:flex;align-items:center")}>
                 <img src="/assets/image.png" alt="RVCE" style={sx("height:34px;width:auto;filter:invert(1);mix-blend-mode:screen")} />
-                <img src="/assets/cc%20new%20logo.jpeg" alt="Coding Club" style={sx("height:34px;width:auto;margin-left:12px;mix-blend-mode:screen")} />
+                <img src="/assets/cc-10-years-white.png" alt="Coding Club" style={sx("height:40px;width:auto;margin-left:12px")} />
               </div>
               <div style={sx("width:1px;height:30px;background:rgba(179,224,242,.14)")}></div>
               <div>
@@ -1034,4 +1102,38 @@ export default class JudgePortal extends React.Component {
       </div>
     );
   }
+}
+
+/**
+ * Live-data wrapper. The view above is the imported design; its squads, saved
+ * rubrics and lock state now come from Supabase, and Save draft / Submit final
+ * write to public.scores.
+ */
+export default function JudgePortal(props) {
+  const { squads, progress, status, error, migrationMissing, saveScore, refetch } = useJudgeData();
+
+  return (
+    <>
+      {migrationMissing && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
+          background: 'rgba(194,86,75,.14)', borderBottom: '1px solid rgba(194,86,75,.5)',
+          color: '#E6A79E', font: "500 11px/1.6 'JetBrains Mono', monospace",
+          letterSpacing: '.14em', textTransform: 'uppercase', padding: '10px 16px',
+          textAlign: 'center',
+        }}>
+          Scoring tables missing — apply supabase/patch_008_judging.sql to enable saving
+        </div>
+      )}
+      <JudgePortalView
+        {...props}
+        squads={squads}
+        progress={progress}
+        loading={status === 'loading'}
+        error={status === 'error' ? error : null}
+        onSaveScore={saveScore}
+        onRefetch={refetch}
+      />
+    </>
+  );
 }

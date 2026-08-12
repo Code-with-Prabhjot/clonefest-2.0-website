@@ -28,14 +28,14 @@ export default function LoginForm() {
     setLoading(true);
     setError(null);
 
-    const emailErr = validateRvceEmail(email);
-    if (emailErr) {
-      setError(emailErr);
-      setLoading(false);
-      return;
-    }
-    
     if (isSignUp) {
+      const emailErr = validateRvceEmail(email);
+      if (emailErr) {
+        setError(emailErr);
+        setLoading(false);
+        return;
+      }
+
       if (password.length < 6) {
         setError('Access code must be at least 6 characters.');
         setLoading(false);

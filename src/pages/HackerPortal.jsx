@@ -7,6 +7,7 @@ import CreateTeamForm from '../components/auth/CreateTeamForm';
 import JoinTeamForm from '../components/auth/JoinTeamForm';
 import TrackGrid from '../components/hacker/TrackGrid';
 import SubmissionLog from '../components/hacker/SubmissionLog';
+import Announcements from '../components/hacker/Announcements';
 import ProfileDetailsForm from '../components/hacker/ProfileDetailsForm';
 import { supabase } from '../lib/supabase';
 import { useHackerData } from '../hooks/useHackerData';
@@ -185,7 +186,7 @@ function Dashboard({ profile, tracks, submissions, refetch }) {
       style={{ position: 'relative' }}
     >
       <CyberGrid variant="cyan" />
-      <CyberHeader variant="cyan" customLogo="/assets/cc%20new%20logo.jpeg" />
+      <CyberHeader variant="cyan" customLogo="/assets/cc-10-years-white.png" />
 
       <div
         style={{
@@ -210,6 +211,12 @@ function Dashboard({ profile, tracks, submissions, refetch }) {
               View leaderboard →
             </Link>
           </div>
+        </div>
+
+        {/* ── Section: Announcements ────────────────────────────────────── */}
+        <div style={{ marginBottom: 48 }}>
+          <SectionLabel>&gt; Announcements</SectionLabel>
+          <Announcements role={profile?.role} />
         </div>
 
         {/* ── Section: Mission dossier (track grid) ─────────────────────── */}

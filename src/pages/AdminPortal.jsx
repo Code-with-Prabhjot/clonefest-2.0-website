@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { sx } from '../lib/sx';
 import { supabase } from '../lib/supabase';
+import { useEventData, rankSquads } from '../hooks/useEventData';
+import { EXPORTS, downloadCsv } from '../lib/csv';
 import './AdminPortal.css';
 
 // ── Submission Timer Panel ────────────────────────────────────────────────────
@@ -149,7 +151,7 @@ const CHIP = {
   scored:   {label:'Scored',        c:ICE,     fill:ICE,           border:ICE}
 };
 
-const SQUADS = [
+const SQUADS_FALLBACK = [
   {name:'GHOST_IN_SHELL', lead:'bashful',   members:4, track:'T4 · Realtime',  w:['scored','scored','scored'],     score:94, judge:'a_menon', invite:'GH0ST-4X', reg:'19 Jul 2026', prs:14},
   {name:'SEGFAULT_SALLY', lead:'heapdump',  members:3, track:'T2 · Data',      w:['scored','scored','accepted'],   score:91, judge:'v_rao',   invite:'SEGF-7K2', reg:'18 Jul 2026', prs:11},
   {name:'NULL_POINTER',   lead:'ax0lotl',   members:4, track:'T5 · UI Kit',    w:['scored','accepted','pending'],  score:87, judge:'v_rao',   invite:'NULL-9QX', reg:'18 Jul 2026', prs:9},
@@ -196,12 +198,13 @@ function startAnim(){
 const MONO = "font-family:'JetBrains Mono',monospace";
 const PANEL = 'background:#112026;border:1px solid rgba(179,224,242,.10);border-radius:3px';
 
-export default class AdminPortal extends React.Component {
+class AdminPortalView extends React.Component {
 
   state = {
     section:'overview', stateOverride:null, expanded:'GHOST_IN_SHELL',
     modal:null, confirm:null, toast:null, toastTitle:'', banner:true,
     search:'', bodyLen:0, pinned:true, tick:0,
+    annTitle:'', annBody:'', annAudience:'all', judgeId:'',
     picked:{'NULL_POINTER':true,'DEEP_THOUGHT':true,'TABS_OVER_SPACES':true},
     locks:{1:false,2:false,3:true}
   };
@@ -225,7 +228,52 @@ export default class AdminPortal extends React.Component {
     };
   }
 
+  async removeAnnouncement(id, title){
+    const res = await this.props.onDeleteAnnouncement(id);
+    if (!res.ok) return this.toast('Could not delete', res.error);
+    this.toast('Announcement deleted', title);
+  }
+
+  async moderate(id, next, squadName){
+    const res = await this.props.onSetSubmissionStatus(id, next);
+    if (!res || res.ok === false) {
+      return this.toast('Could not update', (res && res.error) || 'Update failed.');
+    }
+    this.toast('Submission ' + next, squadName + ' \u00b7 now visible to the squad and the leaderboard.');
+  }
+
   renderVals(){
+    // Live data from useEventData, mapped onto the shape this design renders.
+    // Falls back to the sample rows only until the first fetch resolves.
+    const ST = this.props.stats || { squads:0, hackers:0, leads:0, members:0,
+      unassigned:0, judges:0, submissions:0, cleared:0, pending:0, rejected:0, tracks:0,
+      scoredSquads:0, totalPoints:0 };
+    const EX = {
+      users: (this.props.profiles || []).length,
+      submissions: (this.props.submissions || []).length,
+      squads: (this.props.squads || []).length,
+    };
+    const live = this.props.squads;
+    const SQUADS = (live && live.length)
+      ? live.map((q) => ({
+          name: q.name,
+          lead: q.lead || 'unassigned',
+          members: q.members,
+          track: q.track,
+          w: [q.c1, q.c2],
+          score: q.score,          // null until a points column exists
+          judge: q.judge,
+          invite: q.invite,
+          reg: q.registered
+            ? new Date(q.registered).toLocaleDateString('en-GB',
+                { day: '2-digit', month: 'short', year: 'numeric' })
+            : '—',
+          prs: q.total,
+          roster: q.roster,
+          _subs: q.subs,
+        }))
+      : (this.props.loading ? [] : SQUADS_FALLBACK);
+
     ANIM.host = this;
     startAnim();
     const s = this.state;
@@ -298,27 +346,44 @@ export default class AdminPortal extends React.Component {
 
     const rows = SQUADS.map((q, idx) => {
       const open = s.expanded === q.name;
-      const roster = [{role:'LEAD', callsign:q.lead, email:EMAIL(q.lead)}]
-        .concat(['pixelmoth','nulldiv','tracelog','kernelkid'].slice(0, q.members-1)
-          .map(c => ({role:'MEMBER', callsign:c, email:EMAIL(c)})))
+      const roster = (q.roster && q.roster.length
+        ? q.roster.map(m => ({ role:m.role, callsign:m.callsign, email:m.usn || EMAIL(m.callsign) }))
+        : [{role:'LEAD', callsign:q.lead, email:EMAIL(q.lead)}])
         .map((m, i) => Object.assign(m, {
           roleStyle: MONO + ';font-size:9px;letter-spacing:.12em;width:52px;flex:none;color:' + (m.role === 'LEAD' ? ICE : DIM),
           rowStyle:'display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(179,224,242,.06);animation:rise .3s ease-out ' + (i*0.05) + 's both'
         }));
       return {
-        name:q.name, lead:q.lead, members:q.members, track:q.track, score:q.score,
+        name:q.name, lead:q.lead, members:q.members, track:q.track,
+        score: q.score === null || q.score === undefined ? '\u2014' : q.score,
         judge:q.judge || 'unassigned',
         judgeColor:q.judge ? TXT : DIM,
         w1:this.chip(q.w[0]), w2:this.chip(q.w[1]),
         open, invite:q.invite, registered:q.reg, prs:q.prs, roster,
         meterStyle:'position:absolute;inset:0 auto 0 0;background:' + STEEL + ';transition:width .9s cubic-bezier(.22,1,.36,1) ' +
-          (0.15 + idx*0.05) + 's;width:' + (on ? q.score + '%' : '0%'),
-        links:q.w.slice(0,2).map((st,i) => ({
-          week:'CHALLENGE 0' + (i+1),
-          repo: st === 'none' ? 'no repo' : 'github.com/' + q.lead + '/cf2-w' + (i+1),
-          demo: st === 'none' ? 'no demo' : q.name.toLowerCase().replace(/_/g,'-') + '-w' + (i+1) + '.vercel.app',
-          linkStyle: MONO + ';font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:' + (st === 'none' ? DIM : ICE)
-        })),
+          (0.15 + idx*0.05) + 's;width:' + (on && q.score != null ? q.score + '%' : '0%'),
+        links:(q._subs || []).map((sub) => {
+          const chip = this.chip(sub.status);
+          const act = (ok, tone) => 'padding:5px 10px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;' +
+            MONO + ';border-radius:2px;background:transparent;cursor:' + (ok ? 'pointer' : 'not-allowed') +
+            ';transition:all .2s;border:1px solid ' + (ok ? tone + '66' : 'rgba(179,224,242,.10)') +
+            ';color:' + (ok ? tone : '#3d5560');
+          return {
+            week: sub.track_id || '\u2014',
+            repo: (sub.pr_url || 'no link').replace(/^https?:\/\//, ''),
+            repoUrl: sub.pr_url || '#',
+            statusLabel: chip.label,
+            statusStyle: chip.text,
+            statusDot: chip.dot,
+            canAccept: sub.status !== 'accepted',
+            canReject: sub.status !== 'rejected',
+            acceptStyle: act(sub.status !== 'accepted', '#7FB27E'),
+            rejectStyle: act(sub.status !== 'rejected', '#C2564B'),
+            accept: () => this.moderate(sub.id, 'accepted', q.name),
+            reject: () => this.moderate(sub.id, 'rejected', q.name),
+            linkStyle: MONO + ';font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:' + (sub.pr_url ? ICE : DIM)
+          };
+        }),
         wrapStyle:'animation:rise .4s ease-out ' + (idx*0.045) + 's both;transition:border-color .3s;border-left:2px solid ' +
           (open ? ICE : 'transparent') + (open ? ';background:rgba(93,145,166,.06)' : ''),
         caretStyle:'background:transparent;border:none;cursor:pointer;font-size:16px;line-height:1;padding:6px 4px;transition:transform .3s cubic-bezier(.22,1,.36,1),color .25s;color:' +
@@ -402,12 +467,18 @@ export default class AdminPortal extends React.Component {
       goSquads: () => this.setState({section:'squads'}),
       goAnn: () => this.setState({section:'announcements'}),
 
+      squadCount:String(ST.squads), trackCount:String(ST.tracks),
       stats:[
-        {label:'Total squads', value:count(142), unit:'', sub:'+18 new', color:TXT},
-        {label:'Total hackers', value:count(561), unit:'', sub:'142 leads / 419 members', color:TXT},
-        {label:'Submissions', value:count(118), unit:'', sub:'118 of 142 squads', color:ICE},
-        {label:'Scoring progress', value:count(68), unit:'%', sub:'96 of 142 squads scored', color:MOSS_LT},
-        {label:'Registration closes', value:count(3), unit:'days', sub:'11 Aug 2026 · 23:59 IST', color:STEEL}
+        {label:'Total squads', value:count(ST.squads), unit:'',
+         sub: ST.unassigned + ' operatives without a squad', color:TXT},
+        {label:'Total hackers', value:count(ST.hackers), unit:'',
+         sub: ST.leads + ' leads / ' + ST.members + ' members', color:TXT},
+        {label:'Submissions', value:count(ST.submissions), unit:'',
+         sub: ST.pending + ' awaiting review', color:ICE},
+        {label:'Points awarded', value:count(ST.totalPoints), unit:'',
+         sub: ST.scoredSquads + ' of ' + ST.squads + ' squads scored', color:MOSS_LT},
+        {label:'Tracks', value:count(ST.tracks), unit:'',
+         sub: ST.judges + ' judges registered', color:STEEL}
       ].map((st,i) => Object.assign(st, {
         cellStyle:'transition:background .3s;animation:rise .45s ease-out ' + (0.1 + i*0.07) + 's both;padding:' +
           (phone ? '18px 16px' : '22px 24px 20px') +
@@ -444,35 +515,51 @@ export default class AdminPortal extends React.Component {
       bodyLen:s.bodyLen,
       countColor: s.bodyLen > 460 ? CLAY : DIM,
       countBar:'height:100%;transition:width .3s ease-out;width:' + Math.min(100, s.bodyLen/5) + '%;background:' + (s.bodyLen > 460 ? CLAY : STEEL),
-      onBody: e => this.setState({bodyLen:e.target.value.length}),
+      annTitle:s.annTitle, annBody:s.annBody, annAudience:s.annAudience,
+      onTitle: e => this.setState({annTitle:e.target.value}),
+      onBody: e => this.setState({annBody:e.target.value, bodyLen:e.target.value.length}),
+      onAudience: e => this.setState({annAudience:e.target.value}),
       togglePin: () => this.setState({pinned:!pinOn}),
       pinText: pinOn ? 'PINNED' : 'OFF',
       pinTrack:swTrack(pinOn), pinKnob:swKnob(pinOn), pinLabel:swLabel(pinOn),
       openBroadcast: () => this.setState({modal:'broadcast'}),
-      confirmBroadcast: () => this.toast('Broadcast sent', 'Delivered to 561 hackers · pinned to top.'),
+      confirmBroadcast: async () => {
+        const res = await this.props.onCreateAnnouncement({
+          title:s.annTitle, body:s.annBody, audience:s.annAudience, isPinned:pinOn,
+        });
+        this.setState({modal:null});
+        if (!res.ok) return this.toast('Could not broadcast', res.error);
+        this.setState({annTitle:'', annBody:'', bodyLen:0});
+        this.toast('Broadcast sent', 'Now visible on every hacker dashboard.');
+      },
       openDelete: () => this.setState({modal:'confirm', confirm:{
         kicker:'DESTRUCTIVE', color:CLAY, title:'Delete this announcement?',
         body:'It disappears from every hacker dashboard immediately. Delivery records are kept for the audit log.',
         cta:'Delete announcement', kind:'danger'
       }}),
-      announcements:[
-        {title:'Challenge 02 unlocks at 23:59 IST', excerpt:'Challenge 02 goes live on 25 August. Deploy URLs must resolve over HTTPS before the Wednesday cutoff.', audience:'ALL HACKERS', time:'08 AUG · 09:02', sender:'v_kulkarni', pinned:true},
-        {title:'Canvas repo PR freeze in 48h', excerpt:'Merged-PR points lock on 10 Aug. Anything still in review after that counts for nothing.', audience:'ALL HACKERS', time:'07 AUG · 18:40', sender:'v_kulkarni', pinned:false},
-        {title:'Leads: confirm your roster', excerpt:'Any member not accepted by Friday is dropped from the squad and cannot rejoin with the same invite code.', audience:'SQUAD LEADS', time:'05 AUG · 11:15', sender:'r_prasad', pinned:false},
-        {title:'T5 problem statement amended', excerpt:'Clause 4b on component parity was ambiguous. Revised text is in the handbook; scoring follows the new version.', audience:'TRACK T5', time:'03 AUG · 20:27', sender:'r_prasad', pinned:false}
-      ].map((a,i) => Object.assign(a, {
+      announcements:(this.props.announcements || []).map(a => ({
+        id:a.id,
+        title:a.title,
+        excerpt:a.body,
+        audience:(a.audience === 'leads' ? 'SQUAD LEADS'
+                : a.audience === 'judges' ? 'JUDGES' : 'ALL HACKERS'),
+        time:new Date(a.created_at).toLocaleString('en-GB',
+          {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}).toUpperCase(),
+        sender:'admin',
+        pinned:!!a.is_pinned,
+        remove: () => this.removeAnnouncement(a.id, a.title),
+      })).map((a,i) => Object.assign(a, {
         wrapStyle:'padding:' + (phone ? '16px 18px' : '18px 24px') + ';border-bottom:1px solid rgba(179,224,242,.06);transition:background .25s;animation:rise .4s ease-out ' +
           (0.12 + i*0.07) + 's both;border-left:2px solid ' + (a.pinned ? ICE : 'transparent')
       })),
 
-      judges:[
-        {callsign:'a_menon', email:'a.menon@rvce.edu.in', assigned:22, scored:22},
-        {callsign:'v_rao', email:'v.rao@rvce.edu.in', assigned:24, scored:21},
-        {callsign:'b_nair', email:'b.nair@rvce.edu.in', assigned:20, scored:13},
-        {callsign:'k_iyer', email:'k.iyer@rvce.edu.in', assigned:24, scored:9},
-        {callsign:'s_deshpande', email:'s.deshpande@rvce.edu.in', assigned:18, scored:4}
-      ].map((j, ji) => {
-        const ratio = j.scored / j.assigned;
+      judges:(this.props.judges || []).map(j => ({
+        callsign:j.callsign,
+        email:j.usn || '—',
+        assigned:j.assigned,
+        scored:j.scored,
+      })).map((j, ji) => {
+        const ratio = j.assigned ? j.scored / j.assigned : 0;
         const col = ratio >= .85 ? MOSS_LT : ratio >= .5 ? ICE : STEEL;
         const filled = Math.round(ratio * 14), ticks = [];
         for (let i = 0; i < 14; i++){
@@ -506,7 +593,22 @@ export default class AdminPortal extends React.Component {
         };
       }),
       pickedCount:String(Object.keys(s.picked).filter(k => s.picked[k]).length),
-      confirmAssign: () => this.toast('Assignment saved', Object.keys(s.picked).filter(k => s.picked[k]).length + ' squads assigned to v_rao.'),
+      judgeOptions:(this.props.judges || []).map(j => ({ id:j.id, label:j.callsign })),
+      judgeId:s.judgeId,
+      onJudge: e => {
+        const id = e.target.value;
+        const j = (this.props.judges || []).find(x => x.id === id);
+        const picked = {};
+        for (const name of (j ? j.assignedTeams : [])) picked[name] = true;
+        this.setState({judgeId:id, picked});
+      },
+      confirmAssign: async () => {
+        const names = Object.keys(s.picked).filter(k => s.picked[k]);
+        const res = await this.props.onAssignSquads(s.judgeId, names);
+        if (!res.ok) return this.toast('Could not save', res.error);
+        this.setState({modal:null});
+        this.toast('Assignment saved', names.length + ' squads assigned.');
+      },
 
       challenges:[
         {week:1, title:'Challenge 01', points:100, opens:'20 Aug · 18:00', closes:'25 Aug · 23:59', subs:142, pct:100},
@@ -530,10 +632,14 @@ export default class AdminPortal extends React.Component {
       }),
 
       exports:[
-        {name:'Users', desc:'Profiles, callsigns, emails, roles, squad membership', rows:'561', last:'08 Aug 2026 · 11:40'},
-        {name:'Submissions', desc:'Repo and demo links, status, timestamps, both challenges', rows:'391', last:'08 Aug 2026 · 11:41'},
-        {name:'Scores', desc:'Per-criterion rubric values, totals, judge comments', rows:'288', last:'07 Aug 2026 · 22:05'},
-        {name:'Leaderboard', desc:'Ranked totals including merged-PR points from the canvas repo', rows:'142', last:'never exported'}
+        {name:'Users', desc:'Profiles, callsigns, USN, branch, roles, squad membership',
+         rows:String(EX.users), last:'ready', go:() => this.props.onExport('users')},
+        {name:'Submissions', desc:'PR links, track, status, timestamps',
+         rows:String(EX.submissions), last:'ready', go:() => this.props.onExport('submissions')},
+        {name:'Squads', desc:'Squad name, lead, members, invite code, submission counts',
+         rows:String(EX.squads), last:'ready', go:() => this.props.onExport('squads')},
+        {name:'Leaderboard', desc:'Ranked standings by cleared submissions',
+         rows:String(EX.squads), last:'ready', go:() => this.props.onExport('leaderboard')}
       ].map((e,i) => Object.assign(e, {
         lastColor: e.last === 'never exported' ? DIM : TXT,
         rowStyle:'display:grid;align-items:center;gap:' + (phone ? '12px' : '18px') + ';padding:' + (phone ? '18px 16px' : '22px 24px') +
@@ -577,7 +683,7 @@ export default class AdminPortal extends React.Component {
             <div style={sx("display:flex;align-items:center;gap:14px")}>
               <div style={sx("display:flex;align-items:center")}>
                 <img src="/assets/image.png" alt="RVCE" style={sx("height:34px;width:auto;filter:invert(1);mix-blend-mode:screen")} />
-                <img src="/assets/cc%20new%20logo.jpeg" alt="Coding Club" style={sx("height:34px;width:auto;margin-left:12px;mix-blend-mode:screen")} />
+                <img src="/assets/cc-10-years-white.png" alt="Coding Club" style={sx("height:40px;width:auto;margin-left:12px")} />
               </div>
               <div style={sx("width:1px;height:30px;background:rgba(179,224,242,.14)")}></div>
               <div>
@@ -699,7 +805,7 @@ export default class AdminPortal extends React.Component {
                 <div style={sx(V.L.panel)}>
                   <div style={sx("display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px")}>
                     <div style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:16px;letter-spacing:.06em;color:#E4EEF2")}>Track distribution</div>
-                    <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B")}>142 SQUADS / 5 TRACKS</div>
+                    <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B")}>{V.squadCount} SQUADS / {V.trackCount} TRACKS</div>
                   </div>
                   <div style={sx("display:flex;height:12px;gap:3px;margin-bottom:22px;overflow:hidden")}>
                     {(V.tracks || []).map((t, _i1) => <React.Fragment key={_i1}>
@@ -761,7 +867,7 @@ export default class AdminPortal extends React.Component {
                 </div>
                 <div style={sx("display:flex;align-items:center;gap:10px")}>
                   <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>142 RECORDS</span>
-                  <button onClick={V.exportToast} style={sx("padding:11px 18px;font-size:13px;font-weight:500;white-space:nowrap;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap12">Export CSV</button>
+                  <button onClick={() => this.props.onExport('squads')} style={sx("padding:11px 18px;font-size:13px;font-weight:500;white-space:nowrap;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap12">Export CSV</button>
                 </div>
               </div>
 
@@ -775,14 +881,11 @@ export default class AdminPortal extends React.Component {
                   <div style={sx(V.L.filterCell)}>
                     <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>TRACK</label>
                     <div style={sx("position:relative")}>
-                      <select style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 28px 11px 13px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap14">
-                        <option>All tracks</option>
-                        <option>T1 · CMS Revival</option>
-                        <option>T2 · Data Pipeline</option>
-                        <option>T3 · Commerce Rebuild</option>
-                        <option>T4 · Realtime Rewrite</option>
-                        <option>T5 · UI Kit Port</option>
-                      </select>
+                      <select value={V.annAudience} onChange={V.onAudience} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 30px 12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap29">
+                            <option value="all">All hackers</option>
+                            <option value="leads">Squad leads only</option>
+                            <option value="judges">Judges only</option>
+                          </select>
                       <span style={sx("position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#5D91A6;font-size:8px")}>▼</span>
                     </div>
                   </div>
@@ -908,10 +1011,17 @@ export default class AdminPortal extends React.Component {
                                 <div>
                                   <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:#5D91A6;margin-bottom:14px")}>SUBMISSIONS</div>
                                   {(r.links || []).map((l, _i4) => <React.Fragment key={_i4}>
-                                    <div style={sx("display:grid;grid-template-columns:58px 1fr 1fr;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(179,224,242,.06)")}>
+                                    <div style={sx("display:grid;grid-template-columns:52px minmax(0,1fr) 108px 132px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(179,224,242,.06)")}>
                                       <span style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;color:#56707B")}>{l.week}</span>
-                                      <a href="#" style={sx(l.linkStyle)}>{l.repo}</a>
-                                      <a href="#" style={sx(l.linkStyle)}>{l.demo}</a>
+                                      <a href={l.repoUrl} target="_blank" rel="noreferrer" style={sx(l.linkStyle)}>{l.repo}</a>
+                                      <span style={sx("display:flex;align-items:center;gap:6px")}>
+                                        <span style={sx(l.statusDot)}></span>
+                                        <span style={sx(l.statusStyle)}>{l.statusLabel}</span>
+                                      </span>
+                                      <span style={sx("display:flex;gap:6px;justify-content:flex-end")}>
+                                        <button onClick={l.accept} disabled={!l.canAccept} style={sx(l.acceptStyle)}>Accept</button>
+                                        <button onClick={l.reject} disabled={!l.canReject} style={sx(l.rejectStyle)}>Reject</button>
+                                      </span>
                                     </div>
                                   </React.Fragment>)}
                                 </div>
@@ -990,13 +1100,13 @@ export default class AdminPortal extends React.Component {
                     <div style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:20px;color:#E4EEF2;margin-bottom:22px")}>Compose</div>
 
                     <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>TITLE</label>
-                    <input placeholder="Challenge 02 unlocks at 23:59 IST" style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 15px;font-size:14px;outline:none;transition:all .2s;margin-bottom:20px;border-radius:2px")} data-s="ap27" />
+                    <input value={V.annTitle} onChange={V.onTitle} placeholder="Challenge 02 unlocks at 23:59 IST" style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 14px;font-size:13.5px;outline:none;transition:all .2s;border-radius:2px")} data-s="ap27" />
 
                     <div style={sx("display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px")}>
                       <label style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>BODY</label>
                       <span style={sx(`font-family:'JetBrains Mono',monospace;font-size:10px;color:${V.countColor}`)}>{V.bodyLen} / 500</span>
                     </div>
-                    <textarea onChange={V.onBody} rows="6" placeholder="Plain text. Links are rendered but not tracked." style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:13px 15px;font-size:13px;line-height:1.75;outline:none;resize:vertical;transition:all .2s;border-radius:2px")} data-s="ap28"></textarea>
+                    <textarea value={V.annBody} onChange={V.onBody} rows="6" placeholder="Plain text. Links are rendered but not tracked." style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:13px 15px;font-size:13px;line-height:1.75;outline:none;resize:vertical;transition:all .2s;border-radius:2px")} data-s="ap28"></textarea>
                     <div style={sx("height:2px;background:rgba(179,224,242,.10);margin-top:2px")}><div style={sx(V.countBar)}></div></div>
 
                     <div style={sx(V.L.audienceRow)}>
@@ -1049,7 +1159,7 @@ export default class AdminPortal extends React.Component {
                         <span style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;color:#56707B")}>by {a.sender}</span>
                         <span style={sx("flex:1")}></span>
                         <button style={sx("padding:6px 11px;font-size:11px;background:transparent;border:1px solid rgba(179,224,242,.14);color:#8AA5AE;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap33">Edit</button>
-                        <button onClick={V.openDelete} style={sx("padding:6px 11px;font-size:11px;background:transparent;border:1px solid rgba(194,86,75,.3);color:#C2564B;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap34">Delete</button>
+                        <button onClick={a.remove} style={sx("padding:6px 11px;font-size:11px;background:transparent;border:1px solid rgba(194,86,75,.3);color:#C2564B;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap34">Delete</button>
                       </div>
                     </div>
                   </React.Fragment>)}
@@ -1189,7 +1299,7 @@ export default class AdminPortal extends React.Component {
                       <div style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;color:#56707B;margin-top:3px")}>ROWS</div>
                     </div>
                     <div style={sx(e.lastStyle)}>LAST · <span style={sx(`color:${e.lastColor}`)}>{e.last}</span></div>
-                    <button onClick={V.exportToast} style={sx("padding:11px 18px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px;white-space:nowrap")} data-s="ap41">Download CSV</button>
+                    <button onClick={e.go} style={sx("padding:11px 18px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px;white-space:nowrap")} data-s="ap41">Download CSV</button>
                   </div>
                 </React.Fragment>)}
               </div>
@@ -1203,10 +1313,10 @@ export default class AdminPortal extends React.Component {
               <div style={sx("position:absolute;inset:0;background:linear-gradient(150deg,rgba(93,145,166,.2),transparent 55%);pointer-events:none")}></div>
               <div style={sx(V.L.modalPad)}>
                 <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:#5D91A6;margin-bottom:12px")}>CONFIRM BROADCAST</div>
-                <div style={sx(V.L.modalTitle)}>This will notify 561 hackers. Send?</div>
+                <div style={sx(V.L.modalTitle)}>Send this announcement?</div>
                 <div style={sx("margin:22px 0;border:1px solid rgba(179,224,242,.10);background:#0B1519;padding:16px 18px;border-radius:2px")}>
-                  <div style={sx("font-size:14px;font-weight:500;color:#E4EEF2;margin-bottom:7px")}>Challenge 02 unlocks at 23:59 IST</div>
-                  <div style={sx("font-size:13px;color:#8AA5AE;line-height:1.7")}>Challenge 02 goes live on 25 August. Deploy URLs must resolve over HTTPS before the Wednesday cutoff.</div>
+                  <div style={sx("font-size:14px;font-weight:500;color:#E4EEF2;margin-bottom:7px")}>{V.annTitle || "Untitled"}</div>
+                  <div style={sx("font-size:13px;color:#8AA5AE;line-height:1.7")}>{V.annBody || "No body yet."}</div>
                   <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#5D91A6;margin-top:12px")}>AUDIENCE: ALL HACKERS · PINNED</div>
                 </div>
                 <div style={sx("display:flex;gap:12px;flex-wrap:wrap")}>
@@ -1242,6 +1352,15 @@ export default class AdminPortal extends React.Component {
                 <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>SQUADS</label>
                 <input placeholder="Filter squads" style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 14px;font-size:13px;outline:none;margin-bottom:12px;border-radius:2px")} data-s="ap46" />
 
+                <div style={sx("margin-bottom:16px")}>
+                  <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>JUDGE</label>
+                  <select value={V.judgeId} onChange={V.onJudge} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")}>
+                    <option value="">Select a judge</option>
+                    {(V.judgeOptions || []).map((o) => (
+                      <option key={o.id} value={o.id}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
                 <div style={sx(V.L.pickList)}>
                   {(V.pickList || []).map((p, _i1) => <React.Fragment key={_i1}>
                     <div onClick={p.toggle} style={sx("display:flex;align-items:center;gap:13px;padding:12px 15px;border-bottom:1px solid rgba(179,224,242,.06);cursor:pointer;transition:background .2s")} data-s="ap47">
@@ -1293,4 +1412,48 @@ export default class AdminPortal extends React.Component {
       </div>
     );
   }
+}
+
+/**
+ * Live-data wrapper. The view above is the imported design; everything it
+ * renders now comes from useEventData, which the leaderboard and hacker
+ * portal read from too, so the three stay in step.
+ */
+export default function AdminPortal() {
+  const { squads, stats, trackDistribution, tracks, settings, profiles, submissions,
+          announcements, judges, status, error, fetchedAt, refetch, setSubmissionStatus,
+          createAnnouncement, deleteAnnouncement, assignSquads } = useEventData();
+
+  // Exports are built from data already in memory — no server round trip.
+  const handleExport = (kind) => {
+    const build = EXPORTS[kind];
+    if (!build) return;
+    const { filename, csv } = build({
+      profiles, submissions, squads, ranked: rankSquads(squads),
+    });
+    downloadCsv(filename, csv);
+  };
+
+  return (
+    <AdminPortalView
+      profiles={profiles}
+      submissions={submissions}
+      announcements={announcements}
+      judges={judges}
+      onCreateAnnouncement={createAnnouncement}
+      onDeleteAnnouncement={deleteAnnouncement}
+      onAssignSquads={assignSquads}
+      onExport={handleExport}
+      squads={squads}
+      stats={stats}
+      trackDistribution={trackDistribution}
+      tracks={tracks}
+      settings={settings}
+      loading={status === 'loading'}
+      error={status === 'error' ? error : null}
+      fetchedAt={fetchedAt}
+      onRefetch={refetch}
+      onSetSubmissionStatus={setSubmissionStatus}
+    />
+  );
 }

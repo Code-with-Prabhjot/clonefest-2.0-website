@@ -7,18 +7,27 @@ import { PANEL } from '../components/auth/authStyles';
 export default function AuthPage() {
   const navigate = useNavigate();
 
+
+  // Send people where their role belongs. Hackers keep the existing
+  // /portal/team destination; admins and judges get their own consoles.
+  const routeForRole = async (userId) => {
+    const { data } = await supabase
+      .from('profiles').select('role').eq('id', userId).single();
+    if (data?.role === 'admin') return '/admin';
+    if (data?.role === 'judge') return '/judge';
+    return '/portal/team';
+  };
+
   useEffect(() => {
     // Check if session already exists
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate('/portal/team'); // Route to the standard squad portal
-      }
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) navigate(await routeForRole(session.user.id));
     });
 
     // Listen for auth state changes (crucial for OAuth redirects)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        navigate('/portal/team'); // Route to the standard squad portal
+        routeForRole(session.user.id).then(navigate);
       }
     });
 
@@ -61,8 +70,8 @@ export default function AuthPage() {
         <div className="mx-auto flex max-w-[1580px] items-center gap-4 px-5 py-3.5 sm:px-8 sm:py-4">
           <img src="/assets/image.png" alt="RVCE"
                className="h-9 w-auto [filter:invert(1)] mix-blend-screen" />
-          <img src="/assets/cc%20new%20logo.jpeg" alt="Coding Club"
-               className="h-9 w-auto mix-blend-screen" />
+          <img src="/assets/cc-10-years-white.png" alt="Coding Club"
+               className="h-10 w-auto" />
           <span className="h-7 w-px bg-[#B3E0F2]/14" />
           <div>
             <p className="font-clash text-[15px] font-semibold tracking-[0.14em] text-[#B3E0F2] sm:text-[18px]">

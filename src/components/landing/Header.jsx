@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 // Filenames contain spaces, so they must be URL-encoded.
 const COLLEGE_LOGO_URL = "/assets/image.png";
-const CLUB_LOGO_URL = "/assets/cc%20new%20logo.jpeg";
+const CLUB_LOGO_URL = "/assets/cc-10-years-white.png";
 
 const NAV_BUTTON =
     "bg-transparent font-mono text-[11px] uppercase tracking-[0.15em] " +

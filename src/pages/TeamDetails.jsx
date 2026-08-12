@@ -69,6 +69,7 @@ export default function TeamDetails() {
   const [rosterState, setRosterState] = useState('loading');
   const [pendingRequests, setPendingRequests] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [totals, setTotals] = useState(null);   // finalised score totals
   const [isOpen, setIsOpen] = useState(null);       // null = not yet loaded
   const [togglingOpen, setTogglingOpen] = useState(false);
 
@@ -133,6 +134,21 @@ export default function TeamDetails() {
     return () => { alive = false; };
   }, [profile?.team_name, profile?.role]);
 
+  // Finalised judge scores for this squad, via public.leaderboard_totals.
+  useEffect(() => {
+    if (!profile?.team_name) return;
+    let alive = true;
+    supabase
+      .from('leaderboard_totals')
+      .select('points, scored_count')
+      .eq('team_name', profile.team_name)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (alive && !error) setTotals(data || null);
+      });
+    return () => { alive = false; };
+  }, [profile?.team_name]);
+
   // Sync is_open from team object once it loads
   useEffect(() => {
     if (team && isOpen === null) {
@@ -180,20 +196,17 @@ export default function TeamDetails() {
 
   const stats = useMemo(() => {
     const subs = submissions || [];
-    // ── POINTS SEAM ───────────────────────────────────────────────────────
-    // `submissions` has no points column yet. Once one exists, these two
-    // reduce over it and the pending state below disappears on its own.
-    const scored = subs.filter((s) => typeof s.points === 'number');
-    const total = scored.reduce((n, s) => n + s.points, 0);
+    const scoredCount = totals?.scored_count || 0;
+    const total = totals?.points ?? 0;
 
     return {
       submissions: subs.length,
       accepted: subs.filter((s) => ['accepted', 'scored'].includes(s.status)).length,
-      hasPoints: scored.length > 0,
+      hasPoints: scoredCount > 0,
       total,
-      average: scored.length ? (total / scored.length).toFixed(1) : null,
+      average: scoredCount ? (total / scoredCount).toFixed(1) : null,
     };
-  }, [submissions]);
+  }, [submissions, totals]);
 
   const copyCode = () => {
     navigator.clipboard.writeText(team?.invite_code ?? '');

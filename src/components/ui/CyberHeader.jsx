@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
  */
 
 const RVCE_LOGO = '/assets/image.png';
-const CLUB_LOGO = '/assets/cc%20new%20logo.jpeg';
+const CLUB_LOGO = '/assets/cc-10-years-white.png';
 
 export default function CyberHeader({ variant = 'cyan', customLogo = CLUB_LOGO }) {
   // Variants kept for call-site compatibility, remapped onto the current palette.

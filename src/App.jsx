@@ -18,7 +18,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
         <Route path="/portal" element={<ProtectedRoute><HackerPortal /></ProtectedRoute>} />
         <Route path="/portal/team" element={<ProtectedRoute><TeamDetails /></ProtectedRoute>} />
         <Route path="/teams" element={<OpenTeams />} />
