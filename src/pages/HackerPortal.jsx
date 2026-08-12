@@ -38,26 +38,20 @@ function FindSquadForm({ user, profile }) {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const alreadyHasName = !!profile?.full_name;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!alreadyHasName) {
-      if (trimmed.length < 2 || trimmed.length > 30) {
-        return setError('Callsign must be 2–30 characters.');
-      }
+    if (trimmed.length < 2 || trimmed.length > 30) {
+      return setError('Callsign must be 2–30 characters.');
     }
     setLoading(true);
     setError(null);
     try {
-      if (!alreadyHasName) {
-        const { error: dbErr } = await supabase
-          .from('profiles')
-          .update({ full_name: trimmed })
-          .eq('id', user.id);
-        if (dbErr) throw dbErr;
-      }
+      const { error: dbErr } = await supabase
+        .from('profiles')
+        .update({ full_name: trimmed })
+        .eq('id', user.id);
+      if (dbErr) throw dbErr;
       navigate('/teams');
     } catch (err) {
       setError(err.message);
@@ -71,32 +65,26 @@ function FindSquadForm({ user, profile }) {
       <FormHead
         kicker="Scout"
         title="Find a squad"
-        blurb={
-          alreadyHasName
-            ? `You're browsing as ${profile.full_name}. Browse open squads and request to join one.`
-            : 'Set your callsign so squads know who’s requesting, then browse open squads.'
-        }
+        blurb="Set your callsign so squad leads know who's requesting to join, then browse open squads."
       />
 
       <FormError>{error}</FormError>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {!alreadyHasName && (
-          <div>
-            <label className={LABEL} htmlFor="find-callsign">Operative callsign</label>
-            <input
-              id="find-callsign"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              maxLength={30}
-              autoFocus
-              className={FIELD}
-              placeholder="e.g. nulldiv"
-            />
-          </div>
-        )}
+        <div>
+          <label className={LABEL} htmlFor="find-callsign">Operative callsign</label>
+          <input
+            id="find-callsign"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            maxLength={30}
+            autoFocus
+            className={FIELD}
+            placeholder="e.g. nulldiv"
+          />
+        </div>
         <button type="submit" disabled={loading} className={PRIMARY}>
           {loading ? 'Saving…' : 'Find a Squad →'}
         </button>

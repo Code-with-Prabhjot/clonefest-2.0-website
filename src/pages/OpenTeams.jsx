@@ -4,7 +4,7 @@ import CyberGrid from '../components/ui/CyberGrid';
 import CyberHeader from '../components/ui/CyberHeader';
 import { supabase } from '../lib/supabase';
 import { useHackerData } from '../hooks/useHackerData';
-import { PANEL, PRIMARY, FIELD, LABEL, FormHead, FormError } from '../components/auth/authStyles';
+import { PANEL, PRIMARY } from '../components/auth/authStyles';
 
 export default function OpenTeams() {
   const { user, profile, loading: hackerLoading } = useHackerData();
@@ -12,11 +12,6 @@ export default function OpenTeams() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [requestStatus, setRequestStatus] = useState({});
-  // Callsign dialog state
-  const [nameModalTeam, setNameModalTeam] = useState(null);
-  const [nameInput, setNameInput] = useState('');
-  const [nameSaving, setNameSaving] = useState(false);
-  const [nameError, setNameError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,7 +19,6 @@ export default function OpenTeams() {
 
     async function fetchTeams() {
       try {
-        // Fetch all teams and their profiles
         const { data: teamsData, error: teamsError } = await supabase
           .from('teams')
           .select('name, created_at, profiles(id)')
@@ -32,7 +26,6 @@ export default function OpenTeams() {
 
         if (teamsError) throw teamsError;
 
-        // Fetch user's existing requests
         let userRequests = [];
         if (user) {
           const { data: requestsData } = await supabase
@@ -46,11 +39,10 @@ export default function OpenTeams() {
 
         const initialRequestStatus = {};
         userRequests.forEach(req => {
-          initialRequestStatus[req.team_name] = req.status; // 'pending', 'accepted', 'rejected'
+          initialRequestStatus[req.team_name] = req.status;
         });
         setRequestStatus(initialRequestStatus);
 
-        // Filter for open teams (less than 4 members)
         const openTeams = teamsData
           .map(team => ({
             name: team.name,
@@ -69,72 +61,26 @@ export default function OpenTeams() {
     }
 
     fetchTeams();
-
     return () => { alive = false; };
   }, [user]);
 
-  // Always show the callsign dialog when clicking Request Enlistment
-  // so the lead always sees a confirmed real name
-  const handleRequestJoin = (teamName) => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    setNameModalTeam(teamName);
-    setNameInput('');
-    setNameError(null);
-  };
-
-  const submitRequest = async (teamName) => {
+  const handleRequestJoin = async (teamName) => {
+    if (!user) { navigate('/auth'); return; }
     setRequestStatus(prev => ({ ...prev, [teamName]: 'loading' }));
-    
     try {
       const { error } = await supabase
         .from('team_requests')
-        .insert({
-          team_name: teamName,
-          user_id: user.id,
-          status: 'pending'
-        });
+        .insert({ team_name: teamName, user_id: user.id, status: 'pending' });
 
       if (error) {
-        if (error.code === '23505') {
-          throw new Error('Request already sent.');
-        }
+        if (error.code === '23505') throw new Error('Request already sent.');
         throw error;
       }
-
       setRequestStatus(prev => ({ ...prev, [teamName]: 'pending' }));
     } catch (err) {
       console.error('Request join error:', err);
       setRequestStatus(prev => ({ ...prev, [teamName]: 'error' }));
       alert(err.message);
-    }
-  };
-
-  const handleSaveNameAndRequest = async (e) => {
-    e.preventDefault();
-    const trimmed = nameInput.trim();
-    if (trimmed.length < 2 || trimmed.length > 30) {
-      return setNameError('Callsign must be 2–30 characters.');
-    }
-    setNameSaving(true);
-    setNameError(null);
-    try {
-      const { error: dbErr } = await supabase
-        .from('profiles')
-        .update({ full_name: trimmed })
-        .eq('id', user.id);
-      if (dbErr) throw dbErr;
-      // Update local profile reference so the gate doesn't re-trigger
-      profile.full_name = trimmed;
-      const targetTeam = nameModalTeam;
-      setNameModalTeam(null);
-      await submitRequest(targetTeam);
-    } catch (err) {
-      setNameError(err.message);
-    } finally {
-      setNameSaving(false);
     }
   };
 
@@ -154,74 +100,6 @@ export default function OpenTeams() {
     <div className="min-h-screen bg-[#080D0C] text-[#E4EEF2] pb-[var(--pet-lane)] relative">
       <CyberGrid variant="cyan" />
       <CyberHeader variant="cyan" />
-
-      {/* ── Callsign dialog overlay ─────────────────────────────────────── */}
-      {nameModalTeam && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(8,13,12,0.85)', backdropFilter: 'blur(8px)' }}
-        >
-          {/* Click backdrop to dismiss */}
-          <div className="absolute inset-0" onClick={() => setNameModalTeam(null)} />
-
-          {/* Dialog */}
-          <div
-            className="relative w-full max-w-md animate-[fadeInUp_0.22s_ease-out]"
-            style={{
-              background: '#0E1D23',
-              border: '1px solid rgba(179,224,242,0.18)',
-              borderRadius: 4,
-              boxShadow: '0 0 0 1px rgba(93,145,166,0.08), 0 32px 64px rgba(0,0,0,0.7)',
-            }}
-          >
-            {/* Cyan top bar */}
-            <div style={{
-              height: 2,
-              borderRadius: '4px 4px 0 0',
-              background: 'linear-gradient(90deg, #5D91A6 0%, rgba(93,145,166,0) 100%)',
-            }} />
-
-            <div className="p-7 sm:p-8">
-              <FormHead
-                kicker="Operative ID required"
-                title="Set your callsign"
-                blurb={`The squad lead of ${nameModalTeam} needs to know who's knocking. Your name will appear in their pending enlistments.`}
-              />
-
-              <FormError>{nameError}</FormError>
-
-              <form onSubmit={handleSaveNameAndRequest} className="space-y-4 mt-1">
-                <div>
-                  <label className={LABEL} htmlFor="modal-callsign">Operative callsign</label>
-                  <input
-                    id="modal-callsign"
-                    type="text"
-                    value={nameInput}
-                    onChange={(e) => setNameInput(e.target.value)}
-                    required
-                    maxLength={30}
-                    autoFocus
-                    className={FIELD}
-                    placeholder="e.g. nulldiv"
-                  />
-                </div>
-
-                <button type="submit" disabled={nameSaving} className={PRIMARY}>
-                  {nameSaving ? 'Transmitting…' : 'Confirm & Request Enlistment'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setNameModalTeam(null)}
-                  className="w-full rounded-[2px] border border-[#B3E0F2]/10 py-3 font-jet text-[10px] uppercase tracking-[0.18em] text-[#56707B] transition-colors hover:border-[#B3E0F2]/22 hover:text-[#8AA5AE]"
-                >
-                  Cancel
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="relative z-10 mx-auto max-w-[900px] px-5 pb-16 pt-28 sm:pt-32">
         <div className="flex flex-wrap items-baseline justify-between gap-3 mb-10">
@@ -265,7 +143,6 @@ export default function OpenTeams() {
           ) : (
             teams.map((team) => {
               const status = requestStatus[team.name];
-              
               return (
                 <div key={team.name} className={`${PANEL} p-6 flex flex-col justify-between`}>
                   <div>
@@ -281,7 +158,6 @@ export default function OpenTeams() {
                       </span>
                     </div>
                   </div>
-                  
                   <div className="mt-6">
                     {!user ? (
                       <button onClick={() => navigate('/auth')} className={PRIMARY + " w-full"}>
