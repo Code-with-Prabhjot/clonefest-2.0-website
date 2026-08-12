@@ -32,7 +32,7 @@ function LoadingScreen() {
 }
 
 // ─── Find-a-Squad form — 3rd tab, matches Create/Join in structure ────────────
-function FindSquadForm({ user, profile }) {
+function FindSquadForm({ user, profile, refetch }) {
   const [name, setName] = useState(profile?.full_name || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -52,6 +52,7 @@ function FindSquadForm({ user, profile }) {
         .update({ full_name: trimmed })
         .eq('id', user.id);
       if (dbErr) throw dbErr;
+      await refetch();
       navigate('/teams');
     } catch (err) {
       setError(err.message);
@@ -94,7 +95,7 @@ function FindSquadForm({ user, profile }) {
 }
 
 // ─── Onboarding screen (no team yet) ─────────────────────────────────────────
-function OnboardingScreen({ user, profile }) {
+function OnboardingScreen({ user, profile, refetch }) {
   const [activeTab, setActiveTab] = useState('create');
 
   const TAB_BASE = 'px-6 py-2 uppercase font-bold text-sm border transition-all font-mono';
@@ -165,7 +166,7 @@ function OnboardingScreen({ user, profile }) {
           )}
           {activeTab === 'find' && (
             <div className={`${PANEL} p-7 sm:p-8 w-full`}>
-              <FindSquadForm user={user} profile={profile} />
+              <FindSquadForm user={user} profile={profile} refetch={refetch} />
             </div>
           )}
         </div>
@@ -174,68 +175,10 @@ function OnboardingScreen({ user, profile }) {
   );
 }
 
-// ─── Status card (existing terminal block, kept) ──────────────────────────────
-function StatusCard({ profile, team }) {
-  const [copied, setCopied] = useState(false);
-
-  const copyCode = () => {
-    navigator.clipboard.writeText(team?.invite_code ?? '');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div
-      style={{
-        background: '#0A191F',
-        border: '1px solid rgba(179,224,242,0.10)',
-        borderRadius: 3,
-        padding: '20px 22px',
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 12,
-        color: '#8AA5AE',
-        lineHeight: 1.9,
-      }}
-    >
-      <span style={{ color: '#5D91A6' }}>root@clonefest:~$</span> ./status_check.sh
-      <br /><br />
-      [+] SQUAD LINK ONLINE: <span style={{ color: '#E4EEF2' }}>{profile?.team_name ?? 'UNKNOWN'}</span><br />
-      [+] ROLE: <span style={{ color: '#E4EEF2' }}>{profile?.role?.toUpperCase() ?? 'UNKNOWN'}</span><br />
-      {profile?.role === 'lead' && team?.invite_code && (
-        <>
-          [+] INVITE CODE:{' '}
-          <span style={{ color: '#E4EEF2', background: 'rgba(179,224,242,0.08)', padding: '1px 8px', borderRadius: 2 }}>
-            {team.invite_code}
-          </span>
-          <button
-            onClick={copyCode}
-            style={{
-              marginLeft: 10,
-              padding: '1px 8px',
-              border: `1px solid ${copied ? 'rgba(127,178,126,0.5)' : 'rgba(179,224,242,0.2)'}`,
-              borderRadius: 2,
-              background: copied ? 'rgba(127,178,126,0.1)' : 'transparent',
-              color: copied ? '#7FB27E' : '#5D91A6',
-              cursor: 'pointer',
-              fontSize: 9,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              transition: 'all 0.15s',
-            }}
-          >
-            {copied ? 'Copied!' : 'Copy'}
-          </button>
-          <br />
-        </>
-      )}
-      <br />
-      {'>'} Standing by for mission briefing…
-    </div>
-  );
-}
+// StatusCard removed because it is no longer used
 
 // ─── Main dashboard (has a team) ─────────────────────────────────────────────
-function Dashboard({ profile, team, tracks, submissions, refetch }) {
+function Dashboard({ profile, tracks, submissions, refetch }) {
   return (
     <div
       className="min-h-screen bg-[#080D0C] text-[#E4EEF2] pb-[var(--pet-lane)]"
@@ -359,7 +302,7 @@ function SectionLabel({ children }) {
 
 // ─── Root export ──────────────────────────────────────────────────────────────
 export default function HackerPortal() {
-  const { user, profile, team, tracks, submissions, loading, refetch } = useHackerData();
+  const { user, profile, tracks, submissions, loading, refetch } = useHackerData();
   const [detailsDone, setDetailsDone] = useState(false);
 
   if (loading) return <LoadingScreen />;
@@ -375,14 +318,12 @@ export default function HackerPortal() {
         </OnboardingShell>
       );
     }
-    return <OnboardingScreen user={user} profile={profile} />;
+    return <OnboardingScreen user={user} profile={profile} refetch={refetch} />;
   }
 
   return (
     <Dashboard
-      user={user}
       profile={profile}
-      team={team}
       tracks={tracks}
       submissions={submissions}
       refetch={refetch}
