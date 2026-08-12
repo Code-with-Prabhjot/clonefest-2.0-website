@@ -75,6 +75,9 @@ function OnboardingScreen({ user }) {
           <button onClick={() => setActiveTab('join')} className={`${TAB_BASE} ${activeTab === 'join' ? TAB_ON : TAB_OFF}`}>
             Enlist
           </button>
+          <Link to="/teams" className={`${TAB_BASE} ${TAB_OFF} flex items-center`}>
+            Find a Squad
+          </Link>
         </div>
 
         <div className="w-full flex justify-center max-w-md">

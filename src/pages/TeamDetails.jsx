@@ -67,29 +67,68 @@ export default function TeamDetails() {
   const { profile, team, submissions, loading } = useHackerData();
   const [members, setMembers] = useState([]);
   const [rosterState, setRosterState] = useState('loading');
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!profile?.team_name) return;
     let alive = true;
 
-    supabase
-      .from('profiles')
-      .select('id, full_name, role')
-      .eq('team_name', profile.team_name)
-      .then(({ data, error }) => {
+    async function fetchData() {
+      try {
+        const { data: membersData, error: membersError } = await supabase
+          .from('profiles')
+          .select('id, full_name, role')
+          .eq('team_name', profile.team_name);
+
+        if (membersError) throw membersError;
+
         if (!alive) return;
-        if (error) return setRosterState('error');
         const order = { lead: 0, member: 1 };
-        setMembers((data || []).sort(
+        setMembers((membersData || []).sort(
           (a, b) => (order[a.role] ?? 2) - (order[b.role] ?? 2) ||
             String(a.full_name).localeCompare(String(b.full_name)),
         ));
         setRosterState('ready');
-      });
+
+        if (profile.role === 'lead') {
+          const { data: reqData, error: reqError } = await supabase
+            .from('team_requests')
+            .select('id, user_id, status, profiles(full_name)')
+            .eq('team_name', profile.team_name)
+            .eq('status', 'pending');
+            
+          if (!reqError && alive) {
+            setPendingRequests(reqData || []);
+          }
+        }
+      } catch (err) {
+        if (alive) setRosterState('error');
+      }
+    }
+
+    fetchData();
 
     return () => { alive = false; };
-  }, [profile?.team_name]);
+  }, [profile?.team_name, profile?.role]);
+
+  const handleRequestAction = async (requestId, userId, action) => {
+    try {
+      if (action === 'accept') {
+        const { error } = await supabase.rpc('accept_team_request', { p_request_id: requestId });
+        if (error) throw error;
+        
+        const newMemberName = pendingRequests.find(r => r.id === requestId)?.profiles?.full_name;
+        setMembers(prev => [...prev, { id: userId, full_name: newMemberName, role: 'member' }]);
+        setPendingRequests(prev => prev.filter(r => r.id !== requestId));
+      } else if (action === 'reject') {
+        await supabase.from('team_requests').update({ status: 'rejected' }).eq('id', requestId);
+        setPendingRequests(prev => prev.filter(r => r.id !== requestId));
+      }
+    } catch (err) {
+      alert('Error updating request: ' + err.message);
+    }
+  };
 
   const stats = useMemo(() => {
     const subs = submissions || [];
@@ -237,7 +276,28 @@ export default function TeamDetails() {
             </ul>
           )}
         </div>
-
+        {isLead && pendingRequests.length > 0 && (
+            <div style={CARD} className="p-5 sm:p-6 mt-5">
+              <Kicker>Pending Enlistments</Kicker>
+              <ul className="mt-4 divide-y divide-[#B3E0F2]/[0.07] border-t border-[#B3E0F2]/[0.07]">
+                {pendingRequests.map(req => (
+                  <li key={req.id} className="flex items-center justify-between gap-3 py-3">
+                    <span className="min-w-0 flex-1 truncate text-[13.5px] text-[#E4EEF2]">
+                      {req.profiles?.full_name || 'operative'}
+                    </span>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleRequestAction(req.id, req.user_id, 'accept')} className="font-jet rounded-[2px] border border-[rgba(127,178,126,0.3)] bg-[rgba(127,178,126,0.1)] px-3 py-1 text-[9px] uppercase tracking-[0.16em] text-[#7FB27E] transition-colors hover:bg-[rgba(127,178,126,0.2)]">
+                        Accept
+                      </button>
+                      <button onClick={() => handleRequestAction(req.id, req.user_id, 'reject')} className="font-jet rounded-[2px] border border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.1)] px-3 py-1 text-[9px] uppercase tracking-[0.16em] text-red-400 transition-colors hover:bg-[rgba(239,68,68,0.2)]">
+                        Reject
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
         </div>
 
