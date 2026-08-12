@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SubmitPRModal from './SubmitPRModal';
 import { useEventSettings } from '../../hooks/useEventSettings';
 
@@ -130,6 +130,79 @@ function CountdownBanner({ secondsLeft, isExpired, deadline }) {
 
 function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
   const [hovered, setHovered] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  
+  const getUnlockDate = (id) => {
+    if (id === 'T1') return new Date('2026-08-20T18:00:00+05:30').getTime();
+    if (id === 'T2') return new Date('2026-08-25T23:59:59+05:30').getTime();
+    return 0;
+  };
+
+  const unlockTime = getUnlockDate(track.id);
+  const isLocked = now < unlockTime;
+
+  useEffect(() => {
+    if (isLocked) {
+      const interval = setInterval(() => {
+        setNow(Date.now());
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isLocked]);
+
+  if (isLocked) {
+    const timeLeft = Math.floor((unlockTime - now) / 1000);
+    const d = Math.floor(timeLeft / (3600 * 24));
+    const h = Math.floor((timeLeft % (3600 * 24)) / 3600);
+    const m = Math.floor((timeLeft % 3600) / 60);
+    const s = timeLeft % 60;
+
+    const pad = (n) => String(n).padStart(2, '0');
+    const timeString = `${d}d ${pad(h)}h ${pad(m)}m ${pad(s)}s`;
+
+    return (
+      <div
+        style={{
+          position: 'relative',
+          background: '#071013',
+          border: '1px dashed rgba(194,86,75,0.4)',
+          borderRadius: 3,
+          padding: '22px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 16,
+          minHeight: '220px',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.1,
+          background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, #C2564B 10px, #C2564B 20px)'
+        }} />
+        
+        <div style={{
+          position: 'relative', zIndex: 1, textAlign: 'center',
+          fontFamily: "'JetBrains Mono', monospace",
+        }}>
+          <div style={{
+            fontSize: 18, color: '#E4EEF2', letterSpacing: '0.05em',
+            background: 'rgba(194,86,75,0.15)', padding: '8px 16px', borderRadius: 4,
+            border: '1px solid rgba(194,86,75,0.3)'
+          }}>
+            {timeString}
+          </div>
+          <div style={{
+            fontSize: 10, color: '#56707B', marginTop: 12, letterSpacing: '0.1em', textTransform: 'uppercase'
+          }}>
+            Time until transmission unlocks
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const subStatus = latestSub?.status ?? 'none';
   const dotCfg = SUBMISSION_DOT[subStatus] ?? SUBMISSION_DOT.none;
 
@@ -292,6 +365,8 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
     );
   }
 
+  const visibleTracks = tracks.filter(t => t.id === 'T1' || t.id === 'T2');
+
   return (
     <>
       {/* Pulse animation for status dots */}
@@ -318,7 +393,7 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
         gap: 16,
       }}>
-        {tracks.map(track => (
+        {visibleTracks.map(track => (
           <MissionCard
             key={track.id}
             track={track}
