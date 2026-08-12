@@ -30,7 +30,10 @@ export default function ProfileDetailsForm({ onComplete }) {
     setError(null);
 
     if (!/^[0-9A-Z]{10}$/.test(usnClean)) {
-      return setError('USN should be 10 characters, e.g. 1RV24CS001.');
+      return setError('USN should be 10 characters, e.g. 1RV25CS001.');
+    }
+    if (!usnClean.startsWith('1RV25') && !usnClean.startsWith('1RZ25')) {
+      return setError('USN must belong to the 2025 batch (starting with 1RV25 or 1RZ25).');
     }
     if (!branch) return setError('Select your branch.');
     if (!eligible) return setError('Confirm you are part of the 2025 - 2029 batch.');
