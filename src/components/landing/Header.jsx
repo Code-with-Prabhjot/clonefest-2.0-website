@@ -16,7 +16,7 @@ export default function Header({ booted, onFaqClick, onAboutClick, onRulesClick 
             transition={{ duration: 0.7, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-x-0 top-0 z-50 border-b border-[#5D91A6]/15 bg-[#080D0C]/80 backdrop-blur-md"
         >
-            <div className="relative flex flex-col items-center gap-3 px-4 py-3 sm:flex-row sm:justify-between sm:gap-0 sm:px-10 sm:py-4">
+            <div className="relative flex flex-col items-center gap-3 px-4 py-3 sm:flex-row sm:justify-between sm:gap-0 sm:px-10 sm:py-2">
                 {/* On mobile: row of both logos. On desktop: only college logo on the left. */}
                 <div className="flex w-full items-center justify-between sm:w-auto">
                     <img
@@ -30,7 +30,7 @@ export default function Header({ booted, onFaqClick, onAboutClick, onRulesClick 
                         data-testid="club-logo-slot-mobile"
                         src={CLUB_LOGO_URL}
                         alt="Coding Club"
-                        className="h-12 w-auto shrink-0 mix-blend-screen transition-transform duration-300 hover:scale-105 sm:hidden"
+                        className="h-14 w-auto shrink-0 transition-transform duration-300 hover:scale-105 sm:hidden"
                     />
                 </div>
 
@@ -66,7 +66,7 @@ export default function Header({ booted, onFaqClick, onAboutClick, onRulesClick 
                     data-testid="club-logo-slot-desktop"
                     src={CLUB_LOGO_URL}
                     alt="Coding Club"
-                    className="hidden h-[72px] w-auto shrink-0 mix-blend-screen transition-transform duration-300 hover:scale-105 sm:block"
+                    className="hidden h-[104px] w-auto shrink-0 transition-transform duration-300 hover:scale-105 sm:block"
                 />
             </div>
         </motion.header>

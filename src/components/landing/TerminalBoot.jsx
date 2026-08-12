@@ -53,11 +53,12 @@ export default function TerminalBoot({ onComplete }) {
             transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
             className="fixed inset-0 z-[100] flex flex-col justify-center bg-[#080D0C] px-6 sm:px-16"
         >
-            <div className="pointer-events-none absolute left-6 top-6 font-mono text-[10px] tracking-[0.3em] text-[#5D91A6]/60 sm:left-16">
-                CLONEFEST BIOS v2.0.26
-            </div>
-            <div className="pointer-events-none absolute right-6 top-6 font-mono text-[10px] tracking-[0.3em] text-[#5D91A6]/60 sm:right-16">
-                MEM CHECK: 640K — ENOUGH FOR ANYONE
+            {/* One wrapping row: side by side when there is room, stacked when
+                there is not. Two absolutes both pinned to top-6 collided on
+                narrow screens. */}
+            <div className="pointer-events-none absolute inset-x-6 top-6 flex flex-wrap justify-between gap-x-6 gap-y-1 font-mono text-[9px] tracking-[0.18em] text-[#5D91A6]/60 sm:inset-x-16 sm:text-[10px] sm:tracking-[0.3em]">
+                <span>CLONEFEST BIOS v2.0.26</span>
+                <span>MEM CHECK: 640K — ENOUGH FOR ANYONE</span>
             </div>
 
             <div className="w-full max-w-3xl">
@@ -67,7 +68,7 @@ export default function TerminalBoot({ onComplete }) {
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.18 }}
-                        className={`font-mono text-xs leading-relaxed sm:text-sm ${TONE_CLASS[line.tone]}`}
+                        className={`font-mono text-[10px] leading-relaxed break-all sm:text-sm sm:break-normal ${TONE_CLASS[line.tone]}`}
                     >
                         <span className="mr-2 text-[#477346]">&gt;</span>
                         {line.text}
@@ -92,7 +93,7 @@ export default function TerminalBoot({ onComplete }) {
                 </div>
             </div>
 
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-[0.35em] text-[#5D91A6]/50">
+            <div className="absolute inset-x-0 bottom-8 px-6 text-center font-mono text-[9px] tracking-[0.22em] text-[#5D91A6]/50 sm:text-[10px] sm:tracking-[0.35em]">
                 [ CLICK ANYWHERE TO SKIP ]
             </div>
         </motion.div>
