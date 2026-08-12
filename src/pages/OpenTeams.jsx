@@ -21,7 +21,7 @@ export default function OpenTeams() {
       try {
         const { data: teamsData, error: teamsError } = await supabase
           .from('teams')
-          .select('name, created_at, profiles(id)')
+          .select('name, created_at')
           .eq('is_open', true);
 
         if (teamsError) throw teamsError;
@@ -37,6 +37,26 @@ export default function OpenTeams() {
 
         if (!alive) return;
 
+        // Fetch all profiles belonging to these teams to count members
+        const teamNames = teamsData.map(t => t.name);
+        let profilesData = [];
+        if (teamNames.length > 0) {
+          const { data, error: profilesError } = await supabase
+            .from('profiles')
+            .select('team_name')
+            .in('team_name', teamNames);
+          if (!profilesError && data) {
+            profilesData = data;
+          }
+        }
+
+        const counts = {};
+        profilesData.forEach(p => {
+          if (p.team_name) {
+            counts[p.team_name] = (counts[p.team_name] || 0) + 1;
+          }
+        });
+
         const initialRequestStatus = {};
         userRequests.forEach(req => {
           initialRequestStatus[req.team_name] = req.status;
@@ -46,7 +66,7 @@ export default function OpenTeams() {
         const openTeams = teamsData
           .map(team => ({
             name: team.name,
-            memberCount: team.profiles ? team.profiles.length : 0,
+            memberCount: counts[team.name] || 0,
             createdAt: team.created_at,
           }))
           .filter(team => team.memberCount < 4)
