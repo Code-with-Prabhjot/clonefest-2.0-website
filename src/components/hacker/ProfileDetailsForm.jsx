@@ -29,11 +29,8 @@ export default function ProfileDetailsForm({ onComplete }) {
     e.preventDefault();
     setError(null);
 
-    if (!/^[0-9A-Z]{10}$/.test(usnClean)) {
-      return setError('USN should be 10 characters, e.g. 1RV25CS001.');
-    }
-    if (!usnClean.startsWith('1RV25') && !usnClean.startsWith('1RZ25')) {
-      return setError('USN must belong to the 2025 batch (starting with 1RV25 or 1RZ25).');
+    if (!/^1RV25[A-Z]{2}\d{3}$/.test(usnClean)) {
+      return setError('USN must be in the format 1RV25XX000 (e.g., 1RV25CS001).');
     }
     if (!branch) return setError('Select your branch.');
     if (!eligible) return setError('Confirm you are part of the 2025 - 2029 batch.');
@@ -110,18 +107,12 @@ export default function ProfileDetailsForm({ onComplete }) {
           <div>
             <label className={LABEL} htmlFor="reg-batch">Batch</label>
             <div className="relative">
-              <select
+              <input
                 id="reg-batch"
                 value={batch}
-                onChange={(e) => setBatch(e.target.value)}
-                required
-                className={selectClass}
-              >
-                {BATCHES.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-[#56707B]">
-                ▾
-              </span>
+                readOnly
+                className={`${FIELD} text-[#8AA5AE] cursor-default bg-transparent`}
+              />
             </div>
           </div>
         </div>

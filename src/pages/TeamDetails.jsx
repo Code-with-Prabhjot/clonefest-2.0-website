@@ -234,12 +234,29 @@ export default function TeamDetails() {
             {profile.team_name}
           </h1>
         </div>
-        <Link
-          to="/portal"
-          className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
-        >
-          Challenge portal →
-        </Link>
+        <div className="flex items-center gap-8">
+          <Link
+            to="/portal"
+            className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
+          >
+            Challenge portal →
+          </Link>
+          <Link
+            to="/leaderboard"
+            className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
+          >
+            View leaderboard →
+          </Link>
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut();
+              window.location.href = '/';
+            }}
+            className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
+          >
+            Logout →
+          </button>
+        </div>
       </div>
 
       {/* Metrics */}
@@ -412,13 +429,6 @@ export default function TeamDetails() {
               Only the squad lead can see the invite code
             </p>
           )}
-
-          <Link
-            to="/leaderboard"
-            className="mt-5 block rounded-[2px] border border-[#B3E0F2]/20 px-4 py-2.5 text-center font-jet text-[10px] uppercase tracking-[0.16em] text-[#8AA5AE] transition-colors hover:border-[#B3E0F2]/45 hover:text-[#E4EEF2]"
-          >
-            View leaderboard →
-          </Link>
         </div>
       </div>
 

@@ -145,21 +145,13 @@ export default function Leaderboard() {
               Standings
             </p>
           </div>
-          <div className="flex-1" />
-          <div className="flex items-center gap-5">
-            <Link to="/portal/team" className="font-jet text-[10px] uppercase tracking-[0.18em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]">
-              Team dashboard
-            </Link>
-            <Link to="/portal" className="font-jet text-[10px] uppercase tracking-[0.18em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]">
-              Challenges dashboard
-            </Link>
-          </div>
         </div>
       </header>
 
       <main className="relative z-10 mx-auto w-full max-w-[1180px] px-5 py-10 sm:px-8 sm:py-14">
-        <div style={{ animation: 'rise .5s ease-out both' }}>
-          <p className={KICKER}>Live standings</p>
+        <div className="flex flex-wrap items-baseline justify-between gap-3" style={{ animation: 'rise .5s ease-out both' }}>
+          <div>
+            <p className={KICKER}>Live standings</p>
           <h1 className="mt-3 font-clash text-[30px] font-medium leading-tight text-[#E4EEF2] sm:text-[40px]">
             Leaderboard
           </h1>
@@ -167,6 +159,15 @@ export default function Leaderboard() {
             Squads are ranked by cleared submissions — accepted or scored. Ties
             break on total submissions, then on who cleared first.
           </p>
+          </div>
+          <div className="flex items-center gap-8">
+            <Link to="/portal/team" className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]">
+              Team portal →
+            </Link>
+            <Link to="/portal" className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]">
+              Challenge portal →
+            </Link>
+          </div>
         </div>
 
         {status === 'ready' && (
