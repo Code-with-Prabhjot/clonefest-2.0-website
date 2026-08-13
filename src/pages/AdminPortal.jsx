@@ -217,6 +217,27 @@ class AdminPortalView extends React.Component {
 
   componentWillUnmount(){ clearTimeout(this._t); if (ANIM.host === this) ANIM.host = null; }
 
+  async copyText(text){
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const el = document.createElement('textarea');
+        el.value = text;
+        el.setAttribute('readonly', '');
+        el.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+        document.body.appendChild(el);
+        el.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(el);
+        if (!ok) throw new Error('copy rejected');
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   toast(title, msg){
     clearTimeout(this._t);
     this.setState({toast:msg, toastTitle:title, modal:null, confirm:null});
@@ -456,7 +477,10 @@ class AdminPortalView extends React.Component {
         caretStyle:'background:transparent;border:none;cursor:pointer;font-size:16px;line-height:1;padding:6px 4px;transition:transform .3s cubic-bezier(.22,1,.36,1),color .25s;color:' +
           (open ? ICE : DIM) + ';transform:rotate(' + (open ? '90' : '0') + 'deg)',
         toggle: () => this.setState({expanded: open ? null : q.name}),
-        copy: () => this.toast('Invite code copied', q.invite + ' is on your clipboard.'),
+        copy: async () => this.toast(
+          ...(await this.copyText(q.invite)
+            ? ['Invite code copied', q.invite + ' is on your clipboard.']
+            : ['Could not copy', 'Invite code is ' + q.invite + '.'])),
         dq: () => this.setState({modal:'confirm', confirm:{
           kicker:'DESTRUCTIVE', color:CLAY, title:'Disqualify ' + q.name + '?',
           body:'All submissions and ' + q.score + ' rubric points are voided. The squad keeps read access but drops off the leaderboard. This cannot be undone from the portal.',
