@@ -9,6 +9,7 @@ import TrackGrid from '../components/hacker/TrackGrid';
 import SubmissionLog from '../components/hacker/SubmissionLog';
 import Announcements from '../components/hacker/Announcements';
 import ProfileDetailsForm from '../components/hacker/ProfileDetailsForm';
+import WhatsAppInvite, { shouldShowInvite, markInviteSeen } from '../components/hacker/WhatsAppInvite';
 import { supabase } from '../lib/supabase';
 import { useHackerData } from '../hooks/useHackerData';
 
@@ -254,6 +255,8 @@ function SectionLabel({ children }) {
 export default function HackerPortal() {
   const { user, profile, tracks, submissions, loading, refetch } = useHackerData();
   const [detailsDone, setDetailsDone] = useState(false);
+  // Raised on the transition out of ProfileDetailsForm, then never again.
+  const [showInvite, setShowInvite] = useState(false);
 
   if (loading) return <LoadingScreen />;
 
@@ -264,11 +267,26 @@ export default function HackerPortal() {
     if (!profile?.usn && !detailsDone) {
       return (
         <OnboardingShell step="Step 1 of 2">
-          <ProfileDetailsForm onComplete={() => setDetailsDone(true)} />
+          <ProfileDetailsForm
+            onComplete={() => {
+              setDetailsDone(true);
+              setShowInvite(shouldShowInvite(user?.id));
+            }}
+          />
         </OnboardingShell>
       );
     }
-    return <OnboardingScreen user={user} profile={profile} refetch={refetch} />;
+    return (
+      <>
+        <OnboardingScreen user={user} profile={profile} refetch={refetch} />
+        {showInvite && (
+          <WhatsAppInvite
+            userId={user?.id}
+            onClose={() => { markInviteSeen(user?.id); setShowInvite(false); }}
+          />
+        )}
+      </>
+    );
   }
 
   return (
