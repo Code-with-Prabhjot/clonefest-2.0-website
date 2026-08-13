@@ -205,8 +205,8 @@ class AdminPortalView extends React.Component {
     section:'overview', stateOverride:null, expanded:'GHOST_IN_SHELL',
     modal:null, confirm:null, toast:null, toastTitle:'', banner:true,
     search:'', bodyLen:0, pinned:true, tick:0,
-    annTitle:'', annBody:'', annAudience:'all', judgeId:'',
-    picked:{'NULL_POINTER':true,'DEEP_THOUGHT':true,'TABS_OVER_SPACES':true},
+    annTitle:'', annBody:'', annAudience:'all', judgeId:'', assignSquadName:'',
+    picked:{},
     locks:{1:false,2:false},
     trackFilter:'all', statusFilter:'Any status', judgeFilter:'All judges', sortFilter:'Score · high to low',
     page: 1, pageSize: 25,
@@ -421,6 +421,9 @@ class AdminPortalView extends React.Component {
         judgeColor:q.judge ? TXT : DIM,
         w1:this.chip(q.c1 || (q.w && q.w[0]) || 'none'), w2:this.chip(q.c2 || (q.w && q.w[1]) || 'none'),
         open, invite:q.invite, registered:q.registered || q.reg, prs:q.total || q.prs || 0, roster,
+        assignJudge: () => this.setState({
+          modal:'assignOne', assignSquadName:q.name, judgeId:q.judgeId || '',
+        }),
         meterStyle:'position:absolute;inset:0 auto 0 0;background:' + STEEL + ';transition:width .9s cubic-bezier(.22,1,.36,1) ' +
           (0.15 + idx*0.05) + 's;width:' + (on && q.score != null ? q.score + '%' : '0%'),
         links:(q.subs || q._subs || []).map((sub) => {
@@ -635,7 +638,8 @@ class AdminPortalView extends React.Component {
       })),
 
       judges:(this.props.judges || []).map(j => ({
-        callsign:j.callsign,
+        id:j.id,                       // needed for <option value>; dropping it
+        callsign:j.callsign,           // made the browser submit the label text
         email:j.usn || '—',
         assigned:j.assigned,
         scored:j.scored,
@@ -658,7 +662,7 @@ class AdminPortalView extends React.Component {
           progStyle:'display:flex;align-items:center;gap:14px;padding:' + (phone ? '0 8px 16px' : '16px 8px') + (phone ? ';grid-column:1/-1' : '')
         });
       }),
-      openAssign: () => this.setState({modal:'assign'}),
+      openAssign: () => this.setState({modal:'assign', judgeId:'', picked:{}}),
       openAuto: () => {
         const jCount = Math.max(1, ST.judges);
         const per = Math.floor(ST.squads / jCount);
@@ -676,8 +680,21 @@ class AdminPortalView extends React.Component {
           toggle: () => this.setState(st => ({picked:Object.assign({}, st.picked, {[q.name]: !st.picked[q.name]})}))
         };
       }),
-      pickedCount:String(Object.keys(s.picked).filter(k => s.picked[k]).length),
+      pickedCount:String(SQUADS.filter(q => s.picked[q.name]).length),
       judgeOptions:(this.props.judges || []).map(j => ({ id:j.id, label:j.callsign })),
+      modalAssignOne: s.modal === 'assignOne',
+      assignSquadName: s.assignSquadName || '',
+      confirmAssignOne: async () => {
+        const res = await this.props.onAssignJudgeToSquad(s.assignSquadName, s.judgeId);
+        if (!res.ok) return this.toast('Could not assign', res.error);
+        this.setState({modal:null});
+        const who = (this.props.judges || []).find(j => j.id === s.judgeId);
+        this.toast(
+          s.judgeId ? 'Judge assigned' : 'Judge cleared',
+          s.judgeId ? s.assignSquadName + ' -> ' + who.callsign
+                    : s.assignSquadName + ' has no judge now.',
+        );
+      },
       judgeId:s.judgeId,
       onJudge: e => {
         const id = e.target.value;
@@ -687,7 +704,7 @@ class AdminPortalView extends React.Component {
         this.setState({judgeId:id, picked});
       },
       confirmAssign: async () => {
-        const names = Object.keys(s.picked).filter(k => s.picked[k]);
+        const names = SQUADS.filter(q => s.picked[q.name]).map(q => q.name);
         const res = await this.props.onAssignSquads(s.judgeId, names);
         if (!res.ok) return this.toast('Could not save', res.error);
         this.setState({modal:null});
@@ -1063,7 +1080,7 @@ class AdminPortalView extends React.Component {
                               <div style={sx(`padding:15px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:${r.judgeColor}`)}>{r.judge}</div>
                               <div style={sx("padding:10px 8px;display:flex;gap:6px;justify-content:flex-end")}>
                                 
-                                <button onClick={V.openAssign} style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(93,145,166,.45);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap21">Assign judge</button>
+                                <button onClick={r.assignJudge} style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(93,145,166,.45);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap21">Assign judge</button>
                                 <button onClick={r.dq} style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(194,86,75,.35);color:#C2564B;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap22">Disqualify</button>
                               </div>
                             </div>
@@ -1223,7 +1240,6 @@ class AdminPortalView extends React.Component {
                     </div>
 
                     <div style={sx("display:flex;gap:12px;margin-top:26px;flex-wrap:wrap")}>
-                      <button style={sx("flex:1;min-width:120px;padding:12px 20px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(179,224,242,.16);color:#8AA5AE;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap30">Preview</button>
                       <button onClick={V.openBroadcast} style={sx("flex:1.5;min-width:150px;padding:12px 20px;font-size:13px;font-weight:700;white-space:nowrap;background:#B3E0F2;border:1px solid #B3E0F2;color:#080D0C;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap31">Broadcast</button>
                     </div>
                   </div>
@@ -1248,7 +1264,6 @@ class AdminPortalView extends React.Component {
                         <span style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;color:#5D91A6;border:1px solid rgba(93,145,166,.35);padding:3px 7px")}>{a.audience}</span>
                         <span style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;color:#56707B")}>by {a.sender}</span>
                         <span style={sx("flex:1")}></span>
-                        <button style={sx("padding:6px 11px;font-size:11px;background:transparent;border:1px solid rgba(179,224,242,.14);color:#8AA5AE;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap33">Edit</button>
                         <button onClick={a.remove} style={sx("padding:6px 11px;font-size:11px;background:transparent;border:1px solid rgba(194,86,75,.3);color:#C2564B;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap34">Delete</button>
                       </div>
                     </div>
@@ -1418,6 +1433,33 @@ class AdminPortalView extends React.Component {
           </div>
         </> : null}
 
+        {(V.modalAssignOne) ? <>
+          <div style={sx(V.L.overlay)}>
+            <div style={sx(V.L.modalAssign)}>
+              <div style={sx(V.L.modalPad)}>
+                <div style={sx("display:flex;justify-content:space-between;align-items:center;margin-bottom:8px")}>
+                  <div style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:22px;color:#E4EEF2")}>Assign judge</div>
+                  <button onClick={V.closeModal} style={sx("background:transparent;border:none;color:#56707B;cursor:pointer;font-size:15px")}>&#10005;</button>
+                </div>
+                <div style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;color:#5D91A6;margin-bottom:22px")}>{V.assignSquadName}</div>
+
+                <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>JUDGE</label>
+                <select value={V.judgeId} onChange={V.onJudge} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")}>
+                  <option value="">No judge assigned</option>
+                  {(V.judgeOptions || []).map((o) => (
+                    <option key={o.id} value={o.id}>{o.label}</option>
+                  ))}
+                </select>
+
+                <div style={sx("display:flex;gap:12px;flex-wrap:wrap;margin-top:26px")}>
+                  <button onClick={V.closeModal} style={sx("flex:1;min-width:110px;padding:12px 18px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(179,224,242,.24);color:#8AA5AE;cursor:pointer;border-radius:2px")}>Cancel</button>
+                  <button onClick={V.confirmAssignOne} style={sx("flex:1.6;min-width:150px;padding:12px 18px;font-size:13px;font-weight:700;background:#B3E0F2;border:1px solid #B3E0F2;color:#080D0C;cursor:pointer;border-radius:2px")}>Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </> : null}
+
         {(V.modalAssign) ? <>
           <div style={sx(V.L.overlay)}>
             <div style={sx(V.L.modalAssign)}>
@@ -1429,7 +1471,7 @@ class AdminPortalView extends React.Component {
 
                 <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>JUDGE</label>
                 <div style={sx("position:relative;margin-bottom:20px")}>
-                  <select style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 30px 12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap45">
+                  <select value={V.judgeId} onChange={V.onJudge} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 30px 12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap45">
                     <option value="">Overview (Select a judge below to re-assign)</option>
                     {(V.judges || []).map(j => (
                       <option key={j.id} value={j.id}>{j.callsign} · {j.assigned} assigned</option>
@@ -1439,17 +1481,7 @@ class AdminPortalView extends React.Component {
                 </div>
 
                 <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>SQUADS</label>
-                <input placeholder="Filter squads" style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 14px;font-size:13px;outline:none;margin-bottom:12px;border-radius:2px")} data-s="ap46" />
 
-                <div style={sx("margin-bottom:16px")}>
-                  <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>JUDGE</label>
-                  <select value={V.judgeId} onChange={V.onJudge} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")}>
-                    <option value="">Select a judge</option>
-                    {(V.judgeOptions || []).map((o) => (
-                      <option key={o.id} value={o.id}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
                 <div style={sx(V.L.pickList)}>
                   {(V.pickList || []).map((p, _i1) => <React.Fragment key={_i1}>
                     <div onClick={p.toggle} style={sx("display:flex;align-items:center;gap:13px;padding:12px 15px;border-bottom:1px solid rgba(179,224,242,.06);cursor:pointer;transition:background .2s")} data-s="ap47">
@@ -1563,7 +1595,8 @@ export default function AdminPortal() {
   };
   const { squads, stats, trackDistribution, tracks, settings, profiles, submissions,
           announcements, judges, status, error, fetchedAt, refetch, setSubmissionStatus,
-          createAnnouncement, deleteAnnouncement, assignSquads, updateTrack } = useEventData();
+          createAnnouncement, deleteAnnouncement, assignSquads, updateTrack,
+          assignJudgeToSquad } = useEventData();
 
   // Exports are built from data already in memory — no server round trip.
   const handleExport = (kind) => {
@@ -1585,6 +1618,7 @@ export default function AdminPortal() {
       onCreateAnnouncement={createAnnouncement}
       onDeleteAnnouncement={deleteAnnouncement}
       onAssignSquads={assignSquads}
+      onAssignJudgeToSquad={assignJudgeToSquad}
       onExport={handleExport}
       squads={squads}
       stats={stats}
@@ -1600,3 +1634,6 @@ export default function AdminPortal() {
     />
   );
 }
+
+// Exported for the binding audit in scratch; not used by the app.
+export { AdminPortalView };

@@ -17,7 +17,11 @@ import { supabase } from '../lib/supabase';
 export const CLEARED = new Set(['accepted', 'scored']);
 export const STATUSES = ['pending', 'accepted', 'rejected', 'scored'];
 
-function buildSquads({ teams, profiles, submissions, totals }) {
+function buildSquads({ teams, profiles, submissions, totals, assignments }) {
+  const judgeById = new Map(
+    profiles.filter((p) => p.role === 'judge').map((p) => [p.id, p]));
+  const judgeForTeam = new Map(
+    (assignments || []).map((a) => [a.team_name, judgeById.get(a.judge_id)]));
   const pointsFor = new Map((totals || []).map((t) => [t.team_name, t]));
   const byTeam = new Map(
     teams.map((t) => [t.name, {
@@ -83,7 +87,8 @@ function buildSquads({ teams, profiles, submissions, totals }) {
       scoredCount: pointsFor.get(row.name)?.scored_count ?? 0,
       lastScoredAt: pointsFor.get(row.name)?.last_scored_at ?? null,
       score: pointsFor.get(row.name)?.points ?? null,
-      judge: '',
+      judge: judgeForTeam.get(row.name)?.full_name || '',
+      judgeId: judgeForTeam.get(row.name)?.id || '',
     };
   });
 }
@@ -211,6 +216,9 @@ export function useEventData() {
         .select();
       if (err) return { ok: false, error: err.message };
       inserted = data || [];
+      if (!inserted.length) {
+        return { ok: false, error: 'Nothing was written — check the row-level security policy on judge_assignments.' };
+      }
     }
     setAssignments((rows) => [...rows.filter((r) => r.judge_id !== judgeId), ...inserted]);
     return { ok: true, count: inserted.length };
@@ -230,9 +238,33 @@ export function useEventData() {
     return { ok: true };
   }, [tracks]);
 
+  /** Point one squad at one judge. Passing an empty judgeId unassigns it. */
+  const assignJudgeToSquad = useCallback(async (teamName, judgeId) => {
+    const del = await supabase
+      .from('judge_assignments').delete().eq('team_name', teamName);
+    if (del.error) return { ok: false, error: del.error.message };
+
+    let inserted = [];
+    if (judgeId) {
+      const { data, error: err } = await supabase
+        .from('judge_assignments')
+        .insert({ judge_id: judgeId, team_name: teamName })
+        .select();
+      if (err) return { ok: false, error: err.message };
+      inserted = data || [];
+      if (!inserted.length) {
+        return { ok: false, error: 'Nothing was written — check the row-level security policy on judge_assignments.' };
+      }
+    }
+    setAssignments((rows) => [
+      ...rows.filter((r) => r.team_name !== teamName), ...inserted,
+    ]);
+    return { ok: true };
+  }, []);
+
   const squads = useMemo(
-    () => buildSquads({ teams, profiles, submissions, totals }),
-    [teams, profiles, submissions, totals],
+    () => buildSquads({ teams, profiles, submissions, totals, assignments }),
+    [teams, profiles, submissions, totals, assignments],
   );
 
   const stats = useMemo(() => {
@@ -296,6 +328,6 @@ export function useEventData() {
     status, error, fetchedAt,
     refetch: load,
     setSubmissionStatus,
-    createAnnouncement, deleteAnnouncement, assignSquads, updateTrack,
+    createAnnouncement, deleteAnnouncement, assignSquads, assignJudgeToSquad, updateTrack,
   };
 }

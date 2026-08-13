@@ -736,8 +736,6 @@ class JudgePortalView extends React.Component {
               <div style={sx(V.L.pager)}>
                 <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>{V.pagerText}</span>
                 <div style={sx("display:flex;gap:8px")}>
-                  <button style={sx("padding:8px 14px;font-size:12px;background:transparent;border:1px solid rgba(179,224,242,.14);color:#56707B;cursor:not-allowed;border-radius:2px")}>Prev</button>
-                  <button style={sx("padding:8px 14px;font-size:12px;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;border-radius:2px;transition:all .25s")} data-s="jp10">Next</button>
                 </div>
               </div>
             </> : null}
@@ -1149,3 +1147,6 @@ export default function JudgePortal(props) {
     </>
   );
 }
+
+// Exported for the binding audit in scratch; not used by the app.
+export { JudgePortalView };
