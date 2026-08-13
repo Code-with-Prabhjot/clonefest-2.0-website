@@ -1,5 +1,7 @@
 import React from 'react';
 import { useJudgeData } from '../hooks/useJudgeData';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { sx } from '../lib/sx';
 import './JudgePortal.css';
 
@@ -96,6 +98,14 @@ class JudgePortalView extends React.Component {
   }
 
   /** Live squads mapped onto the shape this design renders. */
+  /** Display name: real name, else the email local part, else 'Judge'. */
+  judgeName(){
+    const me = this.props.me;
+    if (me?.full_name && me.full_name.trim()) return me.full_name.trim();
+    if (me?.email) return String(me.email).split('@')[0];
+    return 'Judge';
+  }
+
   squadList(){
     const live = this.props.squads;
     // Live squads from useJudgeData, mapped onto the shape this design renders.
@@ -208,6 +218,8 @@ class JudgePortalView extends React.Component {
       prCellFiles: phone ? 'display:none' : MONO + ';font-size:12px;color:' + DIM + ';padding:13px 0;display:flex;align-items:center;justify-content:flex-end',
       prCellMerged: narrow ? 'display:none' : MONO + ';font-size:11px;color:' + DIM + ';padding:13px 0;display:flex;align-items:center',
       prSubtotal:'display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:18px;padding:18px 20px;border:1px solid rgba(127,178,126,.28);background:linear-gradient(90deg,rgba(127,178,126,.10),rgba(127,178,126,.01));border-radius:2px',
+      rubricHead:'margin-top:' + (phone ? '34px' : '48px') + ';display:flex;align-items:' +
+        (phone ? 'flex-start' : 'flex-end') + ';justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap',
       rubricGrid:'display:grid;gap:' + (phone ? '16px' : '20px') + ';align-items:start;grid-template-columns:' + (narrow ? '1fr' : '1fr 330px'),
       critRow: phone ? 'display:flex;flex-direction:column;gap:14px' : 'display:flex;align-items:flex-start;justify-content:space-between;gap:24px',
       textarea:'width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:' + TXT + ';padding:14px;font-size:13.5px;line-height:1.65;outline:none;border-radius:2px;resize:vertical;transition:border-color .25s',
@@ -324,9 +336,15 @@ class JudgePortalView extends React.Component {
     const weeks = subsArray.map((sub, i) => {
       const submitted = !!sub;
       const late = false;
-      const chip = !submitted ? {label:'Not submitted', c:DIM, fill:'transparent', border:DIM}
-        : locked ? {label:'Scored', c:ICE, fill:ICE, border:ICE}
-        : {label:'Accepted', c:MOSS_LT, fill:MOSS_LT, border:MOSS_LT};
+      const chipByStatus = {
+        pending:  {label:'Pending',  c:STEEL,   fill:'transparent', border:STEEL},
+        accepted: {label:'Accepted', c:MOSS_LT, fill:MOSS_LT,       border:MOSS_LT},
+        scored:   {label:'Scored',   c:ICE,     fill:ICE,           border:ICE},
+        rejected: {label:'Rejected', c:CLAY,    fill:'transparent', border:CLAY},
+      };
+      const chip = !submitted
+        ? {label:'Not submitted', c:DIM, fill:'transparent', border:DIM}
+        : (chipByStatus[sub.status] || chipByStatus.pending);
         
       const demoUrl = sub?.deployed_url || '';
       const demoHost = demoUrl ? demoUrl.replace(/^https?:\/\//, '') : '';
@@ -334,7 +352,7 @@ class JudgePortalView extends React.Component {
       const repoHost = repoUrl ? repoUrl.replace(/^https?:\/\//, '') : '';
 
       return {
-        label:'SUBMISSION', title:sub?.track_id || q.track || 'Unknown Track', submitted, missing:!submitted,
+        label:'SUBMISSION', title:sub?.track_id || q.track || 'Submission', submitted, missing:!submitted,
         repo:repoHost,
         repoUrl:repoUrl,
         demo:demoHost,
@@ -375,6 +393,17 @@ class JudgePortalView extends React.Component {
     };
 
     return {
+      heroTitle: (() => {
+        const total = this.props.progress?.assigned || 0;
+        const left = Math.max(0, total - (this.props.progress?.scored || 0));
+        if (!total) return 'No squads in your queue yet.';
+        return left === 0
+          ? 'Every squad in your queue is scored.'
+          : left + (left === 1 ? ' squad still needs' : ' squads still need') + ' a final score.';
+      })(),
+      heroBody: 'Drafts stay private to you. Submitting a final score locks the rubric and makes it visible to admins.',
+      scopeNote: (this.props.progress?.assigned || 0) + ' squads are in your review queue.',
+      signOut: () => this.props.onSignOut && this.props.onSignOut(),
       L, isPhone:phone,
       isList: view === 'list', isDetail: view === 'detail', isDenied: view === 'denied', notDenied: view !== 'denied',
       progressStyle:'height:100%;background:' + ICE + ';box-shadow:0 0 12px rgba(179,224,242,.5);transition:width 1.1s cubic-bezier(.22,1,.36,1) .2s;width:' + (on ? `${this.props.progress?.assigned ? Math.round(((this.props.progress.scored || 0) / this.props.progress.assigned) * 100) : 0}%` : '0%'),
@@ -454,7 +483,7 @@ class JudgePortalView extends React.Component {
       })),
 
       locked, lockedAt: s.locked[name] || '',
-      requestUnlock: () => this.toast('Unlock requested', 'v_kulkarni was notified. ' + name + ' stays locked until an admin approves.'),
+      requestUnlock: () => this.toast('Unlock requested', name + ' stays locked until an admin approves.'),
       criteria,
       total:String(total), filledCount:String(filled),
       totalColor: total >= 80 ? MOSS_LT : total >= 50 ? TXT : STEEL,
@@ -551,8 +580,8 @@ class JudgePortalView extends React.Component {
           <div style={sx(V.L.headTop)}>
             <div style={sx("display:flex;align-items:center;gap:14px")}>
               <div style={sx("display:flex;align-items:center")}>
-                <img src="/assets/image.png" alt="RVCE" style={sx("height:34px;width:auto;filter:invert(1);mix-blend-mode:screen")} />
-                <img src="/assets/cc-10-years-white.png" alt="Coding Club" style={sx("height:40px;width:auto;margin-left:12px")} />
+                <img src="/assets/image.png" alt="RVCE" style={sx("height:52px;width:auto;filter:invert(1);mix-blend-mode:screen")} />
+                <img src="/assets/cc-10-years-white.png" alt="Coding Club" style={sx("height:84px;width:auto;margin-left:16px")} />
               </div>
               <div style={sx("width:1px;height:30px;background:rgba(179,224,242,.14)")}></div>
               <div>
@@ -580,15 +609,15 @@ class JudgePortalView extends React.Component {
               <div style={sx(V.L.hidePhone)}>
                 <div style={sx("text-align:right;line-height:1.35")}>
                   <div style={sx("display:flex;align-items:center;gap:8px;justify-content:flex-end")}>
-                    <span style={sx("font-size:13px;font-weight:500;color:#E4EEF2")}>{this.props.me?.full_name || this.props.me?.id || 'JUDGE'}</span>
+                    <span style={sx("font-size:13px;font-weight:500;color:#E4EEF2")}>{this.judgeName()}</span>
                     <span style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;padding:3px 7px;border:1px solid rgba(179,224,242,.45);color:#B3E0F2")}>JUDGE</span>
                   </div>
                   <div style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;color:#56707B;margin-top:4px")}>ASSIGNED SQUADS ONLY</div>
                 </div>
               </div>
-              <div style={sx("width:34px;height:34px;background:#B3E0F2;color:#080D0C;display:grid;place-items:center;font-family:'Clash Grotesk',sans-serif;font-weight:600;font-size:13px;transition:transform .3s")} data-s="jp3">{(this.props.me?.full_name || 'JU').substring(0, 2).toUpperCase()}</div>
+              <div style={sx("width:34px;height:34px;background:#B3E0F2;color:#080D0C;display:grid;place-items:center;font-family:'Clash Grotesk',sans-serif;font-weight:600;font-size:13px;transition:transform .3s")} data-s="jp3">{this.judgeName().substring(0, 2).toUpperCase()}</div>
               <div style={sx(V.L.hidePhone)}>
-                <button style={sx("padding:9px 16px;font-size:12px;font-weight:500;white-space:nowrap;background:transparent;cursor:pointer;transition:all .25s;border:1px solid rgba(179,224,242,.16);color:#8AA5AE;border-radius:2px")} data-s="jp4">Sign out</button>
+                <button onClick={V.signOut} style={sx("padding:9px 16px;font-size:12px;font-weight:500;white-space:nowrap;background:transparent;cursor:pointer;transition:all .25s;border:1px solid rgba(179,224,242,.16);color:#8AA5AE;border-radius:2px")} data-s="jp4">Sign out</button>
               </div>
             </div>
           </div>
@@ -613,8 +642,8 @@ class JudgePortalView extends React.Component {
           <div style={sx(V.L.hero)}>
             <div>
               <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6;animation:rise .5s ease-out both")}>YOUR QUEUE · REVIEW WINDOW</div>
-              <h1 style={sx(V.L.heroTitle)}>8 squads still need a final score.</h1>
-              <p style={sx("font-size:14px;line-height:1.7;color:#8AA5AE;margin:14px 0 0;max-width:540px;text-wrap:pretty;animation:rise .5s ease-out .16s both")}>Final scores lock on 10 August at 18:00 IST. Drafts left unsubmitted at that point are discarded and the squad is marked unscored.</p>
+              <h1 style={sx(V.L.heroTitle)}>{V.heroTitle}</h1>
+              <p style={sx("font-size:14px;line-height:1.7;color:#8AA5AE;margin:14px 0 0;max-width:540px;text-wrap:pretty;animation:rise .5s ease-out .16s both")}>{V.heroBody}</p>
             </div>
             <div style={sx("display:flex;gap:10px;flex-wrap:wrap;animation:rise .5s ease-out .22s both")}>
               <button onClick={V.openNextUnscored} style={sx("padding:12px 20px;font-size:13px;font-weight:500;white-space:nowrap;background:#B3E0F2;border:1px solid #B3E0F2;color:#080D0C;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="jp5">Score next unscored squad</button>
@@ -637,10 +666,10 @@ class JudgePortalView extends React.Component {
           <div style={sx(V.L.scopeNote)}>
             <span style={sx("width:22px;height:22px;flex:none;border:1px solid rgba(93,145,166,.5);color:#5D91A6;display:grid;place-items:center;font-size:11px")}>⌷</span>
             <div style={sx("flex:1;min-width:220px")}>
-              <span style={sx("font-size:13px;color:#E4EEF2")}>You are seeing only the 20 squads an admin assigned to you.</span>
+              <span style={sx("font-size:13px;color:#E4EEF2")}>{V.scopeNote}</span>
               <span style={sx("font-size:13px;color:#8AA5AE")}> Squads outside your assignment list, other judges' scores, and the combined leaderboard are not visible from this console.</span>
             </div>
-            <span style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B;white-space:nowrap")}>judge_assignment · {this.props.me?.full_name || 'judge'}</span>
+            <span style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B;white-space:nowrap")}>judge_assignment · {this.judgeName()}</span>
           </div>
 
           <div style={sx(V.L.panelFlush)}>
@@ -766,8 +795,8 @@ class JudgePortalView extends React.Component {
 
           <div style={sx(V.L.sectionHead)}>
             <div>
-              <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6")}>SUBMISSIONS</div>
-              <h2 style={sx(V.L.h2)}>Two challenges</h2>
+              
+              <h2 style={sx(V.L.h2)}>Submissions</h2>
             </div>
             <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>{V.detail.subsMeta}</span>
           </div>
@@ -812,7 +841,7 @@ class JudgePortalView extends React.Component {
                     <p style={sx("font-size:12px;line-height:1.6;color:#8AA5AE;margin:10px 0 0;text-wrap:pretty")}>Nothing was pushed before the deadline. Score this challenge on the rubric as delivered, or raise it with an admin if you believe an extension applies.</p>
                   </div>
                   <div style={sx("flex:1")}></div>
-                  <div style={sx("margin-top:20px;padding-top:14px;border-top:1px solid rgba(179,224,242,.08);font-family:'JetBrains Mono',monospace;font-size:10px;color:#56707B")}>DEADLINE PASSED {w.at}</div>
+                  
                 </> : null}
               </div>
             </React.Fragment>)}
@@ -827,7 +856,7 @@ class JudgePortalView extends React.Component {
                   <span style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:17px;letter-spacing:.04em;color:#E4EEF2")}>PREvaluator</span>
                   <span style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;padding:3px 7px;border:1px solid rgba(93,145,166,.45);color:#5D91A6")}>MOUNTED COMPONENT</span>
                 </div>
-                <div style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B;margin-top:8px")}>props: repoUrl="github.com/rvce-cc/broken-canvas" · teamId={V.detail.teamId}</div>
+                
               </div>
         
             </div>
@@ -903,7 +932,7 @@ class JudgePortalView extends React.Component {
           </div>
 
     
-          <div style={sx(V.L.sectionHead)}>
+          <div style={sx(V.L.rubricHead)}>
             <div>
               <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6")}>RUBRIC</div>
               <h2 style={sx(V.L.h2)}>Score {V.detail.name}</h2>
@@ -1085,6 +1114,12 @@ class JudgePortalView extends React.Component {
  */
 export default function JudgePortal(props) {
   const { me, squads, progress, status, error, migrationMissing, saveScore, refetch } = useJudgeData();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth', { replace: true });
+  };
 
   return (
     <>
@@ -1101,6 +1136,8 @@ export default function JudgePortal(props) {
       )}
       <JudgePortalView
         {...props}
+        me={me}
+        onSignOut={handleSignOut}
         squads={squads}
         progress={progress}
         loading={status === 'loading'}

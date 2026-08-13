@@ -3,6 +3,7 @@ import { sx } from '../lib/sx';
 import { supabase } from '../lib/supabase';
 import { useEventData, rankSquads } from '../hooks/useEventData';
 import { EXPORTS, downloadCsv } from '../lib/csv';
+import { useNavigate } from 'react-router-dom';
 import './AdminPortal.css';
 
 // ── Submission Timer Panel ────────────────────────────────────────────────────
@@ -398,9 +399,16 @@ class AdminPortalView extends React.Component {
 
     const rows = squadList.map((q, idx) => {
       const open = s.expanded === q.name;
-      const roster = (q.roster && q.roster.length
-        ? q.roster.map(m => ({ role:m.role, callsign:m.callsign, email:m.usn || EMAIL(m.callsign) }))
-        : [{role:'LEAD', callsign:q.lead, email:EMAIL(q.lead)}])
+      // profiles has no email column, so show the USN when we have one and an
+      // em dash otherwise. Deriving "callsign@rvce.edu.in" invented addresses
+      // that do not exist, and produced a bare "@rvce.edu.in" for members with
+      // no name recorded.
+      const roster = ((q.roster && q.roster.length ? q.roster : [])
+        .map(m => ({
+          role: m.role,
+          callsign: m.callsign || 'unnamed',
+          email: m.usn || '\u2014',
+        })))
         .map((m, i) => Object.assign(m, {
           roleStyle: MONO + ';font-size:9px;letter-spacing:.12em;width:52px;flex:none;color:' + (m.role === 'LEAD' ? ICE : DIM),
           rowStyle:'display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(179,224,242,.06);animation:rise .3s ease-out ' + (i*0.05) + 's both'
@@ -408,6 +416,7 @@ class AdminPortalView extends React.Component {
       return {
         name:q.name, lead:q.lead, members:q.members, track:q.track,
         score: q.score === null || q.score === undefined ? '\u2014' : q.score,
+        hasScore: q.score !== null && q.score !== undefined,
         judge:q.judge || 'unassigned',
         judgeColor:q.judge ? TXT : DIM,
         w1:this.chip(q.c1 || (q.w && q.w[0]) || 'none'), w2:this.chip(q.c2 || (q.w && q.w[1]) || 'none'),
@@ -510,6 +519,8 @@ class AdminPortalView extends React.Component {
     const swLabel = o => MONO + ';font-size:10px;letter-spacing:.14em;transition:color .3s;color:' + (o ? ICE : DIM);
 
     return {
+      // Wired from the wrapper below; without this the header button was a no-op.
+      signOut: () => this.props.onSignOut && this.props.onSignOut(),
       L, isPhone:phone,
       eventDay:String(day).padStart(2,'0'),
       banner:(this.props.showErrorBanner ?? true) && s.banner,
@@ -782,8 +793,8 @@ class AdminPortalView extends React.Component {
 
             <div style={sx("display:flex;align-items:center;gap:14px")}>
               <div style={sx("display:flex;align-items:center")}>
-                <img src="/assets/image.png" alt="RVCE" style={sx("height:34px;width:auto;filter:invert(1);mix-blend-mode:screen")} />
-                <img src="/assets/cc-10-years-white.png" alt="Coding Club" style={sx("height:40px;width:auto;margin-left:12px")} />
+                <img src="/assets/image.png" alt="RVCE" style={sx("height:52px;width:auto;filter:invert(1);mix-blend-mode:screen")} />
+                <img src="/assets/cc-10-years-white.png" alt="Coding Club" style={sx("height:84px;width:auto;margin-left:16px")} />
               </div>
               <div style={sx("width:1px;height:30px;background:rgba(179,224,242,.14)")}></div>
               <div>
@@ -805,7 +816,7 @@ class AdminPortalView extends React.Component {
                 <div style={sx("width:34px;height:34px;background:#B3E0F2;color:#080D0C;display:grid;place-items:center;font-family:'Clash Grotesk',sans-serif;font-weight:600;font-size:13px;transition:transform .3s")} data-s="ap3">AM</div>
               </div>
               <div style={sx(V.L.hidePhone)}>
-                <button style={sx("padding:9px 16px;font-size:12px;font-weight:500;white-space:nowrap;background:transparent;cursor:pointer;transition:all .25s;border:1px solid rgba(179,224,242,.16);color:#8AA5AE;border-radius:2px")} data-s="ap4">Sign out</button>
+                <button onClick={V.signOut} style={sx("padding:9px 16px;font-size:12px;font-weight:500;white-space:nowrap;background:transparent;cursor:pointer;transition:all .25s;border:1px solid rgba(179,224,242,.16);color:#8AA5AE;border-radius:2px")} data-s="ap4">Sign out</button>
               </div>
             </div>
           </div>
@@ -1047,13 +1058,13 @@ class AdminPortalView extends React.Component {
                               <div style={sx("padding:15px 8px;display:flex;align-items:center;gap:7px")}><span style={sx(r.w2.dot)}></span><span style={sx(r.w2.text)}>{r.w2.label}</span></div>
                               <div style={sx("padding:15px 8px;display:flex;align-items:center;gap:10px")}>
                                 <span style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:18px;color:#B3E0F2;font-variant-numeric:tabular-nums")}>{r.score}</span>
-                                <span style={sx("flex:1;height:3px;background:rgba(179,224,242,.12);position:relative")}><span style={sx(r.meterStyle)}></span></span>
+                                {r.hasScore ? <span style={sx("flex:1;height:3px;background:rgba(179,224,242,.12);position:relative")}><span style={sx(r.meterStyle)}></span></span> : null}
                               </div>
                               <div style={sx(`padding:15px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:${r.judgeColor}`)}>{r.judge}</div>
                               <div style={sx("padding:10px 8px;display:flex;gap:6px;justify-content:flex-end")}>
-                                <button style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(179,224,242,.16);color:#8AA5AE;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap20">View</button>
-                                <button onClick={V.openAssign} style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(93,145,166,.45);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap21">Judge</button>
-                                <button onClick={r.dq} style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(194,86,75,.35);color:#C2564B;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap22">DQ</button>
+                                
+                                <button onClick={V.openAssign} style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(93,145,166,.45);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap21">Assign judge</button>
+                                <button onClick={r.dq} style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(194,86,75,.35);color:#C2564B;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap22">Disqualify</button>
                               </div>
                             </div>
 
@@ -1195,7 +1206,6 @@ class AdminPortalView extends React.Component {
                           <select value={V.annAudience} onChange={V.onAudience} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:12px 30px 12px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")} data-s="ap29">
                             <option value="all">All hackers · {V.hackerCount}</option>
                             <option value="leads">Squad leads only · {V.leadCount}</option>
-                            <option value="judges">Judges only · {V.judgeCount}</option>
                             {(V.tracks || []).map(t => (
                               <option key={t.code} value={t.code}>Single track — {t.code} {t.name} · {t.count}</option>
                             ))}
@@ -1546,6 +1556,11 @@ class AdminPortalView extends React.Component {
  * portal read from too, so the three stay in step.
  */
 export default function AdminPortal() {
+  const navigate = useNavigate();
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth', { replace: true });
+  };
   const { squads, stats, trackDistribution, tracks, settings, profiles, submissions,
           announcements, judges, status, error, fetchedAt, refetch, setSubmissionStatus,
           createAnnouncement, deleteAnnouncement, assignSquads, updateTrack } = useEventData();
@@ -1564,6 +1579,7 @@ export default function AdminPortal() {
     <AdminPortalView
       profiles={profiles}
       submissions={submissions}
+      onSignOut={handleSignOut}
       announcements={announcements}
       judges={judges}
       onCreateAnnouncement={createAnnouncement}

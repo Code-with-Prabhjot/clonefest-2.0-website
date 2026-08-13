@@ -39,7 +39,7 @@ export function useJudgeData() {
       const { data: profile, error: pErr } = await supabase
         .from('profiles').select('*').eq('id', auth.user.id).single();
       if (pErr) throw pErr;
-      setMe(profile);
+      setMe({ ...profile, email: auth.user.email });
 
       // Which squads is this judge responsible for?
       let assignedNames = null;                       // null = everything
