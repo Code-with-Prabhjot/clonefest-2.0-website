@@ -43,13 +43,24 @@ grant select on public.leaderboard_totals to authenticated;
 -- Create the login first: Supabase → Authentication → Users → Add user,
 -- ticking "Auto Confirm User". Then call:
 --
---   select public.promote_user('clonefest.admin@rvce.edu.in', 'admin');
---   select public.promote_user('judge.one@rvce.edu.in',       'judge');
+--   select public.promote_user('clonefest.admin@rvce.edu.in', 'admin', 'Raksha S');
+--   select public.promote_user('judge.one@rvce.edu.in',       'judge', 'A Menon');
+--
+-- The third argument is optional; without it the email's local part is used.
+-- An existing non-empty name is never overwritten.
 --
 -- security definer so it can read auth.users; execute is revoked from client
 -- roles so it can only be called from the SQL editor / service role.
 
-create or replace function public.promote_user(p_email text, p_role text)
+-- Safe to re-run even if the earlier two-argument version was already
+-- applied: drop it before creating the current signature.
+drop function if exists public.promote_user(text, text);
+
+create or replace function public.promote_user(
+  p_email text,
+  p_role  text,
+  p_name  text default null
+)
 returns text
 language plpgsql
 security definer
@@ -70,14 +81,21 @@ begin
       p_email;
   end if;
 
+  -- The signup trigger has usually created the row already, with full_name
+  -- NULL when the account was made from the dashboard (no user metadata).
+  -- Fill the name here too, otherwise every organiser account stays nameless.
   insert into public.profiles (id, full_name, role)
-  values (v_id, split_part(p_email, '@', 1), p_role)
-  on conflict (id) do update set role = excluded.role;
+  values (v_id, coalesce(p_name, split_part(p_email, '@', 1)), p_role)
+  on conflict (id) do update
+    set role      = excluded.role,
+        full_name = coalesce(
+          nullif(trim(public.profiles.full_name), ''),   -- keep a real name
+          excluded.full_name);
 
   return format('%s is now %s', p_email, p_role);
 end $$;
 
-revoke execute on function public.promote_user(text, text) from anon, authenticated;
+revoke execute on function public.promote_user(text, text, text) from anon, authenticated;
 
 -- Check who holds elevated roles:
 --   select u.email, p.role
