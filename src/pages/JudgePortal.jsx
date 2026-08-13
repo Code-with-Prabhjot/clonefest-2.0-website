@@ -263,7 +263,7 @@ class JudgePortalView extends React.Component {
       const sc = r.st === 'none' ? '—' : String(r.total);
       return {
         name:r.q.name, track:r.q.track, subs:r.q.subs + ' of 2', updated:r.q.updated,
-        subLine:(narrow ? r.q.track + ' · ' : '') + r.q.subs + '/3 SUBMITTED' + (narrow ? ' · ' + r.q.updated : ''),
+        subLine:(narrow ? r.q.track + ' · ' : '') + r.q.subs + '/2 SUBMITTED' + (narrow ? ' · ' + r.q.updated : ''),
         subsColor: r.q.subs >= 2 ? MUTE : CLAY,
         chipLabel:m.label,
         chipDot:'width:7px;height:7px;flex:none;border:1px solid ' + m.border + ';background:' + m.fill,

@@ -456,7 +456,7 @@ class AdminPortalView extends React.Component {
         copy: () => this.toast('Invite code copied', q.invite + ' is on your clipboard.'),
         dq: () => this.setState({modal:'confirm', confirm:{
           kicker:'DESTRUCTIVE', color:CLAY, title:'Disqualify ' + q.name + '?',
-          body:'All three submissions and ' + q.score + ' rubric points are voided. The squad keeps read access but drops off the leaderboard. This cannot be undone from the portal.',
+          body:'All submissions and ' + q.score + ' rubric points are voided. The squad keeps read access but drops off the leaderboard. This cannot be undone from the portal.',
           cta:'Disqualify squad', kind:'danger'
         }})
       };
@@ -935,7 +935,7 @@ class AdminPortalView extends React.Component {
                     <div style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:16px;letter-spacing:.06em;color:#E4EEF2")}>Submissions by challenge</div>
                     <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B")}>OF {V.squadCount}</div>
                   </div>
-                  <div style={sx("flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:end;min-height:170px")}>
+                  <div style={sx(`flex:1;display:grid;grid-template-columns:repeat(${(V.weeks || []).length || 1},1fr);gap:20px;align-items:end;min-height:170px`)}>
                     {(V.weeks || []).map((w, _i1) => <React.Fragment key={_i1}>
                       <div style={sx("display:flex;flex-direction:column;align-items:center;gap:12px")}>
                         <span style={sx(`font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:22px;color:${w.color};font-variant-numeric:tabular-nums`)}>{w.count}</span>
