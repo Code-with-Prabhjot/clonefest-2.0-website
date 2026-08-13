@@ -3,13 +3,17 @@ import { Link } from 'react-router-dom';
 /**
  * Portal top bar: RVCE mark, CLONEFEST 2.0 wordmark, Coding Club mark.
  *
- * Logo treatment matches the landing, auth and leaderboard headers:
- * image.png is black artwork on a white plate, so it is inverted and screened;
- * the club JPEG already sits on black and only needs screening.
+ * Both logos are transparent PNGs with light artwork, so neither needs an
+ * invert or a blend mode.
+ *
+ * The wordmark used to be absolutely centred across the full row, which
+ * overlapped the two marks once they grew — that was the alignment drift on
+ * the participants page. It now occupies a flex track of its own and simply
+ * drops out on the narrowest screens rather than squeezing the logos.
  */
 
-const RVCE_LOGO = '/assets/image.png';
-const CLUB_LOGO = '/assets/cc-10-years-white.png';
+const RVCE_LOGO = '/assets/rvce-transparent.png';
+const CLUB_LOGO = '/assets/cc-transparent.png';
 
 export default function CyberHeader({ variant = 'cyan', customLogo = CLUB_LOGO }) {
   // Variants kept for call-site compatibility, remapped onto the current palette.
@@ -22,29 +26,27 @@ export default function CyberHeader({ variant = 'cyan', customLogo = CLUB_LOGO }
 
   return (
     <header
-      className={`fixed top-0 left-0 z-50 w-full border-b ${colors.border} bg-[#080D0C]/85 px-4 py-3 backdrop-blur-md sm:px-6`}
+      className={`fixed top-0 left-0 z-50 w-full border-b ${colors.border} bg-[#080D0C]/85 px-3 py-2 backdrop-blur-md sm:px-6 sm:py-3`}
     >
-      <div className="relative mx-auto flex max-w-7xl items-center justify-between">
-        <Link to="/" aria-label="CloneFest home" className="flex items-center">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 sm:gap-6">
+        <Link to="/" aria-label="CloneFest home" className="flex shrink-0 items-center">
           <img
             src={RVCE_LOGO}
             alt="RVCE"
-            className="h-12 w-auto [filter:invert(1)] mix-blend-screen transition-transform duration-300 hover:scale-105 md:h-14"
+            className="h-12 w-auto transition-transform duration-300 hover:scale-105 md:h-16"
           />
         </Link>
 
-        <div className="pointer-events-none absolute left-1/2 w-full max-w-[200px] -translate-x-1/2 text-center sm:max-w-none">
-          <span
-            className={`font-clash text-base font-semibold uppercase tracking-[0.14em] md:text-2xl ${colors.text}`}
-          >
-            CloneFest 2.0
-          </span>
-        </div>
+        <span
+          className={`hidden min-w-0 flex-1 truncate text-center font-clash text-lg font-semibold uppercase tracking-[0.14em] sm:block md:text-2xl ${colors.text}`}
+        >
+          CloneFest 2.0
+        </span>
 
         <img
           src={customLogo}
           alt="Coding Club"
-          className="h-16 w-auto object-contain transition-transform duration-300 hover:scale-105 md:h-20"
+          className="h-20 w-auto shrink-0 object-contain transition-transform duration-300 hover:scale-105 md:h-24"
         />
       </div>
     </header>

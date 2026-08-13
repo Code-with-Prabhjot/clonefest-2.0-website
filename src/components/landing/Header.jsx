@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 
 // Filenames contain spaces, so they must be URL-encoded.
-const COLLEGE_LOGO_URL = "/assets/image.png";
-const CLUB_LOGO_URL = "/assets/cc-10-years-white.png";
+const COLLEGE_LOGO_URL = "/assets/rvce-transparent.png";
+const CLUB_LOGO_URL = "/assets/cc-transparent.png";
 
 const NAV_BUTTON =
     "bg-transparent font-mono text-[11px] uppercase tracking-[0.15em] " +
@@ -23,14 +23,14 @@ export default function Header({ booted, onFaqClick, onAboutClick, onRulesClick 
                         data-testid="college-logo-slot"
                         src={COLLEGE_LOGO_URL}
                         alt="RVCE"
-                        className="h-10 w-auto shrink-0 [filter:invert(1)] mix-blend-screen transition-transform duration-300 hover:scale-105 sm:h-14"
+                        className="h-10 w-auto shrink-0 transition-transform duration-300 hover:scale-105 sm:h-14"
                     />
                     
                     <img
                         data-testid="club-logo-slot-mobile"
                         src={CLUB_LOGO_URL}
                         alt="Coding Club"
-                        className="h-14 w-auto shrink-0 transition-transform duration-300 hover:scale-105 sm:hidden"
+                        className="h-20 w-auto shrink-0 transition-transform duration-300 hover:scale-105 sm:hidden"
                     />
                 </div>
 

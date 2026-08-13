@@ -305,12 +305,15 @@ class AdminPortalView extends React.Component {
 
     const judgeCols = phone ? '1fr 62px 62px' : narrow ? '190px 96px 96px 1fr' : '190px 250px 96px 96px 1fr';
     const L = {
-      headTop:'max-width:1580px;margin:0 auto;display:flex;align-items:center;gap:' + (phone ? '12px' : '26px') +
+      headTop:'max-width:1580px;margin:0 auto;display:flex;align-items:center;' + (phone ? 'flex-wrap:wrap;row-gap:10px;' : '') + 'gap:' + (phone ? '12px' : '26px') +
         ';padding:' + (phone ? '12px 16px 0' : '16px 32px 0'),
       wordmark:"font-family:'Clash Grotesk',sans-serif;font-weight:600;letter-spacing:.14em;white-space:nowrap;color:" + ICE +
         ';line-height:1;font-size:' + (phone ? '15px' : '19px'),
       dayChip:'display:flex;align-items:center;gap:7px;' + MONO,
-      hidePhone: phone ? 'display:none' : 'display:flex;align-items:center',
+      logoRvce:'height:' + (phone ? '34px' : '52px') + ';width:auto;flex:none',
+      logoClub:'height:' + (phone ? '56px' : '84px') + ';width:auto;flex:none;margin-left:' +
+        (phone ? '10px' : '16px'),
+      hidePhone:'display:flex;align-items:center',
       hideNarrow: narrow ? 'display:none' : 'display:flex;align-items:center',
       navRow:'max-width:1580px;margin:8px auto 0;padding:0 ' + (phone ? '10px' : '32px') +
         ';display:flex;align-items:center;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch',
@@ -810,8 +813,8 @@ class AdminPortalView extends React.Component {
 
             <div style={sx("display:flex;align-items:center;gap:14px")}>
               <div style={sx("display:flex;align-items:center")}>
-                <img src="/assets/image.png" alt="RVCE" style={sx("height:52px;width:auto;filter:invert(1);mix-blend-mode:screen")} />
-                <img src="/assets/cc-10-years-white.png" alt="Coding Club" style={sx("height:84px;width:auto;margin-left:16px")} />
+                <img src="/assets/rvce-transparent.png" alt="RVCE" style={sx(V.L.logoRvce)} />
+                <img src="/assets/cc-transparent.png" alt="Coding Club" style={sx(V.L.logoClub)} />
               </div>
               <div style={sx("width:1px;height:30px;background:rgba(179,224,242,.14)")}></div>
               <div>
@@ -1049,12 +1052,47 @@ class AdminPortalView extends React.Component {
                 </div>
 
                 {(V.isPhone) ? <>
-                  <div style={sx("padding:10px 16px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B;border-bottom:1px solid rgba(179,224,242,.06)")}>SWIPE THE TABLE SIDEWAYS →</div>
+                  {(V.rows || []).map((r, _ip) => <React.Fragment key={_ip}>
+                    <div style={sx("padding:16px;border-bottom:1px solid rgba(179,224,242,.06)")}>
+                      <div style={sx("display:flex;align-items:baseline;justify-content:space-between;gap:12px")}>
+                        <span style={sx("font-size:15px;font-weight:500;color:#E4EEF2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{r.name}</span>
+                        <span style={sx("font-family:'Clash Grotesk',sans-serif;font-size:17px;color:#B3E0F2;flex:none")}>{r.score}</span>
+                      </div>
+
+                      <div style={sx("margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#56707B")}>
+                        {r.lead} &middot; {r.members} MEMBERS &middot; {r.track}
+                      </div>
+
+                      <div style={sx("display:flex;flex-wrap:wrap;gap:12px;margin-top:10px")}>
+                        <span style={sx("display:flex;align-items:center;gap:6px")}>
+                          <span style={sx(r.w1.dot)}></span><span style={sx(r.w1.text)}>{r.w1.label}</span>
+                        </span>
+                        <span style={sx("display:flex;align-items:center;gap:6px")}>
+                          <span style={sx(r.w2.dot)}></span><span style={sx(r.w2.text)}>{r.w2.label}</span>
+                        </span>
+                      </div>
+
+                      <div style={sx(`margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;color:${r.judgeColor}`)}>
+                        JUDGE: {r.judge}
+                      </div>
+
+                      <div style={sx("display:flex;align-items:center;gap:8px;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;color:#56707B")}>
+                        <span>INVITE: {r.invite}</span>
+                        <button onClick={r.copy} style={sx("background:transparent;border:1px solid rgba(93,145,166,.35);color:#5D91A6;padding:2px 7px;font-size:9px;letter-spacing:.12em;border-radius:2px;cursor:pointer")}>COPY</button>
+                      </div>
+
+                      <div style={sx("display:flex;gap:8px;margin-top:12px;flex-wrap:wrap")}>
+                        <button onClick={r.assignJudge} style={sx("flex:1;min-width:120px;padding:8px 10px;font-size:11px;background:transparent;border:1px solid rgba(93,145,166,.45);color:#B3E0F2;border-radius:2px;cursor:pointer")}>Assign judge</button>
+                        <button onClick={r.dq} style={sx("flex:1;min-width:100px;padding:8px 10px;font-size:11px;background:transparent;border:1px solid rgba(194,86,75,.35);color:#C2564B;border-radius:2px;cursor:pointer")}>Disqualify</button>
+                      </div>
+                    </div>
+                  </React.Fragment>)}
                 </> : null}
 
+                {(V.isPhone) ? null : <>
                 <div style={sx("overflow-x:auto;-webkit-overflow-scrolling:touch")}>
-                  <div style={sx("min-width:1300px")}>
-                    <div style={sx("display:grid;grid-template-columns:24px 196px 124px 62px 154px 118px 118px 126px 116px 128px;align-items:center;padding:0 18px;border-bottom:1px solid rgba(179,224,242,.08)")}>
+                  <div style={sx("min-width:1320px")}>
+                    <div style={sx("display:grid;grid-template-columns:24px 196px 124px 62px 154px 118px 118px 126px 140px 200px;align-items:center;padding:0 18px;border-bottom:1px solid rgba(179,224,242,.08)")}>
                       <div></div>
                       {(V.cols || []).map((c, _i1) => <React.Fragment key={_i1}>
                         <div style={sx(c.style)}>{c.label}</div>
@@ -1065,7 +1103,7 @@ class AdminPortalView extends React.Component {
                       <div>
                         {(V.rows || []).map((r, _i2) => <React.Fragment key={_i2}>
                           <div style={sx(r.wrapStyle)}>
-                            <div style={sx("display:grid;grid-template-columns:24px 196px 124px 62px 154px 118px 118px 126px 116px 128px;align-items:center;padding:0 18px;border-bottom:1px solid rgba(179,224,242,.06);transition:background .2s")} data-s="ap19">
+                            <div style={sx("display:grid;grid-template-columns:24px 196px 124px 62px 154px 118px 118px 126px 140px 200px;align-items:center;padding:0 18px;border-bottom:1px solid rgba(179,224,242,.06);transition:background .2s")} data-s="ap19">
                               <button onClick={r.toggle} style={sx(r.caretStyle)}>›</button>
                               <div style={sx("padding:15px 8px;font-size:14px;font-weight:500;color:#E4EEF2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{r.name}</div>
                               <div style={sx("padding:15px 8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#8AA5AE")}>{r.lead}</div>
@@ -1078,10 +1116,10 @@ class AdminPortalView extends React.Component {
                                 {r.hasScore ? <span style={sx("flex:1;height:3px;background:rgba(179,224,242,.12);position:relative")}><span style={sx(r.meterStyle)}></span></span> : null}
                               </div>
                               <div style={sx(`padding:15px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:${r.judgeColor}`)}>{r.judge}</div>
-                              <div style={sx("padding:10px 8px;display:flex;gap:6px;justify-content:flex-end")}>
+                              <div style={sx("padding:10px 8px;display:flex;gap:6px;justify-content:flex-start")}>
                                 
-                                <button onClick={r.assignJudge} style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(93,145,166,.45);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap21">Assign judge</button>
-                                <button onClick={r.dq} style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(194,86,75,.35);color:#C2564B;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="ap22">Disqualify</button>
+                                <button onClick={r.assignJudge} style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(93,145,166,.45);color:#B3E0F2;cursor:pointer;transition:all .25s;border-radius:2px;white-space:nowrap")} data-s="ap21">Assign judge</button>
+                                <button onClick={r.dq} style={sx("padding:7px 10px;font-size:11px;background:transparent;border:1px solid rgba(194,86,75,.35);color:#C2564B;cursor:pointer;transition:all .25s;border-radius:2px;white-space:nowrap")} data-s="ap22">Disqualify</button>
                               </div>
                             </div>
 
@@ -1174,6 +1212,7 @@ class AdminPortalView extends React.Component {
                     </> : null}
                   </div>
                 </div>
+                </>}
 
                 <div style={sx(V.L.pager)}>
                   <div style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>SHOWING <span style={sx("color:#E4EEF2")}>{Math.min(V.totalFiltered, (V.currentPage - 1) * V.pageSize + 1)}–{Math.min(V.totalFiltered, V.currentPage * V.pageSize)}</span> OF <span style={sx("color:#E4EEF2")}>{V.totalFiltered}</span></div>

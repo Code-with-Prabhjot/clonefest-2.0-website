@@ -175,9 +175,12 @@ class JudgePortalView extends React.Component {
     const prCols = phone ? '1fr 90px 60px' : narrow ? '1fr 96px 70px 70px' : '1fr 110px 100px 66px 130px 70px';
 
     const L = {
-      headTop:'max-width:1580px;margin:0 auto;display:flex;align-items:center;gap:' + (phone ? '12px' : '26px') + ';padding:' + (phone ? '12px 16px' : '16px 32px'),
+      headTop:'max-width:1580px;margin:0 auto;display:flex;align-items:center;' + (phone ? 'flex-wrap:wrap;row-gap:10px;' : '') + 'gap:' + (phone ? '12px' : '26px') + ';padding:' + (phone ? '12px 16px' : '16px 32px'),
       wordmark:"font-family:'Clash Grotesk',sans-serif;font-weight:600;letter-spacing:.14em;white-space:nowrap;color:" + ICE + ';line-height:1;font-size:' + (phone ? '15px' : '19px'),
-      hidePhone: phone ? 'display:none' : 'display:flex;align-items:center',
+      logoRvce:'height:' + (phone ? '34px' : '52px') + ';width:auto;flex:none',
+      logoClub:'height:' + (phone ? '56px' : '84px') + ';width:auto;flex:none;margin-left:' +
+        (phone ? '10px' : '16px'),
+      hidePhone:'display:flex;align-items:center',
       hideNarrow: narrow ? 'display:none' : 'display:flex;align-items:center',
       headPhoneProgress: narrow ? 'padding:' + (phone ? '0 16px 12px' : '0 32px 14px') + ';max-width:1580px;margin:0 auto' : 'display:none',
       main:'position:relative;z-index:5;max-width:1580px;margin:0 auto;padding:' + (phone ? '22px 16px 96px' : '30px 32px 110px'),
@@ -581,8 +584,8 @@ class JudgePortalView extends React.Component {
           <div style={sx(V.L.headTop)}>
             <div style={sx("display:flex;align-items:center;gap:14px")}>
               <div style={sx("display:flex;align-items:center")}>
-                <img src="/assets/image.png" alt="RVCE" style={sx("height:52px;width:auto;filter:invert(1);mix-blend-mode:screen")} />
-                <img src="/assets/cc-10-years-white.png" alt="Coding Club" style={sx("height:84px;width:auto;margin-left:16px")} />
+                <img src="/assets/rvce-transparent.png" alt="RVCE" style={sx(V.L.logoRvce)} />
+                <img src="/assets/cc-transparent.png" alt="Coding Club" style={sx(V.L.logoClub)} />
               </div>
               <div style={sx("width:1px;height:30px;background:rgba(179,224,242,.14)")}></div>
               <div>

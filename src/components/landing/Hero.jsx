@@ -58,27 +58,6 @@ function TypedTagline({ booted }) {
     );
 }
 
-function EdgeLabel({ booted, children, side }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={booted ? { opacity: 1 } : {}}
-            transition={{ duration: 1, delay: 1.3 }}
-            className={`fixed top-1/2 z-20 hidden -translate-y-1/2 lg:block ${
-                side === "left" ? "left-5" : "right-5"
-            }`}
-        >
-            <span
-                className={`font-mono text-[10px] tracking-[0.4em] text-[#5D91A6]/50 [writing-mode:vertical-rl] ${
-                    side === "left" ? "rotate-180" : ""
-                }`}
-            >
-                {children}
-            </span>
-        </motion.div>
-    );
-}
-
 export default function Hero({ booted }) {
     const mx = useMotionValue(0);
     const my = useMotionValue(0);
@@ -134,9 +113,6 @@ export default function Hero({ booted }) {
 
                 <GlitchButton booted={booted} />
             </motion.div>
-
-            <EdgeLabel booted={booted} side="left">REBUILD // REDEPLOY // REPEAT</EdgeLabel>
-            <EdgeLabel booted={booted} side="right">CF-2.0 — 2026 EDITION</EdgeLabel>
         </main>
     );
 }
