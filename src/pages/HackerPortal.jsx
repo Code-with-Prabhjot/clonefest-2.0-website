@@ -33,67 +33,7 @@ function LoadingScreen() {
 }
 
 // ─── Find-a-Squad form — 3rd tab, matches Create/Join in structure ────────────
-function FindSquadForm({ user, profile, refetch }) {
-  const [name, setName] = useState(profile?.full_name || '');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (trimmed.length < 2 || trimmed.length > 30) {
-      return setError('Callsign must be 2–30 characters.');
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const { error: dbErr } = await supabase
-        .from('profiles')
-        .update({ full_name: trimmed })
-        .eq('id', user.id);
-      if (dbErr) throw dbErr;
-      await refetch();
-      navigate('/teams');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <>
-      <FormHead
-        kicker="Scout"
-        title="Find a squad"
-        blurb="Set your callsign so squad leads know who's requesting to join, then browse open squads."
-      />
-
-      <FormError>{error}</FormError>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className={LABEL} htmlFor="find-callsign">Operative callsign</label>
-          <input
-            id="find-callsign"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            maxLength={30}
-            autoFocus
-            className={FIELD}
-            placeholder="e.g. nulldiv"
-          />
-        </div>
-        <button type="submit" disabled={loading} className={PRIMARY}>
-          {loading ? 'Saving…' : 'Find a Squad →'}
-        </button>
-      </form>
-    </>
-  );
-}
 
 // ─── Onboarding screen (no team yet) ─────────────────────────────────────────
 function OnboardingScreen({ user, profile, refetch }) {
@@ -158,12 +98,7 @@ function OnboardingScreen({ user, profile, refetch }) {
           >
             Enlist
           </button>
-          <button
-            onClick={() => setActiveTab('find')}
-            className={`${TAB_BASE} ${activeTab === 'find' ? TAB_ON : TAB_OFF}`}
-          >
-            Find a Squad
-          </button>
+
         </div>
 
         <div className="w-full flex justify-center max-w-md">
@@ -177,11 +112,7 @@ function OnboardingScreen({ user, profile, refetch }) {
               <JoinTeamForm user={user} />
             </div>
           )}
-          {activeTab === 'find' && (
-            <div className={`${PANEL} p-7 sm:p-8 w-full`}>
-              <FindSquadForm user={user} profile={profile} refetch={refetch} />
-            </div>
-          )}
+
         </div>
       </div>
     </div>
