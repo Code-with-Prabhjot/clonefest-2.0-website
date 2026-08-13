@@ -77,22 +77,42 @@ export function useJudgeData() {
         (t) => !assignedNames || assignedNames.includes(t.name),
       );
 
-      setSquads(teams.map((t) => {
+      const flattened = [];
+      teams.forEach((t) => {
         const members = (profilesRes.data || []).filter((p) => p.team_name === t.name);
+        const sortedMembers = members
+          .sort((a, b) => (a.role === 'lead' ? 0 : 1) - (b.role === 'lead' ? 0 : 1))
+          .map((m) => [m.full_name || 'operative', m.role === 'lead' ? 'LEAD' : '']);
         const subs = (subsRes.data || []).filter((s) => s.team_name === t.name);
-        const score = myScores.find((sc) => sc.team_name === t.name);
-        return {
-          name: t.name,
-          members: members
-            .sort((a, b) => (a.role === 'lead' ? 0 : 1) - (b.role === 'lead' ? 0 : 1))
-            .map((m) => [m.full_name || 'operative', m.role === 'lead' ? 'LEAD' : '']),
-          subs,
-          // Score is attached to the squad's most recent submission.
-          latestSubmissionId: subs.length ? subs[subs.length - 1].id : null,
-          updated: subs.length ? subs[subs.length - 1].created_at : t.created_at,
-          score: score || null,
-        };
-      }));
+
+        if (subs.length === 0) {
+          flattened.push({
+            id: t.name,
+            name: t.name,
+            teamName: t.name,
+            members: sortedMembers,
+            subs: [],
+            latestSubmissionId: null,
+            updated: t.created_at,
+            score: null,
+          });
+        } else {
+          subs.forEach(sub => {
+            const score = myScores.find((sc) => sc.submission_id === sub.id);
+            flattened.push({
+              id: sub.id,
+              name: `${t.name} (${sub.track_id})`,
+              teamName: t.name,
+              members: sortedMembers,
+              subs: [sub],
+              latestSubmissionId: sub.id,
+              updated: sub.created_at,
+              score: score || null,
+            });
+          });
+        }
+      });
+      setSquads(flattened);
 
       setStatus('ready');
     } catch (e) {

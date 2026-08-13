@@ -130,78 +130,6 @@ function CountdownBanner({ secondsLeft, isExpired, deadline }) {
 
 function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
   const [hovered, setHovered] = useState(false);
-  const [now, setNow] = useState(Date.now());
-  
-  const getUnlockDate = (id) => {
-    if (id === 'T1') return new Date('2026-08-20T18:00:00+05:30').getTime();
-    if (id === 'T2') return new Date('2026-08-25T23:59:59+05:30').getTime();
-    return 0;
-  };
-
-  const unlockTime = getUnlockDate(track.id);
-  const isLocked = now < unlockTime;
-
-  useEffect(() => {
-    if (isLocked) {
-      const interval = setInterval(() => {
-        setNow(Date.now());
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [isLocked]);
-
-  if (isLocked) {
-    const timeLeft = Math.floor((unlockTime - now) / 1000);
-    const d = Math.floor(timeLeft / (3600 * 24));
-    const h = Math.floor((timeLeft % (3600 * 24)) / 3600);
-    const m = Math.floor((timeLeft % 3600) / 60);
-    const s = timeLeft % 60;
-
-    const pad = (n) => String(n).padStart(2, '0');
-    const timeString = `${d}d ${pad(h)}h ${pad(m)}m ${pad(s)}s`;
-
-    return (
-      <div
-        style={{
-          position: 'relative',
-          background: '#071013',
-          border: '1px dashed rgba(194,86,75,0.4)',
-          borderRadius: 3,
-          padding: '22px 20px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 16,
-          minHeight: '220px',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{
-          position: 'absolute', inset: 0, opacity: 0.1,
-          background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, #C2564B 10px, #C2564B 20px)'
-        }} />
-        
-        <div style={{
-          position: 'relative', zIndex: 1, textAlign: 'center',
-          fontFamily: "'JetBrains Mono', monospace",
-        }}>
-          <div style={{
-            fontSize: 18, color: '#E4EEF2', letterSpacing: '0.05em',
-            background: 'rgba(194,86,75,0.15)', padding: '8px 16px', borderRadius: 4,
-            border: '1px solid rgba(194,86,75,0.3)'
-          }}>
-            {timeString}
-          </div>
-          <div style={{
-            fontSize: 10, color: '#56707B', marginTop: 12, letterSpacing: '0.1em', textTransform: 'uppercase'
-          }}>
-            Time until transmission unlocks
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const subStatus = latestSub?.status ?? 'none';
   const dotCfg = SUBMISSION_DOT[subStatus] ?? SUBMISSION_DOT.none;
@@ -264,28 +192,10 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
           {track.title}
         </h3>
 
-        {/* Subtitle */}
-        {track.subtitle && (
-          <p style={{
-            color: '#5D91A6', fontSize: 11.5, margin: '0 0 10px', lineHeight: 1.4,
-            fontStyle: 'italic',
-          }}>
-            {track.subtitle}
-          </p>
-        )}
 
-        {/* Short description (fallback if no subtitle) */}
-        {!track.subtitle && track.description && (
-          <p style={{
-            color: '#8AA5AE', fontSize: 12.5, lineHeight: 1.6, margin: '0 0 14px 0',
-          }}>
-            {track.description}
-          </p>
-        )}
 
-        {/* Footer: difficulty chip + repo link */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-          <DifficultyChip difficulty={track.difficulty} />
+        {/* Footer: repo link */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
           {track.repo_url && (
             <a
               href={track.repo_url}
@@ -332,7 +242,9 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
             {profile?.role === 'lead'
               ? isExpired
                 ? 'View details'
-                : latestSub ? 'Resubmit / View' : 'Submit mission'
+                : latestSub
+                  ? (latestSub.status === 'scored' ? 'View details' : 'Resubmit / View')
+                  : 'Submit mission'
               : 'View details'}
           </button>
         </div>
@@ -343,7 +255,20 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
 
 export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
   const [activeTrack, setActiveTrack] = useState(null);
-  const { deadline, secondsLeft, isExpired } = useEventSettings();
+  const { isExpired: globalIsExpired } = useEventSettings();
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const t1Deadline = new Date('2026-08-25T23:59:00+05:30');
+  const t2Deadline = new Date('2026-08-30T23:59:00+05:30');
+  
+  const activeDeadline = now > t1Deadline ? t2Deadline : t1Deadline;
+  const activeIsExpired = globalIsExpired || (now > t2Deadline);
+  const activeSecondsLeft = activeIsExpired ? 0 : Math.floor((activeDeadline - now) / 1000);
 
   // Map track_id → latest submission for that track
   const subByTrack = {};
@@ -381,42 +306,49 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
         }
       `}</style>
 
-      {/* Countdown banner */}
-      <CountdownBanner
-        secondsLeft={secondsLeft}
-        isExpired={isExpired}
-        deadline={deadline}
-      />
+
 
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
         gap: 16,
       }}>
-        {visibleTracks.map(track => (
-          <MissionCard
-            key={track.id}
-            track={track}
-            latestSub={subByTrack[track.id] ?? null}
-            profile={profile}
-            onCardClick={handleCardClick}
-            isExpired={isExpired}
-          />
-        ))}
+        {visibleTracks.map(track => {
+          const trackDeadline = track.id === 'T1' ? t1Deadline : track.id === 'T2' ? t2Deadline : activeDeadline;
+          const isTrackExpired = globalIsExpired || (now > trackDeadline);
+          
+          return (
+            <MissionCard
+              key={track.id}
+              track={track}
+              latestSub={subByTrack[track.id] ?? null}
+              profile={profile}
+              onCardClick={handleCardClick}
+              isExpired={isTrackExpired}
+            />
+          );
+        })}
       </div>
 
-      {activeTrack && (
-        <SubmitPRModal
-          track={activeTrack}
-          profile={profile}
-          existingSub={subByTrack[activeTrack.id] ?? null}
-          deadline={deadline}
-          secondsLeft={secondsLeft}
-          isExpired={isExpired}
-          onClose={handleClose}
-          onSuccess={handleSuccess}
-        />
-      )}
+      {activeTrack && (() => {
+        const trackDeadline = activeTrack.id === 'T1' ? t1Deadline : activeTrack.id === 'T2' ? t2Deadline : activeDeadline;
+        const isTrackExpired = globalIsExpired || (now > trackDeadline);
+        const trackSecondsLeft = isTrackExpired ? 0 : Math.floor((trackDeadline - now) / 1000);
+
+        return (
+          <SubmitPRModal
+            track={activeTrack}
+            profile={profile}
+            existingSub={subByTrack[activeTrack.id] ?? null}
+            deadline={trackDeadline}
+            secondsLeft={trackSecondsLeft}
+            isExpired={isTrackExpired}
+            onClose={handleClose}
+            onSuccess={handleSuccess}
+          />
+        );
+      })()}
+
     </>
   );
 }

@@ -260,12 +260,11 @@ class AdminPortalView extends React.Component {
   }
 
   async saveTrackEdit(){
-    const { trackEditId, trackEditTitle, trackEditDesc, trackEditDiff, trackEditRepo } = this.state;
+    const { trackEditId, trackEditTitle, trackEditDesc, trackEditRepo } = this.state;
     if (!trackEditId) return;
     const res = await this.props.onUpdateTrack(trackEditId, {
       title: trackEditTitle,
-      description: trackEditDesc,
-      difficulty: trackEditDiff,
+      long_description: trackEditDesc,
       repo_url: trackEditRepo
     });
     if (!res.ok) return this.toast('Update failed', res.error);
@@ -289,7 +288,7 @@ class AdminPortalView extends React.Component {
       scoredSquads:0, totalPoints:0 };
     const EX = {
       users: (this.props.profiles || []).length,
-      submissions: (this.props.submissions || []).length,
+      submissions: new Set((this.props.submissions || []).map(s => s.team_name)).size,
       squads: (this.props.squads || []).length,
     };
     const live = this.props.squads;
@@ -739,10 +738,10 @@ class AdminPortalView extends React.Component {
       },
 
       challenges:(this.props.tracks || []).map((tr, i) => {
-        const c = this.props.submissions ? this.props.submissions.filter(sub => sub.track_id === tr.id).length : 0;
+        const c = this.props.submissions ? new Set(this.props.submissions.filter(sub => sub.track_id === tr.id).map(s => s.team_name)).size : 0;
         return {
           id: tr.id,
-          week: i + 1, title: tr.title, desc: tr.description || '', diff: tr.difficulty || 'Medium', repo: tr.repo_url || '', points: 100, 
+          week: i + 1, title: tr.title, desc: tr.long_description || tr.description || '', diff: tr.difficulty || 'Medium', repo: tr.repo_url || '', points: 100, 
           opens: i === 0 ? (this.props.settings?.c1_opens || '20 Aug · 18:00') : (this.props.settings?.c2_opens || '25 Aug · 12:00 AM'), 
           closes: i === 0 ? (this.props.settings?.c1_closes || '25 Aug · 23:59') : (this.props.settings?.c2_closes || '30 Aug · 23:59'), 
           subs: c, pct: Math.min(100, Math.round(c / Math.max(1, ST.squads) * 100))
@@ -1598,21 +1597,25 @@ class AdminPortalView extends React.Component {
                     <input value={V.trackEditTitle} onChange={V.setTrackEditTitle} placeholder="Challenge Title" style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 14px;font-size:13px;outline:none;border-radius:2px")} />
                   </div>
                   <div>
-                    <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>DESCRIPTION</label>
-                    <textarea value={V.trackEditDesc} onChange={V.setTrackEditDesc} rows="3" placeholder="Challenge Description" style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 14px;font-size:13px;outline:none;border-radius:2px;resize:vertical")}></textarea>
-                  </div>
-                  <div style={sx("display:grid;grid-template-columns:1fr 1fr;gap:16px")}>
-                    <div>
-                      <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>DIFFICULTY</label>
-                      <div style={sx("position:relative")}>
-                        <select value={V.trackEditDiff} onChange={V.setTrackEditDiff} style={sx("width:100%;appearance:none;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 30px 11px 14px;font-size:13px;outline:none;cursor:pointer;border-radius:2px")}>
-                          <option value="Easy">Easy</option>
-                          <option value="Medium">Medium</option>
-                          <option value="Hard">Hard</option>
-                        </select>
-                        <span style={sx("position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#5D91A6;font-size:8px")}>▼</span>
-                      </div>
+                    <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>DESCRIPTION (MARKDOWN FILE)</label>
+                    <div style={sx("display:flex;align-items:center;gap:12px")}>
+                      <label style={sx("padding:11px 18px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(179,224,242,.24);color:#B3E0F2;cursor:pointer;border-radius:2px;transition:all 0.25s;")}>
+                        Upload .md File
+                        <input type="file" accept=".md" onChange={e => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => this.setState({trackEditDesc: ev.target.result});
+                            reader.readAsText(file);
+                          }
+                        }} style={{display: 'none'}} />
+                      </label>
+                      <span style={sx("font-size:13px;color:#8AA5AE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px")}>
+                        {V.trackEditDesc ? "Markdown content loaded" : "No file selected"}
+                      </span>
                     </div>
+                  </div>
+                  <div style={sx("display:grid;grid-template-columns:1fr;gap:16px")}>
                     <div>
                       <label style={sx("display:block;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:#56707B")}>GITHUB REPO URL</label>
                       <input value={V.trackEditRepo} onChange={V.setTrackEditRepo} placeholder="https://github.com/..." style={sx("width:100%;background:#0B1519;border:1px solid rgba(179,224,242,.14);color:#E4EEF2;padding:11px 14px;font-size:13px;outline:none;border-radius:2px")} />

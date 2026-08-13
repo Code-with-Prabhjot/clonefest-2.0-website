@@ -113,6 +113,7 @@ class JudgePortalView extends React.Component {
     return (live && live.length)
       ? live.map((q) => ({
           name: q.name,
+          teamName: q.teamName,
           track: q.subs[0]?.track_id || '\u2014',
           subs: q.subs.length,
           status: q.score?.status === 'final' ? 'scored'
@@ -134,7 +135,7 @@ class JudgePortalView extends React.Component {
     const L = this.squadList();
     // Placeholder must be shape-complete: the detail view reads members[0][0].
     return L[this.state.idx] || L[0] || {
-      name:'', track:'—', subs:0, status:'none', updated:'—',
+      name:'', teamName:'', track:'—', subs:0, status:'none', updated:'—',
       prPts:0, prMerged:0, prTotal:0,
       members:[['operative','LEAD']], late:[0,0,0], _subs:[], _submissionId:null,
     };
@@ -266,9 +267,9 @@ class JudgePortalView extends React.Component {
       const m = STATUS[r.st];
       const sc = r.st === 'none' ? '—' : String(r.total);
       return {
-        name:r.q.name, track:r.q.track, subs:r.q.subs + ' of 2', updated:r.q.updated,
-        subLine:(narrow ? r.q.track + ' · ' : '') + r.q.subs + '/2 SUBMITTED' + (narrow ? ' · ' + r.q.updated : ''),
-        subsColor: r.q.subs >= 2 ? MUTE : CLAY,
+        name:r.q.name, track:r.q.track, subs:r.q.subs > 0 ? 'Submitted' : 'Pending', updated:r.q.updated,
+        subLine:(narrow ? r.q.track + ' · ' : '') + (r.q.subs > 0 ? 'SUBMITTED' : 'PENDING') + (narrow ? ' · ' + r.q.updated : ''),
+        subsColor: r.q.subs > 0 ? MUTE : CLAY,
         chipLabel:m.label,
         chipDot:'width:7px;height:7px;flex:none;border:1px solid ' + m.border + ';background:' + m.fill,
         chipText:'font-size:12px;white-space:nowrap;color:' + m.c,
@@ -521,7 +522,7 @@ class JudgePortalView extends React.Component {
       saveDraft: async () => {
         if (locked) return;
         const res = await this.props.onSaveScore({
-          teamName: name, submissionId: q._submissionId, values: vals,
+          teamName: q.teamName, submissionId: q._submissionId, values: vals,
           comments: s.comments[name] || {}, feedback: fb, finalise: false,
         });
         if (!res.ok) return this.toast('Could not save draft', res.error);
@@ -548,7 +549,7 @@ class JudgePortalView extends React.Component {
       ],
       confirmSubmit: async () => {
         const res = await this.props.onSaveScore({
-          teamName: name, submissionId: q._submissionId, values: vals,
+          teamName: q.teamName, submissionId: q._submissionId, values: vals,
           comments: s.comments[name] || {}, feedback: fb, finalise: true,
         });
         if (!res.ok) { this.setState({modal:false}); return this.toast('Could not submit', res.error); }
@@ -849,89 +850,7 @@ class JudgePortalView extends React.Component {
             </React.Fragment>)}
           </div>
 
-    
-          <div style={sx(V.L.prPanel)}>
-            <div style={sx("position:absolute;inset:0;background:linear-gradient(115deg,rgba(93,145,166,.12),transparent 55%);pointer-events:none")}></div>
-            <div style={sx("position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap")}>
-              <div>
-                <div style={sx("display:flex;align-items:center;gap:10px")}>
-                  <span style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:17px;letter-spacing:.04em;color:#E4EEF2")}>PREvaluator</span>
-                  <span style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;padding:3px 7px;border:1px solid rgba(93,145,166,.45);color:#5D91A6")}>MOUNTED COMPONENT</span>
-                </div>
-                
-              </div>
-        
-            </div>
 
-            {(V.prReady) ? <>
-              <div style={sx("position:relative;margin-top:22px")}>
-                <div style={sx(V.L.prHead)}>
-                  <div style={sx("padding:0 0 12px")}>PULL REQUEST</div>
-                  <div style={sx(V.L.prHeadAuthor)}>AUTHOR</div>
-                  <div style={sx("padding:0 0 12px")}>STATE</div>
-                  <div style={sx(V.L.prHeadFiles)}>FILES</div>
-                  <div style={sx(V.L.prHeadMerged)}>MERGED</div>
-                  <div style={sx("padding:0 0 12px;text-align:right")}>POINTS</div>
-                </div>
-                {(V.prRows || []).map((p, _i2) => <React.Fragment key={_i2}>
-                  <div style={sx(p.rowStyle)} data-s="jp18">
-                    <div style={sx("padding:13px 0;min-width:0")}>
-                      <div style={sx("font-size:13px;color:#E4EEF2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{p.title}</div>
-                      <div style={sx(V.L.subLine)}>{p.subLine}</div>
-                    </div>
-                    <div style={sx(V.L.prCellAuthor)}>{p.author}</div>
-                    <div style={sx("padding:13px 0;display:flex;align-items:center;gap:7px;min-width:0")}>
-                      <span style={sx(p.stateDot)}></span>
-                      <span style={sx(p.stateText)}>{p.state}</span>
-                    </div>
-                    <div style={sx(V.L.prCellFiles)}>{p.files}</div>
-                    <div style={sx(V.L.prCellMerged)}>{p.merged}</div>
-                    <div style={sx(`padding:13px 0;text-align:right;font-family:'Clash Grotesk',sans-serif;font-size:16px;color:${p.ptsColor};font-variant-numeric:tabular-nums`)}>{p.points}</div>
-                  </div>
-                </React.Fragment>)}
-                <div style={sx(V.L.prSubtotal)}>
-                  <div>
-                    <div style={sx("font-size:13px;color:#E4EEF2")}>Merged PR subtotal</div>
-                    <div style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B;margin-top:5px")}>{V.prMergedCount} merged of {V.prTotalCount} · carried into the rubric read-only</div>
-                  </div>
-                  <div style={sx("display:flex;align-items:baseline;gap:5px")}>
-                    <span style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:32px;color:#7FB27E;font-variant-numeric:tabular-nums")}>{V.prPoints}</span>
-                    <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B")}>PTS</span>
-                  </div>
-                </div>
-              </div>
-            </> : null}
-
-            {(V.prLoading) ? <>
-              <div style={sx("position:relative;margin-top:22px")}>
-                <div style={sx("display:flex;align-items:center;gap:12px;padding-bottom:18px")}>
-                  <span style={sx("width:15px;height:15px;border:2px solid rgba(179,224,242,.2);border-top-color:#B3E0F2;border-radius:50%;animation:spin .8s linear infinite;flex:none")}></span>
-                  <span style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;color:#8AA5AE")}>QUERYING GITHUB · rvce-cc/broken-canvas</span>
-                </div>
-                {(V.skeletons || []).map((k, _i2) => <React.Fragment key={_i2}>
-                  <div style={sx(k.style)}>
-                    <div style={sx(`height:11px;background:rgba(93,145,166,.22);width:${k.w1}`)}></div>
-                    <div style={sx("height:11px;background:rgba(93,145,166,.14);width:60px")}></div>
-                    <div style={sx("height:11px;background:rgba(93,145,166,.14);width:44px")}></div>
-                  </div>
-                </React.Fragment>)}
-              </div>
-            </> : null}
-
-            {(V.prError) ? <>
-              <div style={sx("position:relative;margin-top:22px;border:1px solid rgba(194,86,75,.35);background:linear-gradient(90deg,rgba(194,86,75,.12),rgba(194,86,75,.02));padding:26px;border-radius:2px;animation:fade .3s ease-out both")}>
-                <div style={sx("display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap")}>
-                  <span style={sx("width:24px;height:24px;flex:none;border:1px solid rgba(194,86,75,.6);color:#C2564B;display:grid;place-items:center;font-size:12px;animation:breathe 2.6s infinite")}>!</span>
-                  <div style={sx("flex:1;min-width:220px")}>
-                    <div style={sx("font-family:'Clash Grotesk',sans-serif;font-size:17px;color:#E6A79E")}>Could not reach GitHub</div>
-                    <p style={sx("font-size:13px;line-height:1.65;color:#8AA5AE;margin:8px 0 0;max-width:520px;text-wrap:pretty")}>The pull request list for this squad could not be fetched. Merged PR points are unavailable, so the combined total below shows the rubric score only. You can still save a draft or submit the rubric — PR points are recalculated server-side when the fetch succeeds.</p>
-                    <div style={sx("font-family:'JetBrains Mono',monospace;font-size:11px;color:#56707B;margin-top:12px")}>GET /repos/rvce-cc/broken-canvas/pulls → 503 · retried 3× · 14:07 IST</div>
-                  </div>
-                  <button onClick={V.prRetry} style={sx("padding:10px 16px;font-size:12px;font-weight:500;white-space:nowrap;background:transparent;border:1px solid rgba(194,86,75,.5);color:#C2564B;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="jp19">Retry fetch</button>
-                </div>
-              </div>
-            </> : null}
-          </div>
 
     
           <div style={sx(V.L.rubricHead)}>

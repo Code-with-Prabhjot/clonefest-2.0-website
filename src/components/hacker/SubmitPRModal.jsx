@@ -208,7 +208,8 @@ export default function SubmitPRModal({
   const [done, setDone]             = useState(false);
   const prRef                       = useRef(null);
   const isLead                      = profile?.role === 'lead';
-  const canSubmit                   = isLead && !isExpired;
+  const isScored                    = existingSub?.status === 'scored';
+  const canSubmit                   = isLead && !isExpired && !isScored;
 
   // Focus PR input on open
   useEffect(() => {
@@ -398,11 +399,7 @@ export default function SubmitPRModal({
 
               {/* Right: countdown + close */}
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
-                <CountdownWidget
-                  secondsLeft={secondsLeft}
-                  isExpired={isExpired}
-                  deadline={deadline}
-                />
+
                 <button
                   onClick={onClose}
                   aria-label="Close"
@@ -447,20 +444,7 @@ export default function SubmitPRModal({
               >
                 {track.title}
               </h2>
-              {track.subtitle && (
-                <p
-                  style={{
-                    fontFamily: "'Satoshi', sans-serif",
-                    fontSize: 16,
-                    color: '#5D91A6',
-                    margin: 0,
-                    lineHeight: 1.5,
-                    fontWeight: 400,
-                  }}
-                >
-                  {track.subtitle}
-                </p>
-              )}
+
             </div>
 
             {/* ── Long description (Markdown) ────────────────────────── */}
