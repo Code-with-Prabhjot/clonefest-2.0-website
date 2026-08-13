@@ -1,5 +1,6 @@
 import React from 'react';
 import { useJudgeData } from '../hooks/useJudgeData';
+import { useEventData } from '../hooks/useEventData';
 import { sx } from '../lib/sx';
 import './JudgePortal.css';
 
@@ -614,7 +615,7 @@ class JudgePortalView extends React.Component {
             <div>
               <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#5D91A6;animation:rise .5s ease-out both")}>YOUR QUEUE · REVIEW WINDOW</div>
               <h1 style={sx(V.L.heroTitle)}>8 squads still need a final score.</h1>
-              <p style={sx("font-size:14px;line-height:1.7;color:#8AA5AE;margin:14px 0 0;max-width:540px;text-wrap:pretty;animation:rise .5s ease-out .16s both")}>Final scores lock on 10 August at 18:00 IST. Drafts left unsubmitted at that point are discarded and the squad is marked unscored.</p>
+              <p style={sx("font-size:14px;line-height:1.7;color:#8AA5AE;margin:14px 0 0;max-width:540px;text-wrap:pretty;animation:rise .5s ease-out .16s both")}>Final scores lock on {this.props.settings?.submission_deadline ? new Date(this.props.settings.submission_deadline).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' IST' : '10 August at 18:00 IST'}. Drafts left unsubmitted at that point are discarded and the squad is marked unscored.</p>
             </div>
             <div style={sx("display:flex;gap:10px;flex-wrap:wrap;animation:rise .5s ease-out .22s both")}>
               <button onClick={V.openNextUnscored} style={sx("padding:12px 20px;font-size:13px;font-weight:500;white-space:nowrap;background:#B3E0F2;border:1px solid #B3E0F2;color:#080D0C;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="jp5">Score next unscored squad</button>
@@ -1085,6 +1086,7 @@ class JudgePortalView extends React.Component {
  */
 export default function JudgePortal(props) {
   const { me, squads, progress, status, error, migrationMissing, saveScore, refetch } = useJudgeData();
+  const { settings } = useEventData();
 
   return (
     <>
@@ -1108,6 +1110,7 @@ export default function JudgePortal(props) {
         onSaveScore={saveScore}
         onRefetch={refetch}
         me={me}
+        settings={settings}
       />
     </>
   );

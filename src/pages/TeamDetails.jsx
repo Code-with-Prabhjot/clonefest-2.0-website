@@ -411,30 +411,7 @@ export default function TeamDetails() {
                 </span>
               </Row>
             )}
-            {isLead && (
-              <Row label="Squad listing">
-                <button
-                  onClick={handleToggleListing}
-                  disabled={togglingOpen || isOpen === null}
-                  className="font-jet rounded-[2px] border px-3 py-1 text-[9px] uppercase tracking-[0.16em] transition-all"
-                  style={{
-                    borderColor: isOpen ? 'rgba(127,178,126,0.5)' : 'rgba(179,224,242,0.2)',
-                    color: isOpen ? '#7FB27E' : '#56707B',
-                    background: isOpen ? 'rgba(127,178,126,0.1)' : 'transparent',
-                    opacity: togglingOpen ? 0.5 : 1,
-                  }}
-                >
-                  {isOpen ? '● Open' : '○ Private'}
-                </button>
-              </Row>
-            )}
-            {isLead && (
-              <p className="pt-2 pb-1 font-jet text-[9px] uppercase tracking-[0.12em] text-[#56707B]">
-                {isOpen
-                  ? 'Your squad is visible in the Find a Squad directory.'
-                  : 'Your squad is hidden. Toggle to Open so others can find you.'}
-              </p>
-            )}
+
           </div>
 
           {!isLead && (

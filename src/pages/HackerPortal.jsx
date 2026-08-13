@@ -107,6 +107,18 @@ function OnboardingScreen({ user, profile, refetch }) {
     <div className="min-h-screen bg-[#080D0C] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-[var(--pet-lane)]">
       <CyberGrid variant="cyan" />
       <CyberHeader variant="cyan" />
+      
+      <div className="absolute top-6 right-6 z-20 sm:top-8 sm:right-10">
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut();
+            window.location.href = '/';
+          }}
+          className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
+        >
+          Logout →
+        </button>
+      </div>
 
       <div className="z-10 w-full max-w-4xl flex flex-col items-center pt-28 sm:pt-24">
         <p

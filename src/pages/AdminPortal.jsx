@@ -688,8 +688,8 @@ class AdminPortalView extends React.Component {
         return {
           id: tr.id,
           week: i + 1, title: tr.title, desc: tr.description || '', diff: tr.difficulty || 'Medium', repo: tr.repo_url || '', points: 100, 
-          opens: i === 0 ? '20 Aug · 18:00' : '25 Aug · 23:59', 
-          closes: i === 0 ? '25 Aug · 23:59' : '30 Aug · 23:59', 
+          opens: i === 0 ? (this.props.settings?.c1_opens || '20 Aug · 18:00') : (this.props.settings?.c2_opens || '25 Aug · 12:00 AM'), 
+          closes: i === 0 ? (this.props.settings?.c1_closes || '25 Aug · 23:59') : (this.props.settings?.c2_closes || '30 Aug · 23:59'), 
           subs: c, pct: Math.min(100, Math.round(c / Math.max(1, ST.squads) * 100))
         };
       }).map((w,i) => {
