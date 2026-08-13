@@ -235,7 +235,7 @@ export default function BackgroundCanvas() {
             ref={canvasRef}
             data-testid="background-canvas"
             aria-hidden="true"
-            className="fixed inset-0 z-0"
+            className="pointer-events-none fixed inset-0 z-0"
         />
     );
 }

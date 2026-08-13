@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Lenis from 'lenis';
+import BackgroundCanvas from '../components/landing/BackgroundCanvas';
 import { AnimatePresence } from 'framer-motion';
 import TerminalBoot from '../components/landing/TerminalBoot';
 import Header from '../components/landing/Header';
@@ -63,6 +64,13 @@ export default function Landing() {
 
   return (
     <div className="relative w-full bg-[#080D0C] text-[#B3E0F2]">
+      {/* Restored from before 0969970. Canvas sits at z-0 and the CRT layers
+          at z-10, all below the hero and About (z-20), marquee (z-40) and
+          header (z-50), so nothing above them shifts or becomes unclickable. */}
+      <BackgroundCanvas />
+      <div className="noise-overlay pointer-events-none fixed inset-0 z-10" aria-hidden="true" />
+      <div className="scanlines pointer-events-none fixed inset-0 z-10" aria-hidden="true" />
+      <div className="vignette pointer-events-none fixed inset-0 z-10" aria-hidden="true" />
 
       <Header
         booted={booted}
