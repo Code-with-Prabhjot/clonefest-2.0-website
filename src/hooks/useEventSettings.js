@@ -70,12 +70,15 @@ export function useEventSettings() {
 
   // ── Derived values ────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!deadline) {
-      setSecondsLeft(null);
-      return;
-    }
-    const diff = Math.floor((deadline.getTime() - Date.now()) / 1000);
-    setSecondsLeft(Math.max(0, diff));
+    const timer = setTimeout(() => {
+      if (!deadline) {
+        setSecondsLeft(null);
+        return;
+      }
+      const diff = Math.floor((deadline.getTime() - Date.now()) / 1000);
+      setSecondsLeft(Math.max(0, diff));
+    }, 0);
+    return () => clearTimeout(timer);
   }, [deadline, tick]);
 
   const isExpired = !submissionsOpen || (secondsLeft !== null && secondsLeft <= 0);

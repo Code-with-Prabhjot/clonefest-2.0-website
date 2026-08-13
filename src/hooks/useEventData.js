@@ -156,7 +156,10 @@ export function useEventData() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const init = async () => await load();
+    init();
+  }, [load]);
 
   /** Moderate a submission. Updates locally first so the UI responds at once. */
   const setSubmissionStatus = useCallback(async (id, next) => {

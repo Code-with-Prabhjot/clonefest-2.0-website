@@ -101,7 +101,10 @@ export function useJudgeData() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const init = async () => await load();
+    init();
+  }, [load]);
 
   /**
    * Persist a rubric. `values` is keyed by the UI's criterion keys (cq, fc…).

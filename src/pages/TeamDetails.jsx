@@ -151,9 +151,12 @@ export default function TeamDetails() {
 
   // Sync is_open from team object once it loads
   useEffect(() => {
-    if (team && isOpen === null) {
-      setIsOpen(!!team.is_open);
-    }
+    const timer = setTimeout(() => {
+      if (team && isOpen === null) {
+        setIsOpen(!!team.is_open);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [team, isOpen]);
 
   const handleToggleListing = async () => {

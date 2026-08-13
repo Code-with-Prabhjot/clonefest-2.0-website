@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { sx } from '../lib/sx';
 import { supabase } from '../lib/supabase';
-import { useEventData, rankSquads } from '../hooks/useEventData';
+import { useEventData, rankSquads, CLEARED } from '../hooks/useEventData';
 import { EXPORTS, downloadCsv } from '../lib/csv';
 import { useNavigate } from 'react-router-dom';
 import './AdminPortal.css';
@@ -569,7 +569,7 @@ class AdminPortalView extends React.Component {
       })),
       prOpened:count(this.props.submissions ? this.props.submissions.length : 318),
       prMerged:count(this.props.submissions ? this.props.submissions.filter(sub => CLEARED.has(sub.status)).length : 204),
-      timeline, tracks, weeks,
+      timeline, weeks,
 
       cols:cols.map((label,i) => ({
         label,
