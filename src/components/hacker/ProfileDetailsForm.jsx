@@ -29,8 +29,8 @@ export default function ProfileDetailsForm({ onComplete }) {
     e.preventDefault();
     setError(null);
 
-    if (!/^1RV25[A-Z]{2}\d{3}$/.test(usnClean)) {
-      return setError('USN must be in the format 1RV25XX000 (e.g., 1RV25CS001).');
+    if (!/^1R[VZ]25[A-Z]{2}\d{3}$/.test(usnClean)) {
+      return setError('USN must be in the format 1RV25XX000 or 1RZ25XX000 (e.g., 1RV25CS001).');
     }
     if (!branch) return setError('Select your branch.');
     if (!eligible) return setError('Confirm you are part of the 2025 - 2029 batch.');
