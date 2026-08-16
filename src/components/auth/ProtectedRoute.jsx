@@ -22,15 +22,26 @@ export default function ProtectedRoute({ children, allowedRoles }) {
       }
       
       // Fetch profile to get role
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', session.user.id)
         .single();
         
+      if (error || !profile) {
+        // Profile is missing or deleted, sign out and clear session
+        await supabase.auth.signOut();
+        if (active) {
+          setSession(null);
+          setRole(null);
+          setLoading(false);
+        }
+        return;
+      }
+        
       if (active) {
         setSession(session);
-        setRole(profile?.role || 'unassigned');
+        setRole(profile.role);
         setLoading(false);
       }
     };
