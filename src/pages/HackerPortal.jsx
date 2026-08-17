@@ -41,14 +41,14 @@ function OnboardingScreen({ user, profile, refetch }) {
   const [activeTab, setActiveTab] = useState('create');
 
   const TAB_BASE = 'px-6 py-2 uppercase font-bold text-sm border transition-all font-mono';
-  const TAB_ON   = 'border-[#5D91A6] bg-[#5D91A6]/10 text-[#B3E0F2] shadow-[0_0_10px_rgba(93,145,166,0.25)]';
-  const TAB_OFF  = 'border-[#B3E0F2]/10 text-[#56707B] hover:border-[#B3E0F2]/25 hover:text-[#8AA5AE]';
+  const TAB_ON = 'border-[#5D91A6] bg-[#5D91A6]/10 text-[#B3E0F2] shadow-[0_0_10px_rgba(93,145,166,0.25)]';
+  const TAB_OFF = 'border-[#B3E0F2]/10 text-[#56707B] hover:border-[#B3E0F2]/25 hover:text-[#8AA5AE]';
 
   return (
     <div className="min-h-screen bg-[#080D0C] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-[var(--pet-lane)]">
       <CyberGrid variant="cyan" />
       <CyberHeader variant="cyan" />
-      
+
       <div className="absolute top-6 right-6 z-20 sm:top-8 sm:right-10">
         <button
           onClick={async () => {

@@ -45,6 +45,7 @@ function buildSquads({ teams, profiles, submissions, totals, assignments }) {
       callsign: p.full_name || 'operative',
       role: p.role === 'lead' ? 'LEAD' : 'MEMBER',
       usn: p.usn || '',
+      college: p.college || '',
       branch: p.branch || '',
     });
     if (p.role === 'lead') row.lead = p.full_name || 'operative';
@@ -299,6 +300,7 @@ export function useEventData() {
           id: p.id,
           callsign: p.full_name || 'judge',
           usn: p.usn || '',
+          college: p.college || '',
           assignedTeams: mine,
           assigned: mine.length,
           scored: mine.filter((n) => scoredByTeam.has(n)).length,

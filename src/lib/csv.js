@@ -39,6 +39,7 @@ export const EXPORTS = {
     csv: toCsv([
       { label: 'Callsign', get: (p) => p.full_name },
       { label: 'USN', get: (p) => p.usn },
+      { label: 'College', get: (p) => p.college },
       { label: 'Branch', get: (p) => p.branch },
       { label: 'Batch', get: (p) => p.batch },
       { label: 'Role', get: (p) => p.role },

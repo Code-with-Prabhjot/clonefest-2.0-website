@@ -10,16 +10,9 @@ export default function LoginForm() {
   const [error, setError] = useState(null);
   const [emailSent, setEmailSent] = useState(false);
 
-  // ── RVCE email validation ────────────────────────────────────────────────
-  // Format: name.branch25@rvce.edu.in  (exactly ONE dot)
-  // name   = letters only, no dots
-  // branch = exactly 2 letters
-  // year   = exactly 2 digits (must be 25)
-  const validateRvceEmail = (addr) => {
-    const rvcePattern = /^[a-z]+\.[a-z]{2}(\d{2})@rvce\.edu\.in$/i;
-    const match = addr.trim().match(rvcePattern);
-    if (!match) return 'Enter a correct email id';
-    if (match[1] !== '25') return 'Only Second Years can participate';
+  // ── Email validation ────────────────────────────────────────────────
+  const validateEmail = (addr) => {
+    if (!addr || !addr.includes('@')) return 'Enter a valid email address';
     return null; // valid
   };
 
@@ -29,7 +22,7 @@ export default function LoginForm() {
     setError(null);
 
     if (isSignUp) {
-      const emailErr = validateRvceEmail(email);
+      const emailErr = validateEmail(email);
       if (emailErr) {
         setError(emailErr);
         setLoading(false);
@@ -143,7 +136,7 @@ export default function LoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             required
             className={FIELD}
-            placeholder="name.cs25@rvce.edu.in"
+            placeholder="jane@college.edu"
           />
         </div>
 

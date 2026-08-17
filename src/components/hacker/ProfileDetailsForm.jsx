@@ -8,15 +8,17 @@ import {
  * Collected once, straight after a hacker's first sign-in and before they can
  * forge or join a squad.
  *
- * Writes usn, branch, and batch to the `profiles` table (patch_004 must be
- * applied first). onComplete() is called only after a successful DB write.
+ * Writes usn, branch, batch, and college to the `profiles` table.
+ * onComplete() is called only after a successful DB write.
  */
 
-const BRANCHES = ['CS', 'CD', 'CY', 'CI', 'BT', 'EC', 'ET', 'EE', 'ME', 'IE', 'CV', 'CH', 'AS'];
+const COLLEGES = ['RVCE', 'PESU', 'BMSCE', 'MSRIT', 'Other'];
 const BATCHES = ['2025 - 2029'];
 
 export default function ProfileDetailsForm({ onComplete }) {
   const [usn, setUsn] = useState('');
+  const [college, setCollege] = useState('');
+  const [customCollege, setCustomCollege] = useState('');
   const [branch, setBranch] = useState('');
   const [batch, setBatch] = useState(BATCHES[0]);
   const [eligible, setEligible] = useState(false);
@@ -29,10 +31,13 @@ export default function ProfileDetailsForm({ onComplete }) {
     e.preventDefault();
     setError(null);
 
-    if (!/^1R[VZ]25[A-Z]{2}\d{3}$/.test(usnClean)) {
-      return setError('USN must be in the format 1RV25XX000 or 1RZ25XX000 (e.g., 1RV25CS001).');
+    if (!usnClean) {
+      return setError('Student ID / USN is required.');
     }
-    if (!branch) return setError('Select your branch.');
+
+    const finalCollege = college === 'Other' ? customCollege.trim() : college;
+    if (!finalCollege) return setError('Please specify your college.');
+    if (!branch.trim()) return setError('Please specify your branch.');
     if (!eligible) return setError('Confirm you are part of the 2025 - 2029 batch.');
 
     setLoading(true);
@@ -42,12 +47,12 @@ export default function ProfileDetailsForm({ onComplete }) {
 
       const { error: updateErr } = await supabase
         .from('profiles')
-        .update({ usn: usnClean, branch, batch })
+        .update({ usn: usnClean, branch: branch.trim(), batch, college: finalCollege })
         .eq('id', user.id);
 
       if (updateErr) throw updateErr;
 
-      onComplete({ usn: usnClean, branch, batch });
+      onComplete({ usn: usnClean, branch: branch.trim(), batch, college: finalCollege });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -69,38 +74,67 @@ export default function ProfileDetailsForm({ onComplete }) {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className={LABEL} htmlFor="reg-usn">USN</label>
+          <label className={LABEL} htmlFor="reg-usn">Student ID / USN</label>
           <input
             id="reg-usn"
             type="text"
             value={usn}
             onChange={(e) => setUsn(e.target.value.toUpperCase())}
             required
-            maxLength={10}
             autoComplete="off"
             className={`${FIELD} font-jet tracking-[0.14em]`}
-            placeholder="1RV25CS001"
+            placeholder="e.g. 1RV25CS001"
           />
-          <p className={HINT}>10 CHARACTERS, AS PRINTED ON YOUR ID CARD</p>
+          <p className={HINT}>AS PRINTED ON YOUR ID CARD</p>
         </div>
+
+        <div>
+          <label className={LABEL} htmlFor="reg-college">College</label>
+          <div className="relative">
+            <select
+              id="reg-college"
+              value={college}
+              onChange={(e) => setCollege(e.target.value)}
+              required
+              className={selectClass}
+            >
+              <option value="" disabled>Select College</option>
+              {COLLEGES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-[#56707B]">
+              ▾
+            </span>
+          </div>
+        </div>
+
+        {college === 'Other' && (
+          <div>
+            <label className={LABEL} htmlFor="reg-custom-college">Enter your College</label>
+            <input
+              id="reg-custom-college"
+              type="text"
+              value={customCollege}
+              onChange={(e) => setCustomCollege(e.target.value)}
+              required
+              className={FIELD}
+              placeholder="Full college name"
+            />
+          </div>
+        )}
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
-            <label className={LABEL} htmlFor="reg-branch">Branch</label>
+            <label className={LABEL} htmlFor="reg-branch">Branch / Course</label>
             <div className="relative">
-              <select
+              <input
                 id="reg-branch"
+                type="text"
                 value={branch}
-                onChange={(e) => setBranch(e.target.value)}
+                onChange={(e) => setBranch(e.target.value.toUpperCase())}
                 required
-                className={selectClass}
-              >
-                <option value="" disabled>Select</option>
-                {BRANCHES.map((b) => <option key={b} value={b}>{b}</option>)}
-              </select>
-              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-[#56707B]">
-                ▾
-              </span>
+                className={`${FIELD} font-jet tracking-[0.14em]`}
+                placeholder="e.g. CS"
+              />
             </div>
           </div>
 
@@ -119,11 +153,10 @@ export default function ProfileDetailsForm({ onComplete }) {
 
         <label
           htmlFor="reg-eligible"
-          className={`flex cursor-pointer items-start gap-3 rounded-[2px] border p-4 transition-colors ${
-            eligible
+          className={`flex cursor-pointer items-start gap-3 rounded-[2px] border p-4 transition-colors ${eligible
               ? 'border-[#7FB27E]/45 bg-[#7FB27E]/[0.07]'
               : 'border-[#B3E0F2]/12 bg-[#0B1519] hover:border-[#B3E0F2]/25'
-          }`}
+            }`}
         >
           <input
             id="reg-eligible"

@@ -27,8 +27,8 @@ const SHEET_NAME = 'Registrations';
 
 function doPost(e) {
   try {
-    const ss    = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet   = ss.getSheetByName(SHEET_NAME);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_NAME);
 
     // Auto-create the sheet with headers if it doesn't exist yet
     if (!sheet) {
@@ -56,14 +56,14 @@ function doPost(e) {
     // Append a new row with all profile fields
     sheet.appendRow([
       new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-      data.event     || '',
+      data.event || '',
       data.full_name || '',
-      data.usn       || '',
-      data.branch    || '',
-      data.batch     || '',
-      data.role      || '',
+      data.usn || '',
+      data.branch || '',
+      data.batch || '',
+      data.role || '',
       data.team_name || '',
-      data.id        || '',
+      data.id || '',
     ]);
 
     return ContentService

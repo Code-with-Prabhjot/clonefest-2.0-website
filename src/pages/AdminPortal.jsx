@@ -163,7 +163,7 @@ const SQUADS_FALLBACK = [
   {name:'FOUR_OH_FOUR',   lead:'notfound',  members:3, track:'T2 · Data',      w:['rejected','none','none'],       score:31, judge:'a_menon', invite:'F0UR-0X4', reg:'23 Jul 2026', prs:1}
 ];
 
-const EMAIL = n => n.replace(/[^a-z0-9_]/gi,'').toLowerCase() + '@rvce.edu.in';
+const EMAIL = n => n.replace(/[^a-z0-9_]/gi,'').toLowerCase() + '@example.com';
 
 // Animation + viewport state lives at module scope so it survives instance churn.
 const ANIM = {t:0, on:false, started:false, host:null, vw:0, bound:false};
@@ -430,7 +430,7 @@ class AdminPortalView extends React.Component {
         .map(m => ({
           role: m.role,
           callsign: m.callsign || 'unnamed',
-          email: m.usn || '\u2014',
+          email: m.usn ? (m.college ? m.usn + ' · ' + m.college : m.usn) : (m.college || '\u2014'),
         })))
         .map((m, i) => Object.assign(m, {
           roleStyle: MONO + ';font-size:9px;letter-spacing:.12em;width:52px;flex:none;color:' + (m.role === 'LEAD' ? ICE : DIM),
@@ -666,7 +666,7 @@ class AdminPortalView extends React.Component {
       judges:(this.props.judges || []).map(j => ({
         id:j.id,                       // needed for <option value>; dropping it
         callsign:j.callsign,           // made the browser submit the label text
-        email:j.usn || '—',
+        email:j.usn ? (j.college ? j.usn + ' · ' + j.college : j.usn) : (j.college || '—'),
         assigned:j.assigned,
         scored:j.scored,
       })).map((j, ji) => {

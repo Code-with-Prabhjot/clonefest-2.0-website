@@ -42,8 +42,8 @@ function CountdownWidget({ secondsLeft, isExpired, deadline }) {
   const color = isExpired
     ? '#C2564B'
     : secondsLeft != null && secondsLeft < 300
-    ? '#E09B4A'
-    : '#7FB27E';
+      ? '#E09B4A'
+      : '#7FB27E';
 
   return (
     <div
@@ -77,8 +77,8 @@ function CountdownWidget({ secondsLeft, isExpired, deadline }) {
           textShadow: isExpired
             ? '0 0 18px rgba(194,86,75,0.4)'
             : secondsLeft != null && secondsLeft < 300
-            ? '0 0 18px rgba(224,155,74,0.35)'
-            : '0 0 18px rgba(127,178,126,0.35)',
+              ? '0 0 18px rgba(224,155,74,0.35)'
+              : '0 0 18px rgba(127,178,126,0.35)',
         }}
       >
         {isExpired ? '00:00:00' : formatCountdown(secondsLeft)}
@@ -199,17 +199,17 @@ export default function SubmitPRModal({
   onClose,
   onSuccess,
 }) {
-  const [prUrl, setPrUrl]           = useState(existingSub?.pr_url       ?? '');
+  const [prUrl, setPrUrl] = useState(existingSub?.pr_url ?? '');
   const [deployedUrl, setDeployedUrl] = useState(existingSub?.deployed_url ?? '');
-  const [appNotes, setAppNotes]     = useState(existingSub?.app_notes    ?? '');
+  const [appNotes, setAppNotes] = useState(existingSub?.app_notes ?? '');
   const [envSnapshot, setEnvSnapshot] = useState(existingSub?.env_snapshot ?? '');
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState(null);
-  const [done, setDone]             = useState(false);
-  const prRef                       = useRef(null);
-  const isLead                      = profile?.role === 'lead';
-  const isScored                    = existingSub?.status === 'scored';
-  const canSubmit                   = isLead && !isExpired && !isScored;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [done, setDone] = useState(false);
+  const prRef = useRef(null);
+  const isLead = profile?.role === 'lead';
+  const isScored = existingSub?.status === 'scored';
+  const canSubmit = isLead && !isExpired && !isScored;
 
   // Focus PR input on open
   useEffect(() => {
@@ -247,11 +247,11 @@ export default function SubmitPRModal({
 
     setLoading(true);
     const { error: dbErr } = await supabase.from('submissions').insert({
-      team_name:    profile.team_name,
-      track_id:     track.id,
-      pr_url:       prUrl.trim(),
+      team_name: profile.team_name,
+      track_id: track.id,
+      pr_url: prUrl.trim(),
       deployed_url: deployedUrl.trim() || null,
-      app_notes:    appNotes.trim()    || null,
+      app_notes: appNotes.trim() || null,
       env_snapshot: envSnapshot.trim() || null,
       submitted_by: profile.id,
     });
@@ -263,7 +263,7 @@ export default function SubmitPRModal({
   };
 
   const focusBorder = (e) => { e.target.style.borderColor = '#5D91A6'; };
-  const blurBorder  = (e) => { e.target.style.borderColor = 'rgba(179,224,242,0.15)'; };
+  const blurBorder = (e) => { e.target.style.borderColor = 'rgba(179,224,242,0.15)'; };
 
   const modal = (
     <div
@@ -747,12 +747,12 @@ export default function SubmitPRModal({
                 {!isLead
                   ? 'Lead access required'
                   : isExpired
-                  ? 'Submissions closed'
-                  : loading
-                  ? 'Logging to grid…'
-                  : existingSub
-                  ? 'Resubmit mission'
-                  : 'Submit mission →'}
+                    ? 'Submissions closed'
+                    : loading
+                      ? 'Logging to grid…'
+                      : existingSub
+                        ? 'Resubmit mission'
+                        : 'Submit mission →'}
               </button>
 
               {/* Disclaimer */}

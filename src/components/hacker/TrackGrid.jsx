@@ -14,17 +14,17 @@ import { useEventSettings } from '../../hooks/useEventSettings';
  */
 
 const DIFFICULTY_CONFIG = {
-  Easy:   { color: '#7FB27E', bg: 'rgba(127,178,126,0.12)', border: 'rgba(127,178,126,0.35)' },
+  Easy: { color: '#7FB27E', bg: 'rgba(127,178,126,0.12)', border: 'rgba(127,178,126,0.35)' },
   Medium: { color: '#B3E0F2', bg: 'rgba(179,224,242,0.12)', border: 'rgba(179,224,242,0.35)' },
-  Hard:   { color: '#C2564B', bg: 'rgba(194,86,75,0.12)',   border: 'rgba(194,86,75,0.35)'   },
+  Hard: { color: '#C2564B', bg: 'rgba(194,86,75,0.12)', border: 'rgba(194,86,75,0.35)' },
 };
 
 const SUBMISSION_DOT = {
-  none:     { color: '#2E4A54', label: 'Not submitted', pulse: false },
-  pending:  { color: '#5D91A6', label: 'Pending review', pulse: true  },
-  accepted: { color: '#7FB27E', label: 'Accepted',       pulse: false },
-  scored:   { color: '#B3E0F2', label: 'Scored',         pulse: false },
-  rejected: { color: '#C2564B', label: 'Rejected',       pulse: false },
+  none: { color: '#2E4A54', label: 'Not submitted', pulse: false },
+  pending: { color: '#5D91A6', label: 'Pending review', pulse: true },
+  accepted: { color: '#7FB27E', label: 'Accepted', pulse: false },
+  scored: { color: '#B3E0F2', label: 'Scored', pulse: false },
+  rejected: { color: '#C2564B', label: 'Rejected', pulse: false },
 };
 
 function DifficultyChip({ difficulty }) {
@@ -73,11 +73,11 @@ function CountdownBanner({ secondsLeft, isExpired, deadline }) {
   };
 
   const critical = isExpired || (secondsLeft != null && secondsLeft < 300);
-  const warn     = !critical && secondsLeft != null && secondsLeft < 1800;
+  const warn = !critical && secondsLeft != null && secondsLeft < 1800;
 
-  const bgColor     = isExpired ? 'rgba(194,86,75,0.1)'   : warn ? 'rgba(224,155,74,0.08)' : 'rgba(93,145,166,0.06)';
-  const borderColor = isExpired ? 'rgba(194,86,75,0.4)'   : warn ? 'rgba(224,155,74,0.35)' : 'rgba(93,145,166,0.25)';
-  const textColor   = isExpired ? '#C2564B'                : warn ? '#E09B4A'               : '#5D91A6';
+  const bgColor = isExpired ? 'rgba(194,86,75,0.1)' : warn ? 'rgba(224,155,74,0.08)' : 'rgba(93,145,166,0.06)';
+  const borderColor = isExpired ? 'rgba(194,86,75,0.4)' : warn ? 'rgba(224,155,74,0.35)' : 'rgba(93,145,166,0.25)';
+  const textColor = isExpired ? '#C2564B' : warn ? '#E09B4A' : '#5D91A6';
 
   return (
     <div
@@ -117,8 +117,8 @@ function CountdownBanner({ secondsLeft, isExpired, deadline }) {
             textShadow: critical
               ? '0 0 12px rgba(194,86,75,0.4)'
               : warn
-              ? '0 0 12px rgba(224,155,74,0.3)'
-              : 'none',
+                ? '0 0 12px rgba(224,155,74,0.3)'
+                : 'none',
           }}
         >
           {formatCountdown(secondsLeft)}
@@ -131,7 +131,7 @@ function CountdownBanner({ secondsLeft, isExpired, deadline }) {
 function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
   const [hovered, setHovered] = useState(false);
   const [now, setNow] = useState(Date.now());
-  
+
   const getUnlockDate = (id) => {
     if (id === 'T1') return new Date('2026-08-20T18:00:00+05:30').getTime();
     if (id === 'T2') return new Date('2026-08-25T23:59:59+05:30').getTime();
@@ -181,7 +181,7 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
           position: 'absolute', inset: 0, opacity: 0.1,
           background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, #C2564B 10px, #C2564B 20px)'
         }} />
-        
+
         <div style={{
           position: 'relative', zIndex: 1, textAlign: 'center',
           fontFamily: "'JetBrains Mono', monospace",
@@ -295,13 +295,12 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
               width: '100%',
               padding: '9px 0',
               background: 'transparent',
-              border: `1px solid ${
-                isExpired
-                  ? 'rgba(194,86,75,0.2)'
-                  : hovered
+              border: `1px solid ${isExpired
+                ? 'rgba(194,86,75,0.2)'
+                : hovered
                   ? 'rgba(179,224,242,0.3)'
                   : 'rgba(179,224,242,0.12)'
-              }`,
+                }`,
               borderRadius: 2,
               color: isExpired ? '#56707B' : hovered ? '#B3E0F2' : '#5D91A6',
               fontFamily: "'JetBrains Mono', monospace",
@@ -337,7 +336,7 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
 
   const t1Deadline = new Date('2026-08-25T23:59:00+05:30');
   const t2Deadline = new Date('2026-08-30T23:59:00+05:30');
-  
+
   const activeDeadline = now > t1Deadline ? t2Deadline : t1Deadline;
   const activeIsExpired = globalIsExpired || (now > t2Deadline);
   const activeSecondsLeft = activeIsExpired ? 0 : Math.floor((activeDeadline - now) / 1000);
@@ -351,8 +350,8 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
   });
 
   const handleCardClick = (track) => setActiveTrack(track);
-  const handleClose     = ()      => setActiveTrack(null);
-  const handleSuccess   = ()      => { onRefetch(); };
+  const handleClose = () => setActiveTrack(null);
+  const handleSuccess = () => { onRefetch(); };
 
   if (!tracks || tracks.length === 0) {
     return (
@@ -388,7 +387,7 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
         {visibleTracks.map(track => {
           const trackDeadline = track.id === 'T1' ? t1Deadline : track.id === 'T2' ? t2Deadline : activeDeadline;
           const isTrackExpired = globalIsExpired || (now > trackDeadline);
-          
+
           return (
             <MissionCard
               key={track.id}
