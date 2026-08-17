@@ -12,13 +12,11 @@ import {
  * onComplete() is called only after a successful DB write.
  */
 
-const COLLEGES = ['RVCE', 'PESU', 'BMSCE', 'MSRIT', 'Other'];
 const BATCHES = ['2025 - 2029'];
 
 export default function ProfileDetailsForm({ onComplete }) {
   const [usn, setUsn] = useState('');
   const [college, setCollege] = useState('');
-  const [customCollege, setCustomCollege] = useState('');
   const [branch, setBranch] = useState('');
   const [batch, setBatch] = useState(BATCHES[0]);
   const [eligible, setEligible] = useState(false);
@@ -35,7 +33,7 @@ export default function ProfileDetailsForm({ onComplete }) {
       return setError('Student ID / USN is required.');
     }
 
-    const finalCollege = college === 'Other' ? customCollege.trim() : college;
+    const finalCollege = college.trim();
     if (!finalCollege) return setError('Please specify your college.');
     if (!branch.trim()) return setError('Please specify your branch.');
     if (!eligible) return setError('Confirm you are part of the 2025 - 2029 batch.');
@@ -90,37 +88,16 @@ export default function ProfileDetailsForm({ onComplete }) {
 
         <div>
           <label className={LABEL} htmlFor="reg-college">College</label>
-          <div className="relative">
-            <select
-              id="reg-college"
-              value={college}
-              onChange={(e) => setCollege(e.target.value)}
-              required
-              className={selectClass}
-            >
-              <option value="" disabled>Select College</option>
-              {COLLEGES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-[#56707B]">
-              ▾
-            </span>
-          </div>
+          <input
+            id="reg-college"
+            type="text"
+            value={college}
+            onChange={(e) => setCollege(e.target.value)}
+            required
+            className={FIELD}
+            placeholder="e.g. RV College of Engineering (RVCE)"
+          />
         </div>
-
-        {college === 'Other' && (
-          <div>
-            <label className={LABEL} htmlFor="reg-custom-college">Enter your College</label>
-            <input
-              id="reg-custom-college"
-              type="text"
-              value={customCollege}
-              onChange={(e) => setCustomCollege(e.target.value)}
-              required
-              className={FIELD}
-              placeholder="Full college name"
-            />
-          </div>
-        )}
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
@@ -171,6 +148,10 @@ export default function ProfileDetailsForm({ onComplete }) {
             students from this batch are eligible to participate.
           </span>
         </label>
+
+        <p className="text-[11.5px] leading-relaxed text-[#C2564B]">
+          Eligibility Notice: This event is strictly for the 2025–2029 batch (upcoming 2nd years). All finalists and prize winners will be required to present a valid physical College ID or portal proof during final evaluation. Ineligible entries will be disqualified.
+        </p>
 
         <button type="submit" disabled={loading || !eligible} className={PRIMARY}>
           {loading ? 'Saving…' : 'Continue to squad setup'}

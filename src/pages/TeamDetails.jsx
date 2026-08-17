@@ -159,26 +159,6 @@ export default function TeamDetails() {
     return () => clearTimeout(timer);
   }, [team, isOpen]);
 
-  const handleToggleListing = async () => {
-    if (togglingOpen) return;
-    const next = !isOpen;
-    setIsOpen(next);
-    setTogglingOpen(true);
-    try {
-      const { error } = await supabase
-        .from('teams')
-        .update({ is_open: next })
-        .eq('name', profile.team_name);
-      if (error) throw error;
-    } catch (err) {
-      // revert
-      setIsOpen(!next);
-      alert('Failed to update listing: ' + err.message);
-    } finally {
-      setTogglingOpen(false);
-    }
-  };
-
   const handleRequestAction = async (requestId, userId, action) => {
     try {
       if (action === 'accept') {

@@ -8,6 +8,7 @@ const CHIPS = [
     { id: "chip-prize", label: "7K PRIZE POOL" },
     { id: "chip-year", label: "10TH YEAR OF CODING CLUB" },
     { id: "chip-batch", label: "2025-2029 BATCH" },
+    { id: "chip-remote", label: "100% REMOTE" },
 ];
 
 function Chip({ id, label, delay, booted, accent }) {

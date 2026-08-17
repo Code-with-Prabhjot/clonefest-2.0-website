@@ -27,20 +27,6 @@ const SUBMISSION_DOT = {
   rejected: { color: '#C2564B', label: 'Rejected', pulse: false },
 };
 
-function DifficultyChip({ difficulty }) {
-  const cfg = DIFFICULTY_CONFIG[difficulty] ?? DIFFICULTY_CONFIG.Medium;
-  return (
-    <span style={{
-      color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}`,
-      borderRadius: 2, padding: '2px 8px',
-      fontSize: 9, letterSpacing: '0.18em',
-      fontFamily: "'JetBrains Mono', monospace",
-      textTransform: 'uppercase', whiteSpace: 'nowrap',
-    }}>
-      {difficulty ?? 'Medium'}
-    </span>
-  );
-}
 
 function StatusDot({ status }) {
   const cfg = SUBMISSION_DOT[status] ?? SUBMISSION_DOT.none;
@@ -60,73 +46,7 @@ function StatusDot({ status }) {
   );
 }
 
-// ── Compact countdown banner shown above the track grid ───────────────────
-function CountdownBanner({ secondsLeft, isExpired, deadline }) {
-  if (!deadline && !isExpired) return null;
 
-  const formatCountdown = (secs) => {
-    if (secs == null || secs < 0) return '00:00:00';
-    const h = Math.floor(secs / 3600);
-    const m = Math.floor((secs % 3600) / 60);
-    const s = secs % 60;
-    return [h, m, s].map(n => String(n).padStart(2, '0')).join(':');
-  };
-
-  const critical = isExpired || (secondsLeft != null && secondsLeft < 300);
-  const warn = !critical && secondsLeft != null && secondsLeft < 1800;
-
-  const bgColor = isExpired ? 'rgba(194,86,75,0.1)' : warn ? 'rgba(224,155,74,0.08)' : 'rgba(93,145,166,0.06)';
-  const borderColor = isExpired ? 'rgba(194,86,75,0.4)' : warn ? 'rgba(224,155,74,0.35)' : 'rgba(93,145,166,0.25)';
-  const textColor = isExpired ? '#C2564B' : warn ? '#E09B4A' : '#5D91A6';
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: 12,
-        marginBottom: 20,
-        padding: '10px 16px',
-        background: bgColor,
-        border: `1px solid ${borderColor}`,
-        borderRadius: 3,
-        animation: 'rise .4s ease-out both',
-      }}
-    >
-      <span
-        style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 10,
-          letterSpacing: '0.2em',
-          textTransform: 'uppercase',
-          color: textColor,
-        }}
-      >
-        {isExpired ? '✕ Submissions closed' : '⏱ Submission window'}
-      </span>
-      {!isExpired && (
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 18,
-            fontVariantNumeric: 'tabular-nums',
-            letterSpacing: '0.06em',
-            color: textColor,
-            textShadow: critical
-              ? '0 0 12px rgba(194,86,75,0.4)'
-              : warn
-                ? '0 0 12px rgba(224,155,74,0.3)'
-                : 'none',
-          }}
-        >
-          {formatCountdown(secondsLeft)}
-        </span>
-      )}
-    </div>
-  );
-}
 
 function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
   const [hovered, setHovered] = useState(false);

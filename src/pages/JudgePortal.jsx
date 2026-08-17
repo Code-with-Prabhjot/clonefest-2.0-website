@@ -340,7 +340,6 @@ class JudgePortalView extends React.Component {
     const subsArray = (q._subs && q._subs.length > 0) ? q._subs : [null];
     const weeks = subsArray.map((sub, i) => {
       const submitted = !!sub;
-      const late = false;
       const chipByStatus = {
         pending:  {label:'Pending',  c:STEEL,   fill:'transparent', border:STEEL},
         accepted: {label:'Accepted', c:MOSS_LT, fill:MOSS_LT,       border:MOSS_LT},

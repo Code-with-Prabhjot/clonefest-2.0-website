@@ -163,7 +163,6 @@ const SQUADS_FALLBACK = [
   {name:'FOUR_OH_FOUR',   lead:'notfound',  members:3, track:'T2 · Data',      w:['rejected','none','none'],       score:31, judge:'a_menon', invite:'F0UR-0X4', reg:'23 Jul 2026', prs:1}
 ];
 
-const EMAIL = n => n.replace(/[^a-z0-9_]/gi,'').toLowerCase() + '@example.com';
 
 // Animation + viewport state lives at module scope so it survives instance churn.
 const ANIM = {t:0, on:false, started:false, host:null, vw:0, bound:false};

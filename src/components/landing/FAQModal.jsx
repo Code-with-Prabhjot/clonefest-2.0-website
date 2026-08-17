@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 const faqs = [
   { q: "What is CloneFest?", a: "CloneFest is an intensive 10-day open-source sprint designed to elevate your skills. You and your squad will build and contribute to live, real-world codebases, gaining the kind of hands-on experience that makes recruiters take notice." },
   { q: "When is the event?", a: "The event runs from 20th to 30th August." },
-  { q: "Who can participate?", a: "Students from the 2025-29 batch. You must participate in a team of 3-4 members." },
-  { q: "What is the mode of the event?", a: "The event is completely ONLINE." },
+  { q: "Who can participate?", a: "Any student from the 2025-2029 batch (current or upcoming 2nd years) from any recognized engineering college in India. You must participate in a team of 3-4 members." },
+  { q: "Is it online or offline?", a: "CloneFest 2.0 is a completely remote (online) hackathon! Teams will build their projects from anywhere and submit their GitHub repositories for evaluation." },
   { q: "What are the main focuses?", a: ["End-to-end Open Source Development", "Production-Ready Software Architecture", "Getting a massive Portfolio Boost!"] },
   { q: "Is there a prize pool?", a: "Yes! We have a 7K Prize Pool up for grabs." },
   { q: "Who can I contact for queries?", a: "Shashwati (8618069507) or Surabhi (7892567330)." }
