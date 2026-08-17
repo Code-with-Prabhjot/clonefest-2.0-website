@@ -64,7 +64,7 @@ export default function JoinTeamForm({ user }) {
     <>
       <FormHead
         kicker="Squad member"
-        title="Enlist in a squad"
+        title="Join a squad"
         blurb="Your lead has an invite code. Paste it below to join their squad."
       />
 
@@ -99,7 +99,7 @@ export default function JoinTeamForm({ user }) {
         </div>
 
         <button type="submit" disabled={loading} className={PRIMARY}>
-          {loading ? 'Transmitting…' : 'Request enlistment'}
+          {loading ? 'Transmitting…' : 'Join squad'}
         </button>
       </form>
     </>

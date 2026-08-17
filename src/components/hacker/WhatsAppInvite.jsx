@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect } from 'react';
 import { PANEL, KICKER, HEADING, GHOST } from '../auth/authStyles';
 
@@ -32,7 +33,7 @@ export function markInviteSeen(userId) {
   }
 }
 
-export default function WhatsAppInvite({ userId, onClose }) {
+export default function WhatsAppInvite({ onClose }) {
   // Escape closes, and the page behind must not scroll while this is up.
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };

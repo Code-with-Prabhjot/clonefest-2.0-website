@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import CyberGrid from '../components/ui/CyberGrid';
 import CyberHeader from '../components/ui/CyberHeader';
-import { PANEL, FIELD, LABEL, PRIMARY, FormError, FormHead } from '../components/auth/authStyles';
+import { PANEL } from '../components/auth/authStyles';
 import CreateTeamForm from '../components/auth/CreateTeamForm';
 import JoinTeamForm from '../components/auth/JoinTeamForm';
 import TrackGrid from '../components/hacker/TrackGrid';
@@ -37,7 +37,7 @@ function LoadingScreen() {
 
 
 // ─── Onboarding screen (no team yet) ─────────────────────────────────────────
-function OnboardingScreen({ user, profile, refetch }) {
+function OnboardingScreen({ user }) {
   const [activeTab, setActiveTab] = useState('create');
 
   const TAB_BASE = 'px-6 py-2 uppercase font-bold text-sm border transition-all font-mono';
@@ -91,13 +91,13 @@ function OnboardingScreen({ user, profile, refetch }) {
             onClick={() => setActiveTab('create')}
             className={`${TAB_BASE} ${activeTab === 'create' ? TAB_ON : TAB_OFF}`}
           >
-            Forge squad
+            Create squad
           </button>
           <button
             onClick={() => setActiveTab('join')}
             className={`${TAB_BASE} ${activeTab === 'join' ? TAB_ON : TAB_OFF}`}
           >
-            Enlist
+            Join squad
           </button>
 
         </div>

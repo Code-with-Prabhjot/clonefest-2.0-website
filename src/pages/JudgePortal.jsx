@@ -75,7 +75,7 @@ class JudgePortalView extends React.Component {
     this._t = setTimeout(() => this.setState({toast:null}), 4600);
   }
 
-  componentDidUpdate(prev){
+  componentDidUpdate(){
     // Fold saved scores into the editable state the rubric works against.
     if (!this.state.hydrated && this.props.squads && this.props.squads.length){
       const scores = {}, feedback = {}, comments = {}, locked = {};

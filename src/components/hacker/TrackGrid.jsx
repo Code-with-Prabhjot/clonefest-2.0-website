@@ -13,11 +13,7 @@ import { useEventSettings } from '../../hooks/useEventSettings';
  *  - onRefetch   : () => void
  */
 
-const DIFFICULTY_CONFIG = {
-  Easy: { color: '#7FB27E', bg: 'rgba(127,178,126,0.12)', border: 'rgba(127,178,126,0.35)' },
-  Medium: { color: '#B3E0F2', bg: 'rgba(179,224,242,0.12)', border: 'rgba(179,224,242,0.35)' },
-  Hard: { color: '#C2564B', bg: 'rgba(194,86,75,0.12)', border: 'rgba(194,86,75,0.35)' },
-};
+
 
 const SUBMISSION_DOT = {
   none: { color: '#2E4A54', label: 'Not submitted', pulse: false },
@@ -50,7 +46,7 @@ function StatusDot({ status }) {
 
 function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
   const [hovered, setHovered] = useState(false);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
 
   const getUnlockDate = (id) => {
     if (id === 'T1') return new Date('2026-08-20T18:00:00+05:30').getTime();
@@ -258,8 +254,6 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
   const t2Deadline = new Date('2026-08-30T23:59:00+05:30');
 
   const activeDeadline = now > t1Deadline ? t2Deadline : t1Deadline;
-  const activeIsExpired = globalIsExpired || (now > t2Deadline);
-  const activeSecondsLeft = activeIsExpired ? 0 : Math.floor((activeDeadline - now) / 1000);
 
   // Map track_id → latest submission for that track
   const subByTrack = {};
@@ -324,15 +318,12 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
       {activeTrack && (() => {
         const trackDeadline = activeTrack.id === 'T1' ? t1Deadline : activeTrack.id === 'T2' ? t2Deadline : activeDeadline;
         const isTrackExpired = globalIsExpired || (now > trackDeadline);
-        const trackSecondsLeft = isTrackExpired ? 0 : Math.floor((trackDeadline - now) / 1000);
 
         return (
           <SubmitPRModal
             track={activeTrack}
             profile={profile}
             existingSub={subByTrack[activeTrack.id] ?? null}
-            deadline={trackDeadline}
-            secondsLeft={trackSecondsLeft}
             isExpired={isTrackExpired}
             onClose={handleClose}
             onSuccess={handleSuccess}
