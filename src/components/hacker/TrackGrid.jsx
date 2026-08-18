@@ -242,7 +242,7 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
 
 export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
   const [activeTrack, setActiveTrack] = useState(null);
-  const { deadline: globalDeadline, secondsLeft: globalSecondsLeft, isExpired: globalIsExpired, serverTimeOffset } = useEventSettings();
+  const { isExpired: globalIsExpired, serverTimeOffset } = useEventSettings();
 
   // Map track_id → latest submission for that track
   const subByTrack = {};

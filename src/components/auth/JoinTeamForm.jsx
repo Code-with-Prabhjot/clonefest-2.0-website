@@ -13,6 +13,19 @@ export default function JoinTeamForm({ user }) {
     e.preventDefault();
     if (!user) return;
     
+    const trimmedMemberName = memberName.trim();
+    const trimmedInviteCode = inviteCode.trim();
+
+    if (!trimmedMemberName) {
+      setError('Operative callsign is required.');
+      return;
+    }
+
+    if (!trimmedInviteCode) {
+      setError('Squad invite code is required.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -22,18 +35,30 @@ export default function JoinTeamForm({ user }) {
       const { data: teamData, error: teamError } = await supabase
         .from('teams')
         .select('name')
-        .eq('invite_code', inviteCode)
+        .eq('invite_code', trimmedInviteCode)
         .single();
 
       if (teamError || !teamData) {
         throw new Error('Invalid invite code. Team not found.');
       }
 
-      // 2. Update user profile
+      // 2. Check current squad capacity (max 4 members)
+      const { count: memberCount, error: countError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('team_name', teamData.name);
+
+      if (countError) throw countError;
+
+      if (memberCount >= 4) {
+        throw new Error('Squad is already at maximum capacity (4/4 operatives).');
+      }
+
+      // 3. Update user profile
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          full_name: memberName,
+          full_name: trimmedMemberName,
           role: 'member',
           team_name: teamData.name
         })

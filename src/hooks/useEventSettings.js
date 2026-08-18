@@ -34,7 +34,7 @@ export function useEventSettings() {
           const offset = new Date(serverDateStr).getTime() - Date.now();
           setServerTimeOffset(offset);
         }
-      } catch (err) {
+      } catch {
         console.warn('Could not fetch server time header, falling back to local time.');
       }
 
