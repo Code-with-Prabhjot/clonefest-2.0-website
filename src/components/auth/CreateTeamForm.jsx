@@ -101,7 +101,7 @@ export default function CreateTeamForm({ user }) {
     <>
       <FormHead
         kicker="Squad lead"
-        title="Forge new squad"
+        title="Create new squad"
         blurb="Register as lead and your squad is created with you at the helm."
       />
 

@@ -71,7 +71,7 @@ export default function TeamDetails() {
   const [copied, setCopied] = useState(false);
   const [totals, setTotals] = useState(null);   // finalised score totals
   const [isOpen, setIsOpen] = useState(null);       // null = not yet loaded
-  const [togglingOpen, setTogglingOpen] = useState(false);
+
 
   useEffect(() => {
     if (!profile?.team_name) return;
@@ -124,7 +124,7 @@ export default function TeamDetails() {
             setPendingRequests([]);
           }
         }
-      } catch (err) {
+      } catch {
         if (alive) setRosterState('error');
       }
     }

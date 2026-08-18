@@ -13,11 +13,7 @@ import { useEventSettings } from '../../hooks/useEventSettings';
  *  - onRefetch   : () => void
  */
 
-const DIFFICULTY_CONFIG = {
-  Easy: { color: '#7FB27E', bg: 'rgba(127,178,126,0.12)', border: 'rgba(127,178,126,0.35)' },
-  Medium: { color: '#B3E0F2', bg: 'rgba(179,224,242,0.12)', border: 'rgba(179,224,242,0.35)' },
-  Hard: { color: '#C2564B', bg: 'rgba(194,86,75,0.12)', border: 'rgba(194,86,75,0.35)' },
-};
+
 
 const SUBMISSION_DOT = {
   none: { color: '#2E4A54', label: 'Not submitted', pulse: false },
@@ -50,7 +46,7 @@ function StatusDot({ status }) {
 
 function MissionCard({ track, latestSub, profile, onCardClick, isExpired, serverTimeOffset }) {
   const [hovered, setHovered] = useState(false);
-  const [now, setNow] = useState(Date.now() + (serverTimeOffset || 0));
+  const [now, setNow] = useState(() => Date.now() + (serverTimeOffset || 0));
 
   const getUnlockDate = (id) => {
     if (id === 'T1') return new Date('2026-08-20T18:00:00+05:30').getTime();
@@ -309,8 +305,6 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
           track={activeTrack}
           profile={profile}
           existingSub={subByTrack[activeTrack.id] ?? null}
-          deadline={globalDeadline}
-          secondsLeft={globalSecondsLeft}
           isExpired={globalIsExpired}
           onClose={handleClose}
           onSuccess={handleSuccess}

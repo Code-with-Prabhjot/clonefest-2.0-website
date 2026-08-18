@@ -19,73 +19,11 @@ import { supabase } from '../../lib/supabase';
  *  - track       : { id, title, subtitle?, long_description?, repo_url? }
  *  - profile     : full profile object (role, team_name, id)
  *  - existingSub : last submission for this track (or null)
- *  - deadline    : Date | null  (from useEventSettings)
- *  - secondsLeft : number | null
  *  - isExpired   : boolean
  *  - onClose     : () => void
  *  - onSuccess   : () => void
  */
 
-// ── Utility: format seconds → HH:MM:SS ────────────────────────────────────
-function formatCountdown(secs) {
-  if (secs == null || secs < 0) return '00:00:00';
-  const h = Math.floor(secs / 3600);
-  const m = Math.floor((secs % 3600) / 60);
-  const s = secs % 60;
-  return [h, m, s].map(n => String(n).padStart(2, '0')).join(':');
-}
-
-// ── Countdown widget ──────────────────────────────────────────────────────
-function CountdownWidget({ secondsLeft, isExpired, deadline }) {
-  if (!deadline && !isExpired) return null;
-
-  const color = isExpired
-    ? '#C2564B'
-    : secondsLeft != null && secondsLeft < 300
-      ? '#E09B4A'
-      : '#7FB27E';
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        gap: 2,
-      }}
-    >
-      <span
-        style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 9,
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          color: color,
-          opacity: 0.8,
-        }}
-      >
-        {isExpired ? 'submissions closed' : 'time remaining'}
-      </span>
-      <span
-        style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 22,
-          fontVariantNumeric: 'tabular-nums',
-          letterSpacing: '0.06em',
-          color: color,
-          lineHeight: 1,
-          textShadow: isExpired
-            ? '0 0 18px rgba(194,86,75,0.4)'
-            : secondsLeft != null && secondsLeft < 300
-              ? '0 0 18px rgba(224,155,74,0.35)'
-              : '0 0 18px rgba(127,178,126,0.35)',
-        }}
-      >
-        {isExpired ? '00:00:00' : formatCountdown(secondsLeft)}
-      </span>
-    </div>
-  );
-}
 
 // ── Input field ───────────────────────────────────────────────────────────
 function Field({ label, hint, children }) {
@@ -193,8 +131,6 @@ export default function SubmitPRModal({
   track,
   profile,
   existingSub,
-  deadline,
-  secondsLeft,
   isExpired,
   onClose,
   onSuccess,

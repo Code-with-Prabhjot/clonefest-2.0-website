@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * Clonefest 2.0 — Google Apps Script
  *
