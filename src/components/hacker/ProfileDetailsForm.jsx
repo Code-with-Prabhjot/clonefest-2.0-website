@@ -108,7 +108,7 @@ export default function ProfileDetailsForm({ onComplete }) {
                 onChange={(e) => setBranch(e.target.value.toUpperCase())}
                 required
                 className={`${FIELD} font-jet tracking-[0.14em]`}
-                placeholder="e.g. CS, IS, BCA"
+                placeholder="e.g. CS, ECE"
               />
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function ProfileDetailsForm({ onComplete }) {
         </label>
 
         <p className="text-[11.5px] leading-relaxed text-[#C2564B]">
-          Eligibility Notice: This event is strictly for the 2025–2029 batch (upcoming 2nd years). All finalists and prize winners will be required to present a valid physical College ID or portal proof during final evaluation. Ineligible entries will be disqualified.
+          Eligibility Notice: All finalists and prize winners will be required to present a photo of a valid College ID during final evaluation. Ineligible entries will be disqualified.
         </p>
 
         <button type="submit" disabled={loading || !eligible} className={PRIMARY}>
