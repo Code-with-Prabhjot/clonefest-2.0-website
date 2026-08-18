@@ -12,18 +12,33 @@ import { supabase } from '../lib/supabase';
  *  - submissionsOpen: boolean       — admin kill-switch
  *  - secondsLeft    : number | null — seconds until deadline (null if no deadline)
  *  - isExpired      : boolean       — true when past deadline OR submissions_open=false
+ *  - serverTimeOffset: number       — offset in ms to add to Date.now() for true server time
  */
 export function useEventSettings() {
   const [deadline, setDeadline]             = useState(null);
   const [submissionsOpen, setSubmissionsOpen] = useState(true);
   const [secondsLeft, setSecondsLeft]       = useState(null);
   const [tick, setTick]                     = useState(0);
+  const [serverTimeOffset, setServerTimeOffset] = useState(0);
 
   // ── Fetch + realtime subscription ────────────────────────────────────────
   useEffect(() => {
     let channel;
 
     async function load() {
+      // 1. Fetch server time offset to prevent client clock spoofing
+      try {
+        const res = await fetch(window.location.href, { method: 'HEAD', cache: 'no-store' });
+        const serverDateStr = res.headers.get('Date');
+        if (serverDateStr) {
+          const offset = new Date(serverDateStr).getTime() - Date.now();
+          setServerTimeOffset(offset);
+        }
+      } catch (err) {
+        console.warn('Could not fetch server time header, falling back to local time.');
+      }
+
+      // 2. Fetch event settings
       const { data, error } = await supabase
         .from('event_settings')
         .select('submission_deadline, submissions_open')
@@ -75,13 +90,14 @@ export function useEventSettings() {
         setSecondsLeft(null);
         return;
       }
-      const diff = Math.floor((deadline.getTime() - Date.now()) / 1000);
+      const trueNow = Date.now() + serverTimeOffset;
+      const diff = Math.floor((deadline.getTime() - trueNow) / 1000);
       setSecondsLeft(Math.max(0, diff));
     }, 0);
     return () => clearTimeout(timer);
-  }, [deadline, tick]);
+  }, [deadline, tick, serverTimeOffset]);
 
   const isExpired = !submissionsOpen || (secondsLeft !== null && secondsLeft <= 0);
 
-  return { deadline, submissionsOpen, secondsLeft, isExpired };
+  return { deadline, submissionsOpen, secondsLeft, isExpired, serverTimeOffset };
 }

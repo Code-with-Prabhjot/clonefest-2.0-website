@@ -48,9 +48,9 @@ function StatusDot({ status }) {
 
 
 
-function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
+function MissionCard({ track, latestSub, profile, onCardClick, isExpired, serverTimeOffset }) {
   const [hovered, setHovered] = useState(false);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(Date.now() + (serverTimeOffset || 0));
 
   const getUnlockDate = (id) => {
     if (id === 'T1') return new Date('2026-08-20T18:00:00+05:30').getTime();
@@ -64,11 +64,11 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
   useEffect(() => {
     if (isLocked) {
       const interval = setInterval(() => {
-        setNow(Date.now());
+        setNow(Date.now() + (serverTimeOffset || 0));
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [isLocked]);
+  }, [isLocked, serverTimeOffset]);
 
   if (isLocked) {
     const timeLeft = Math.floor((unlockTime - now) / 1000);
@@ -246,20 +246,7 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired }) {
 
 export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
   const [activeTrack, setActiveTrack] = useState(null);
-  const { isExpired: globalIsExpired } = useEventSettings();
-  const [now, setNow] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const t1Deadline = new Date('2026-08-25T23:59:00+05:30');
-  const t2Deadline = new Date('2026-08-30T23:59:00+05:30');
-
-  const activeDeadline = now > t1Deadline ? t2Deadline : t1Deadline;
-  const activeIsExpired = globalIsExpired || (now > t2Deadline);
-  const activeSecondsLeft = activeIsExpired ? 0 : Math.floor((activeDeadline - now) / 1000);
+  const { deadline: globalDeadline, secondsLeft: globalSecondsLeft, isExpired: globalIsExpired, serverTimeOffset } = useEventSettings();
 
   // Map track_id → latest submission for that track
   const subByTrack = {};
@@ -297,17 +284,12 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
         }
       `}</style>
 
-
-
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
         gap: 16,
       }}>
         {visibleTracks.map(track => {
-          const trackDeadline = track.id === 'T1' ? t1Deadline : track.id === 'T2' ? t2Deadline : activeDeadline;
-          const isTrackExpired = globalIsExpired || (now > trackDeadline);
-
           return (
             <MissionCard
               key={track.id}
@@ -315,31 +297,25 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
               latestSub={subByTrack[track.id] ?? null}
               profile={profile}
               onCardClick={handleCardClick}
-              isExpired={isTrackExpired}
+              isExpired={globalIsExpired}
+              serverTimeOffset={serverTimeOffset}
             />
           );
         })}
       </div>
 
-      {activeTrack && (() => {
-        const trackDeadline = activeTrack.id === 'T1' ? t1Deadline : activeTrack.id === 'T2' ? t2Deadline : activeDeadline;
-        const isTrackExpired = globalIsExpired || (now > trackDeadline);
-        const trackSecondsLeft = isTrackExpired ? 0 : Math.floor((trackDeadline - now) / 1000);
-
-        return (
-          <SubmitPRModal
-            track={activeTrack}
-            profile={profile}
-            existingSub={subByTrack[activeTrack.id] ?? null}
-            deadline={trackDeadline}
-            secondsLeft={trackSecondsLeft}
-            isExpired={isTrackExpired}
-            onClose={handleClose}
-            onSuccess={handleSuccess}
-          />
-        );
-      })()}
-
+      {activeTrack && (
+        <SubmitPRModal
+          track={activeTrack}
+          profile={profile}
+          existingSub={subByTrack[activeTrack.id] ?? null}
+          deadline={globalDeadline}
+          secondsLeft={globalSecondsLeft}
+          isExpired={globalIsExpired}
+          onClose={handleClose}
+          onSuccess={handleSuccess}
+        />
+      )}
     </>
   );
 }
