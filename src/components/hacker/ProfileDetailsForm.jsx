@@ -13,18 +13,10 @@ import {
  */
 
 const BATCHES = ['2025 - 2029'];
-const COLLEGES = [
-  'RV College of Engineering (RVCE)',
-  'BMS College of Engineering (BMSCE)',
-  'Ramaiah Institute of Technology (MSRIT)',
-  'PES University (PESU)',
-  'Other'
-];
 
 export default function ProfileDetailsForm({ onComplete }) {
   const [usn, setUsn] = useState('');
-  const [collegeSelection, setCollegeSelection] = useState(COLLEGES[0]);
-  const [customCollege, setCustomCollege] = useState('');
+  const [college, setCollege] = useState('');
   const [branch, setBranch] = useState('');
   const [batch] = useState(BATCHES[0]);
   const [eligible, setEligible] = useState(false);
@@ -41,7 +33,7 @@ export default function ProfileDetailsForm({ onComplete }) {
       return setError('Student ID / USN is required.');
     }
 
-    const finalCollege = collegeSelection === 'Other' ? customCollege.trim() : collegeSelection;
+    const finalCollege = college.trim();
     if (!finalCollege) return setError('Please specify your college.');
     if (!branch.trim()) return setError('Please specify your branch.');
     if (!eligible) return setError('Confirm you are part of the 2025 - 2029 batch.');
@@ -94,33 +86,15 @@ export default function ProfileDetailsForm({ onComplete }) {
 
         <div>
           <label className={LABEL} htmlFor="reg-college">College</label>
-          <div className="relative mb-3">
-            <select
-              id="reg-college"
-              value={collegeSelection}
-              onChange={(e) => setCollegeSelection(e.target.value)}
-              className={`${FIELD} appearance-none cursor-pointer`}
-            >
-              {COLLEGES.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
-              <svg className="h-4 w-4 fill-current text-[#8AA5AE]" viewBox="0 0 20 20">
-                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-              </svg>
-            </div>
-          </div>
-          {collegeSelection === 'Other' && (
-            <input
-              type="text"
-              value={customCollege}
-              onChange={(e) => setCustomCollege(e.target.value)}
-              required
-              className={FIELD}
-              placeholder="Enter your college name"
-            />
-          )}
+          <input
+            id="reg-college"
+            type="text"
+            value={college}
+            onChange={(e) => setCollege(e.target.value)}
+            required
+            className={FIELD}
+            placeholder="e.g. RV College of Engineering (RVCE)"
+          />
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
