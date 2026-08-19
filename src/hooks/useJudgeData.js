@@ -85,32 +85,19 @@ export function useJudgeData() {
           .map((m) => [m.full_name || 'operative', m.role === 'lead' ? 'LEAD' : '']);
         const subs = (subsRes.data || []).filter((s) => s.team_name === t.name);
 
-        if (subs.length === 0) {
-          flattened.push({
-            id: t.name,
-            name: t.name,
-            teamName: t.name,
-            members: sortedMembers,
-            subs: [],
-            latestSubmissionId: null,
-            updated: t.created_at,
-            score: null,
-          });
-        } else {
-          subs.forEach(sub => {
-            const score = myScores.find((sc) => sc.submission_id === sub.id);
-            flattened.push({
-              id: sub.id,
-              name: `${t.name} (${sub.track_id})`,
-              teamName: t.name,
-              members: sortedMembers,
-              subs: [sub],
-              latestSubmissionId: sub.id,
-              updated: sub.created_at,
-              score: score || null,
-            });
-          });
-        }
+        const latestSub = subs.length > 0 ? subs[subs.length - 1] : null;
+        const score = latestSub ? myScores.find((sc) => sc.submission_id === latestSub.id) : null;
+
+        flattened.push({
+          id: t.name,
+          name: t.name,
+          teamName: t.name,
+          members: sortedMembers,
+          subs: subs,
+          latestSubmissionId: latestSub ? latestSub.id : null,
+          updated: latestSub ? latestSub.created_at : t.created_at,
+          score: score || null,
+        });
       });
       setSquads(flattened);
 

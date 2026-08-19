@@ -54,7 +54,7 @@ export default function Leaderboard() {
     submissions: stats.submissions,
   };
 
-  const cols = 'grid grid-cols-[46px_1fr_74px_84px] sm:grid-cols-[64px_1fr_92px_100px_104px_150px]';
+  const cols = 'grid gap-4 sm:gap-8 grid-cols-[46px_1fr_74px_84px] sm:grid-cols-[64px_1fr_92px_100px_104px_150px]';
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#080D0C] pb-[var(--pet-lane)]">
@@ -148,7 +148,7 @@ export default function Leaderboard() {
 
           <div className={`${cols} border-b border-[#B3E0F2]/8 px-4 sm:px-5`}>
             {[['#', ''], ['Squad', ''], ['Points', 'text-right'],
-              ['Cleared', 'hidden sm:block text-right'], ['Total', 'hidden sm:block text-right'],
+              ['Cleared', 'hidden sm:block text-right'], ['Total', 'hidden sm:block text-center'],
               ['Last activity', 'hidden sm:block']].map(([label, cls]) => (
               <div key={label} className={`py-3.5 font-jet text-[10px] uppercase tracking-[0.16em] text-[#56707B] ${cls}`}>
                 {label}
@@ -226,7 +226,7 @@ export default function Leaderboard() {
                   {r.points == null ? '—' : r.points}
                 </div>
                 <div className="hidden py-4 text-right font-jet text-[13px] text-[#8AA5AE] sm:block">{r.cleared}</div>
-                <div className="hidden py-4 text-right font-jet text-[13px] text-[#56707B] sm:block">{r.total}</div>
+                <div className="hidden py-4 text-center font-jet text-[13px] text-[#56707B] sm:block">{r.total}</div>
                 <div className="hidden py-4 font-jet text-[11px] text-[#56707B] sm:block">{fmt(r.lastAt)}</div>
               </div>
             );
