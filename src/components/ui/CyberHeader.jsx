@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import ShinyText from './ShinyText/ShinyText.jsx';
 
 /**
  * Portal top bar: RVCE mark, CLONEFEST 2.0 wordmark, Coding Club mark.
@@ -22,7 +23,13 @@ export default function CyberHeader({ variant = 'cyan', customLogo = CLUB_LOGO }
     green: { border: 'border-[#7FB27E]/25', text: 'text-[#7FB27E]' },
     white: { border: 'border-white/15', text: 'text-[#E4EEF2]' },
   };
+  const hexMap = {
+    cyan: '#B3E0F2',
+    green: '#7FB27E',
+    white: '#E4EEF2',
+  };
   const colors = colorMap[variant] || colorMap.cyan;
+  const baseColor = hexMap[variant] || hexMap.cyan;
 
   return (
     <header
@@ -38,9 +45,9 @@ export default function CyberHeader({ variant = 'cyan', customLogo = CLUB_LOGO }
         </Link>
 
         <span
-          className={`hidden min-w-0 flex-1 truncate text-center font-clash text-lg font-semibold uppercase tracking-[0.14em] sm:block md:text-2xl ${colors.text}`}
+          className={`hidden min-w-0 flex-1 truncate text-center font-['Audiowide'] text-2xl font-normal uppercase tracking-[0.08em] sm:block md:text-4xl`}
         >
-          CloneFest 2.0
+          <ShinyText text="CloneFest 2.0" color={baseColor} shineColor="#ffffff" speed={2} />
         </span>
 
         <img
