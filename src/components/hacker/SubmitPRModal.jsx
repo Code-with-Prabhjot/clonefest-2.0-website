@@ -378,26 +378,42 @@ export default function SubmitPRModal({
                   letterSpacing: '-0.01em',
                 }}
               >
-                {track.title}
+                {track.id === 'T1' ? 'Legacy Modernisation: PrivateBin' : track.id === 'T2' ? 'Transmission 02' : track.title}
               </h2>
 
             </div>
 
             {/* ── Long description (Markdown) ────────────────────────── */}
-            {track.long_description && (
-              <div
-                className="sub-md"
-                style={{
-                  padding: '20px 32px 0',
-                  maxHeight: 340,
-                  overflowY: 'auto',
-                  scrollbarWidth: 'thin',
-                  scrollbarColor: 'rgba(93,145,166,0.3) transparent',
-                }}
-              >
-                <ReactMarkdown>{track.long_description}</ReactMarkdown>
+            <div
+              className="sub-md"
+              style={{
+                padding: '20px 32px 0',
+                maxHeight: 340,
+                overflowY: 'auto',
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(93,145,166,0.3) transparent',
+              }}
+            >
+              <div style={{ color: '#8AA5AE', fontSize: '13px', lineHeight: '1.75' }}>
+                <p style={{ color: '#B3E0F2', fontWeight: 600, fontSize: '15px', marginBottom: '8px' }}>Problem Description</p>
+                <p style={{ marginBottom: '10px' }}>Build a modern, secure, and user-friendly platform for sharing sensitive text and information online, inspired by the core problem addressed by PrivateBin.</p>
+                <p style={{ marginBottom: '10px' }}>The goal is not to replicate PrivateBin or reproduce its existing UI/UX. Instead, participants are expected to understand the underlying problem and develop their own modern interpretation and solution using a suitable contemporary technology stack.</p>
+                <p style={{ marginBottom: '10px' }}>Your solution should cover the essential capabilities required for secure and controlled information sharing, while giving you the freedom to rethink the user experience, architecture, security model, collaboration features, usability, performance, and other aspects.</p>
+                <p style={{ marginBottom: '10px' }}>The provided PrivateBin repository is included as a reference implementation. Participants may clone and explore the repository to understand how the existing system works, but the final solution should demonstrate independent implementation and meaningful innovation.</p>
+                <p style={{ marginBottom: '10px' }}>Reference Repository:<br />
+                <a href="https://github.com/PrivateBin/PrivateBin" target="_blank" rel="noopener noreferrer" style={{ color: '#5D91A6', textDecoration: 'underline' }}>https://github.com/PrivateBin/PrivateBin</a></p>
+                <p style={{ marginBottom: '10px' }}>Core idea: Understand the problem → preserve the essential purpose → build your own modern solution → innovate beyond the reference.</p>
+                
+                <p style={{ color: '#B3E0F2', fontWeight: 600, fontSize: '15px', marginTop: '24px', marginBottom: '8px' }}>📋 Judging Rubric – 100 Marks</p>
+                <p style={{ marginBottom: '10px' }}>1️⃣ Problem Understanding & Core Functionality — 20 marks</p>
+                <p style={{ marginBottom: '10px' }}>2️⃣ Innovation & Meaningful Differentiation — 20 marks</p>
+                <p style={{ marginBottom: '10px' }}>3️⃣ Technical Implementation & Architecture — 15 marks</p>
+                <p style={{ marginBottom: '10px' }}>4️⃣ User Experience & Accessibility — 15 marks</p>
+                <p style={{ marginBottom: '10px' }}>5️⃣ Performance & Reliability/Demo Quality — 20 marks</p>
+                <p style={{ marginBottom: '10px' }}>6️⃣ Documentation & Explanation — 10 marks</p>
+                <p style={{ marginBottom: '10px' }}>Total — 100 marks</p>
               </div>
-            )}
+            </div>
 
             {/* ── Divider ───────────────────────────────────────────── */}
             <div
@@ -408,10 +424,9 @@ export default function SubmitPRModal({
             />
 
             {/* ── Repo link ─────────────────────────────────────────── */}
-            {track.repo_url && (
-              <div style={{ padding: '16px 32px 0' }}>
-                <a
-                  href={track.repo_url}
+            <div style={{ padding: '16px 32px 0' }}>
+              <a
+                href="https://github.com/PrivateBin/PrivateBin"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -431,7 +446,6 @@ export default function SubmitPRModal({
                   ↗ View starter repo
                 </a>
               </div>
-            )}
 
             {/* ── Lock notice (members) ──────────────────────────────── */}
             {!isLead && (
