@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import ReactMarkdown from 'react-markdown';
 import { supabase } from '../../lib/supabase';
 
 /**
