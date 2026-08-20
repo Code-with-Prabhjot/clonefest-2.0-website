@@ -9,6 +9,7 @@ import Marquee from '../components/landing/Marquee';
 import About from '../components/landing/About';
 import SurvivalGuide from '../components/landing/SurvivalGuide';
 import FAQModal from '../components/landing/FAQModal';
+import JudgingRubric from '../components/landing/JudgingRubric';
 
 export default function Landing() {
   const [booted, setBooted] = useState(false);
@@ -62,6 +63,14 @@ export default function Landing() {
     }
   };
 
+  const scrollToRubric = () => {
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo('#rubric', { duration: 1.2 });
+    } else {
+      document.getElementById('rubric')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="relative w-full bg-[#080D0C] text-[#B3E0F2]">
       {/* Restored from before 0969970. Canvas sits at z-0 and the CRT layers
@@ -77,6 +86,7 @@ export default function Landing() {
         onFaqClick={() => setFaqOpen(true)}
         onAboutClick={scrollToAbout}
         onRulesClick={scrollToRules}
+        onRubricClick={scrollToRubric}
       />
 
       {/* The hero keeps its own full viewport, so About sits entirely below the
@@ -87,6 +97,7 @@ export default function Landing() {
 
       <About />
       <SurvivalGuide />
+      <JudgingRubric />
 
       <Marquee booted={booted} />
 

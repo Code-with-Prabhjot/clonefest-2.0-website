@@ -8,7 +8,7 @@ const NAV_BUTTON =
     "bg-transparent font-mono text-[11px] uppercase tracking-[0.15em] " +
     "text-[#B3E0F2]/70 transition-colors duration-300 hover:text-[#B3E0F2] sm:text-[13px] sm:tracking-[0.2em]";
 
-export default function Header({ booted, onFaqClick, onAboutClick, onRulesClick }) {
+export default function Header({ booted, onFaqClick, onAboutClick, onRulesClick, onRubricClick }) {
     return (
         <motion.header
             initial={{ y: -56, opacity: 0 }}
@@ -36,7 +36,7 @@ export default function Header({ booted, onFaqClick, onAboutClick, onRulesClick 
 
                 {/* Navigation links centered */}
                 {booted && (
-                    <div className="flex w-full items-center justify-center gap-4 sm:absolute sm:left-1/2 sm:-translate-x-1/2 sm:w-auto sm:gap-9">
+                    <div className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:absolute sm:left-1/2 sm:-translate-x-1/2 sm:w-auto sm:gap-9">
                         <button
                             data-testid="nav-about"
                             onClick={onAboutClick}
@@ -50,6 +50,13 @@ export default function Header({ booted, onFaqClick, onAboutClick, onRulesClick 
                             className={NAV_BUTTON}
                         >
                             Rules
+                        </button>
+                        <button
+                            data-testid="nav-rubric"
+                            onClick={onRubricClick}
+                            className={NAV_BUTTON}
+                        >
+                            Rubric
                         </button>
                         <button
                             data-testid="nav-faq"

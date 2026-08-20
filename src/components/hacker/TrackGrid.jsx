@@ -180,17 +180,16 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
           color: '#E4EEF2', fontSize: 16, fontWeight: 600,
           margin: '0 0 4px 0', lineHeight: 1.3,
         }}>
-          {track.title}
+          {track.id === 'T1' ? 'Legacy Modernisation: PrivateBin' : track.id === 'T2' ? 'Transmission 02 (Locked)' : track.title}
         </h3>
 
 
 
         {/* Footer: repo link */}
-        <div style={{ flex: 1 }}></div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
           {track.repo_url && (
             <a
-              href={track.repo_url}
+              href="https://github.com/PrivateBin/PrivateBin"
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
@@ -207,7 +206,6 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
             </a>
           )}
         </div>
-        <div style={{ flex: 1 }}></div>
 
         {/* Action button */}
         <div>
