@@ -1103,7 +1103,6 @@ export default function JudgePortal(props) {
         error={status === 'error' ? error : null}
         onSaveScore={saveScore}
         onRefetch={refetch}
-        me={me}
         settings={settings}
       />
     </>
