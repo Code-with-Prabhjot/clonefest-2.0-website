@@ -157,15 +157,7 @@ export default function LoginForm() {
           {loading ? 'Authenticating…' : (isSignUp ? 'Register operative' : 'Initiate login')}
         </button>
 
-        <div className="text-center pt-2">
-          <button
-            type="button"
-            onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
-            className="font-jet text-[10px] uppercase tracking-[0.16em] text-[#5D91A6] transition-colors hover:text-[#B3E0F2]"
-          >
-            {isSignUp ? 'Already registered? System login' : 'New here? Register operative'}
-          </button>
-        </div>
+        {/* Register toggle removed */}
 
         <div className="flex items-center gap-4 py-1">
           <span className="h-px flex-1 bg-[#B3E0F2]/10" />
