@@ -183,8 +183,6 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
           {track.id === 'T1' ? 'Legacy Modernisation: PrivateBin' : track.id === 'T2' ? 'Transmission 02 (Locked)' : track.title}
         </h3>
 
-
-
         {/* Footer: repo link */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
           {track.repo_url && (
