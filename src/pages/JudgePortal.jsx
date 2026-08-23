@@ -63,7 +63,7 @@ class JudgePortalView extends React.Component {
   state = {
     view:null, idx:3, tick:0, search:'', tab:'All', sort:'status',
     scores:{}, feedback:{}, comments:{}, attempted:{}, locked:{}, hydrated:false,
-    prState:null, modal:false, toast:null, toastTitle:''
+    prState:null, modal:false, toast:null, toastTitle:'', notesModal:null
   };
 
   componentDidMount(){ ANIM.host = this; startAnim(); }
@@ -362,6 +362,7 @@ class JudgePortalView extends React.Component {
         demo:demoHost,
         demoUrl:demoUrl,
         notes:sub?.app_notes || '', 
+        env:sub?.env_snapshot || '',
         at: sub ? new Date(sub.created_at).toLocaleString('en-GB', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) : 'PENDING', 
         lateBy:'',
         lateStyle: 'display:none',
@@ -561,6 +562,8 @@ class JudgePortalView extends React.Component {
 
       goDashboard: () => this.setState({view:'list'}),
       toast:s.toast, toastTitle:s.toastTitle,
+      notesModal:s.notesModal,
+      closeNotesModal: () => this.setState({notesModal:null}),
       screens:[['list','Assigned list'],['detail','Squad detail'],['denied','Access denied']].map(([k, label]) => ({
         label,
         go: () => this.setState({view:k}),
@@ -828,8 +831,11 @@ class JudgePortalView extends React.Component {
                       <span style={sx("font-size:11px;color:#56707B;flex:none")}>↗</span>
                     </a>
                   </div>
-                  <div style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;color:#56707B;margin:18px 0 7px")}>SQUAD NOTES</div>
-                  <p style={sx("font-size:13px;line-height:1.65;color:#8AA5AE;margin:0;text-wrap:pretty")}>{w.notes}</p>
+                  <div style={sx("font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;color:#56707B;margin:18px 0 7px")}>SQUAD NOTES & ENV</div>
+                  <button onClick={() => this.setState({notesModal: w})} style={sx("display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid rgba(179,224,242,.14);background:#0B1519;border-radius:2px;transition:all .25s;color:#B3E0F2;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;width:100%")} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(179,224,242,.08)'; e.currentTarget.style.borderColor = 'rgba(179,224,242,.25)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = '#0B1519'; e.currentTarget.style.borderColor = 'rgba(179,224,242,.14)'; }}>
+                    <span style={sx("flex:1;text-align:left")}>View Squad Notes & Env Details</span>
+                    <span style={sx("font-size:11px;color:#56707B")}>↗</span>
+                  </button>
                   <div style={sx("flex:1")}></div>
                   <div style={sx("display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:20px;padding-top:14px;border-top:1px solid rgba(179,224,242,.08)")}>
                     <span style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;color:#56707B")}>SUBMITTED {w.at}</span>
@@ -1004,6 +1010,39 @@ class JudgePortalView extends React.Component {
                 <div style={sx("display:flex;gap:10px;flex-wrap:wrap;margin-top:24px")}>
                   <button onClick={V.confirmSubmit} style={sx("flex:1;min-width:150px;padding:13px 20px;font-size:13px;font-weight:500;background:#B3E0F2;border:1px solid #B3E0F2;color:#080D0C;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="jp28">Lock and submit</button>
                   <button onClick={V.closeModal} style={sx("padding:13px 20px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(179,224,242,.2);color:#8AA5AE;cursor:pointer;transition:all .25s;border-radius:2px")} data-s="jp29">Keep editing</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </> : null}
+
+        {(V.notesModal) ? <>
+          <div style={sx(V.L.overlay)} onClick={V.closeNotesModal}>
+            <div style={sx(V.L.modal)} onClick={e => e.stopPropagation()}>
+              <div style={sx("position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#B3E0F2,rgba(179,224,242,0))")}></div>
+              <div style={sx(V.L.modalPad + ";max-height:85vh;overflow-y:auto;scrollbar-width:thin")}>
+                <div style={sx("display:flex;align-items:center;justify-content:space-between;margin-bottom:16px")}>
+                  <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;color:#B3E0F2")}>SQUAD SUBMISSION DETAILS</div>
+                  <button onClick={V.closeNotesModal} style={sx("background:none;border:none;color:#56707B;font-size:18px;cursor:pointer;padding:0;line-height:1")}>×</button>
+                </div>
+                <h3 style={sx(V.L.modalTitle)}>{V.notesModal.title}</h3>
+                
+                <div style={sx("margin-top:24px")}>
+                  <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B;margin-bottom:8px")}>APP NOTES</div>
+                  <div style={sx("background:#0B1519;border:1px solid rgba(179,224,242,.14);padding:14px;border-radius:2px;font-size:13px;line-height:1.65;color:#E4EEF2;white-space:pre-wrap")}>
+                    {V.notesModal.notes || 'No notes provided.'}
+                  </div>
+                </div>
+
+                <div style={sx("margin-top:20px")}>
+                  <div style={sx("font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:#56707B;margin-bottom:8px")}>ENVIRONMENT SNAPSHOT</div>
+                  <div style={sx("background:#0B1519;border:1px solid rgba(179,224,242,.14);padding:14px;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.65;color:#E4EEF2;white-space:pre-wrap")}>
+                    {V.notesModal.env || 'No environment variables provided.'}
+                  </div>
+                </div>
+
+                <div style={sx("display:flex;gap:10px;flex-wrap:wrap;margin-top:24px")}>
+                  <button onClick={V.closeNotesModal} style={sx("padding:13px 20px;font-size:13px;font-weight:500;background:transparent;border:1px solid rgba(179,224,242,.2);color:#E4EEF2;cursor:pointer;transition:all .25s;border-radius:2px;width:100%")} onMouseEnter={e => {e.currentTarget.style.background='rgba(179,224,242,.1)';}} onMouseLeave={e => {e.currentTarget.style.background='transparent';}}>Close</button>
                 </div>
               </div>
             </div>

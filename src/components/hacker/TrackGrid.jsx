@@ -90,6 +90,7 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
           justifyContent: 'center',
           gap: 16,
           minHeight: '220px',
+          height: '100%',
           overflow: 'hidden',
         }}
       >
@@ -140,6 +141,8 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
         flexDirection: 'column',
         gap: 12,
         overflow: 'hidden',
+        height: '100%',
+        minHeight: '220px',
       }}
     >
       {/* Scanline hover overlay */}
@@ -150,9 +153,9 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
         }} />
       )}
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1 }}>
         {/* Top row: Track ID badge + status dot */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
           <span style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 11, letterSpacing: '0.22em',
@@ -184,8 +187,9 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
 
         {/* Footer: repo link */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+          {track.repo_url && (
             <a
-              href="https://github.com/PrivateBin/PrivateBin"
+              href={track.repo_url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
@@ -200,10 +204,11 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
             >
               View repo →
             </a>
+          )}
         </div>
 
         {/* Action button */}
-        <div style={{ marginTop: 16 }}>
+        <div>
           <button
             style={{
               width: '100%',
