@@ -187,7 +187,7 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
           {track.repo_url && (
             <a
-              href="https://github.com/PrivateBin/PrivateBin"
+              href={track.repo_url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}

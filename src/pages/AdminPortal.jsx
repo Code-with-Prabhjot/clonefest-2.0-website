@@ -438,6 +438,7 @@ class AdminPortalView extends React.Component {
       return {
         name:q.name, lead:q.lead, members:q.members, track:q.track,
         score: q.score === null || q.score === undefined ? '\u2014' : q.score,
+        nScore: q.normalizedPoints === null || q.normalizedPoints === undefined ? '\u2014' : q.normalizedPoints,
         hasScore: q.score !== null && q.score !== undefined,
         judge:q.judge || 'unassigned',
         judgeColor:q.judge ? TXT : DIM,
@@ -487,7 +488,7 @@ class AdminPortalView extends React.Component {
       };
     });
 
-    const cols = ['Squad','Lead','Mem','Track','Ch 1','Ch 2','Total','Judge','Actions'];
+    const cols = ['Squad','Lead','Mem','Track','Ch 1','Ch 2','Scores','Judge','Actions'];
     const trackColors = [ICE, '#8CBCD1', STEEL, '#41707F', '#5C8F5B'];
 
     const tracks = (this.props.trackDistribution && this.props.trackDistribution.length > 0
@@ -1078,7 +1079,7 @@ class AdminPortalView extends React.Component {
                     <div style={sx("padding:16px;border-bottom:1px solid rgba(179,224,242,.06)")}>
                       <div style={sx("display:flex;align-items:baseline;justify-content:space-between;gap:12px")}>
                         <span style={sx("font-size:15px;font-weight:500;color:#E4EEF2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{r.name}</span>
-                        <span style={sx("font-family:'Clash Grotesk',sans-serif;font-size:17px;color:#B3E0F2;flex:none")}>{r.score}</span>
+                        <span style={sx("font-family:'Clash Grotesk',sans-serif;font-size:17px;color:#B3E0F2;flex:none")}>{r.score} {r.hasScore ? <span style={sx("color:#7FB27E;font-size:14px")}>/ {r.nScore}</span> : null}</span>
                       </div>
 
                       <div style={sx("margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#56707B")}>
@@ -1135,6 +1136,7 @@ class AdminPortalView extends React.Component {
                               <div style={sx("padding:15px 8px;display:flex;align-items:center;gap:7px")}><span style={sx(r.w2.dot)}></span><span style={sx(r.w2.text)}>{r.w2.label}</span></div>
                               <div style={sx("padding:15px 8px;display:flex;align-items:center;gap:10px")}>
                                 <span style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:18px;color:#B3E0F2;font-variant-numeric:tabular-nums")}>{r.score}</span>
+                                {r.hasScore ? <span style={sx("font-family:'Clash Grotesk',sans-serif;font-weight:500;font-size:14px;color:#7FB27E;font-variant-numeric:tabular-nums")}>/ {r.nScore}</span> : null}
                                 {r.hasScore ? <span style={sx("flex:1;height:3px;background:rgba(179,224,242,.12);position:relative")}><span style={sx(r.meterStyle)}></span></span> : null}
                               </div>
                               <div style={sx(`padding:15px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:${r.judgeColor}`)}>{r.judge}</div>

@@ -85,6 +85,7 @@ function buildSquads({ teams, profiles, submissions, totals, assignments }) {
       firstClearedAt: subs.find((s) => CLEARED.has(s.status))?.created_at || null,
       // Finalised judge scores, via the public leaderboard_totals view.
       points: pointsFor.get(row.name)?.points ?? null,
+      normalizedPoints: pointsFor.get(row.name)?.normalized_points ?? null,
       scoredCount: pointsFor.get(row.name)?.scored_count ?? 0,
       lastScoredAt: pointsFor.get(row.name)?.last_scored_at ?? null,
       score: pointsFor.get(row.name)?.points ?? null,
