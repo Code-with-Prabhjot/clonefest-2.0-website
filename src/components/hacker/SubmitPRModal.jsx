@@ -132,6 +132,7 @@ export default function SubmitPRModal({
   profile,
   existingSub,
   isExpired,
+  serverTimeOffset,
   onClose,
   onSuccess,
 }) {
@@ -145,7 +146,7 @@ export default function SubmitPRModal({
   const prRef = useRef(null);
   const isLead = profile?.role === 'lead';
   const isScored = existingSub?.status === 'scored';
-  const isT1Expired = track.id === 'T1' && Date.now() >= new Date('2026-08-26T03:00:00+05:30').getTime();
+  const isT1Expired = track.id === 'T1' && (Date.now() + (serverTimeOffset || 0)) >= new Date('2026-08-26T03:00:00+05:30').getTime();
   const trackIsExpired = track.id === 'T1' ? isT1Expired : isExpired;
   const canSubmit = isLead && !trackIsExpired && !isScored;
 
@@ -430,9 +431,10 @@ export default function SubmitPRModal({
             />
 
             {/* ── Repo link ─────────────────────────────────────────── */}
-            <div style={{ padding: '16px 32px 0' }}>
-              <a
-                href="https://github.com/PrivateBin/PrivateBin"
+            {track.repo_url && (
+              <div style={{ padding: '16px 32px 0' }}>
+                <a
+                  href={track.repo_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -452,6 +454,7 @@ export default function SubmitPRModal({
                   ↗ View starter repo
                 </a>
               </div>
+            )}
 
             {/* ── Lock notice (members) ──────────────────────────────── */}
             {!isLead && (

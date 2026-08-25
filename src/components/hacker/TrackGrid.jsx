@@ -59,13 +59,13 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
   const trackIsExpired = track.id === 'T1' ? now >= new Date('2026-08-26T03:00:00+05:30').getTime() : isExpired;
 
   useEffect(() => {
-    if (isLocked || track.id === 'T1') {
+    if (isLocked || (track.id === 'T1' && !trackIsExpired)) {
       const interval = setInterval(() => {
         setNow(Date.now() + (serverTimeOffset || 0));
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [isLocked, serverTimeOffset, track.id]);
+  }, [isLocked, serverTimeOffset, track.id, trackIsExpired]);
 
   if (isLocked) {
     const timeLeft = Math.floor((unlockTime - now) / 1000);
@@ -308,6 +308,7 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
           profile={profile}
           existingSub={subByTrack[activeTrack.id] ?? null}
           isExpired={globalIsExpired}
+          serverTimeOffset={serverTimeOffset}
           onClose={handleClose}
           onSuccess={handleSuccess}
         />
