@@ -132,6 +132,7 @@ export default function SubmitPRModal({
   profile,
   existingSub,
   isExpired,
+  serverTimeOffset,
   onClose,
   onSuccess,
 }) {
@@ -145,7 +146,7 @@ export default function SubmitPRModal({
   const prRef = useRef(null);
   const isLead = profile?.role === 'lead';
   const isScored = existingSub?.status === 'scored';
-  const isT1Expired = track.id === 'T1' && Date.now() >= new Date('2026-08-26T03:00:00+05:30').getTime();
+  const isT1Expired = track.id === 'T1' && (Date.now() + (serverTimeOffset || 0)) >= new Date('2026-08-26T03:00:00+05:30').getTime();
   const trackIsExpired = track.id === 'T1' ? isT1Expired : isExpired;
   const canSubmit = isLead && !trackIsExpired && !isScored;
 
@@ -430,309 +431,320 @@ export default function SubmitPRModal({
             />
 
             {/* ── Repo link ─────────────────────────────────────────── */}
-            <div style={{ padding: '16px 32px 0' }}>
-              <a
-                href="https://github.com/PrivateBin/PrivateBin"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 11,
-                  letterSpacing: '0.12em',
-                  color: '#5D91A6',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  transition: 'color 0.15s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#B3E0F2')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#5D91A6')}
-              >
-                ↗ View starter repo
-              </a>
-            </div>
-
-            {/* ── Lock notice (members) ──────────────────────────────── */}
-            {!isLead && (
-              <div
-                style={{
-                  margin: '20px 32px 0',
-                  background: 'rgba(194,86,75,0.08)',
-                  border: '1px solid rgba(194,86,75,0.3)',
-                  borderLeft: '3px solid #C2564B',
-                  borderRadius: 2,
-                  padding: '12px 16px',
-                }}
-              >
-                <p
+            {track.repo_url && (
+              <div style={{ padding: '16px 32px 0' }}>
+                <a
+                  href={track.repo_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={{
                     fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 9,
-                    letterSpacing: '0.2em',
-                    textTransform: 'uppercase',
-                    color: '#C2564B',
-                    marginBottom: 4,
+                    fontSize: 11,
+                    letterSpacing: '0.12em',
+                    color: '#5D91A6',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    transition: 'color 0.15s',
                   }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#B3E0F2')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#5D91A6')}
                 >
-                  Lead access required
-                </p>
-                <p style={{ color: '#E6A79E', fontSize: 12.5, lineHeight: 1.6, margin: 0 }}>
-                  Only your Team Lead can submit. Ask your lead to open this panel.
-                </p>
+                  ↗ View starter repo
+                </a>
               </div>
             )}
 
-            {/* ── Submissions closed notice ──────────────────────────── */}
-            {trackIsExpired && isLead && (
-              <div
-                style={{
-                  margin: '20px 32px 0',
-                  background: 'rgba(194,86,75,0.1)',
-                  border: '1px solid rgba(194,86,75,0.4)',
-                  borderLeft: '3px solid #C2564B',
-                  borderRadius: 2,
-                  padding: '12px 16px',
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 9,
-                    letterSpacing: '0.2em',
-                    textTransform: 'uppercase',
-                    color: '#C2564B',
-                    marginBottom: 4,
-                  }}
-                >
-                  Submissions closed
-                </p>
-                <p style={{ color: '#E6A79E', fontSize: 12.5, lineHeight: 1.6, margin: 0 }}>
-                  The submission window has ended. No new entries can be accepted.
-                </p>
-              </div>
-            )}
-
-            {/* ── Existing sub notice ────────────────────────────────── */}
-            {existingSub && isLead && !isExpired && (
-              <div
-                style={{
-                  margin: '20px 32px 0',
-                  background: 'rgba(93,145,166,0.08)',
-                  border: '1px solid rgba(93,145,166,0.25)',
-                  borderRadius: 2,
-                  padding: '10px 14px',
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 11,
-                  color: '#8AA5AE',
-                }}
-              >
-                <span style={{ color: '#5D91A6', marginRight: 8 }}>{'>'}</span>
-                Previous submission on record — submitting again adds a new entry.
-              </div>
-            )}
-
-            {/* ── Error ─────────────────────────────────────────────── */}
-            {error && (
-              <div
-                style={{
-                  margin: '20px 32px 0',
-                  background: 'rgba(194,86,75,0.1)',
-                  border: '1px solid rgba(194,86,75,0.45)',
-                  borderLeft: '2px solid #C2564B',
-                  borderRadius: 2,
-                  padding: '10px 14px',
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 9,
-                    letterSpacing: '0.2em',
-                    textTransform: 'uppercase',
-                    color: '#C2564B',
-                    marginBottom: 4,
-                  }}
-                >
-                  Transaction failed
-                </p>
-                <p style={{ color: '#E6A79E', fontSize: 12.5, margin: 0 }}>{error}</p>
-              </div>
-            )}
-
-            {/* ── Form ──────────────────────────────────────────────── */}
-            <form onSubmit={handleSubmit} style={{ padding: '24px 32px 32px' }}>
-
-              {/* GitHub PR URL */}
-              <Field
-                label="> GitHub URL"
-                hint="Must be a valid repository link — github.com/owner/repo"
-              >
-                <input
-                  ref={prRef}
-                  type="url"
-                  value={prUrl}
-                  onChange={(e) => setPrUrl(e.target.value)}
-                  disabled={!canSubmit || loading}
-                  placeholder="https://github.com/owner/repo"
-                  style={{
-                    ...INPUT_BASE,
-                    opacity: !canSubmit ? 0.45 : 1,
-                    cursor: !canSubmit ? 'not-allowed' : 'text',
-                  }}
-                  onFocus={canSubmit ? focusBorder : undefined}
-                  onBlur={blurBorder}
-                />
-              </Field>
-
-              {/* Deployed / Vercel URL */}
-              <Field
-                label="> Vercel / Deployed URL"
-                hint="Optional — share your live deployment"
-              >
-                <input
-                  type="url"
-                  value={deployedUrl}
-                  onChange={(e) => setDeployedUrl(e.target.value)}
-                  disabled={!canSubmit || loading}
-                  placeholder="https://your-app.vercel.app"
-                  style={{
-                    ...INPUT_BASE,
-                    opacity: !canSubmit ? 0.45 : 1,
-                    cursor: !canSubmit ? 'not-allowed' : 'text',
-                  }}
-                  onFocus={canSubmit ? focusBorder : undefined}
-                  onBlur={blurBorder}
-                />
-              </Field>
-
-              {/* App notes */}
-              <Field
-                label="> Notes — describe your submission"
-                hint="Explain what your app does, key decisions, and anything judges should know (max 4000 chars)"
-              >
-                <textarea
-                  value={appNotes}
-                  onChange={(e) => setAppNotes(e.target.value)}
-                  disabled={!canSubmit || loading}
-                  maxLength={4000}
-                  rows={5}
-                  placeholder={
-                    'We built a headless CMS with Supabase + Next.js RSC…\n\nKey features:\n- Real-time preview\n- Drag & drop media uploads\n- Auto-generated sitemap'
-                  }
-                  style={{
-                    ...INPUT_BASE,
-                    resize: 'vertical',
-                    lineHeight: 1.65,
-                    opacity: !canSubmit ? 0.45 : 1,
-                    cursor: !canSubmit ? 'not-allowed' : 'text',
-                  }}
-                  onFocus={canSubmit ? focusBorder : undefined}
-                  onBlur={blurBorder}
-                />
-                <div
-                  style={{
-                    textAlign: 'right',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 9,
-                    color: appNotes.length > 3800 ? '#E09B4A' : '#2E4A54',
-                    marginTop: 4,
-                  }}
-                >
-                  {appNotes.length} / 4000
-                </div>
-              </Field>
-
-              {/* Env snapshot */}
-              <Field
-                label="> Environment variables"
-                hint="Paste your .env keys (redact secret values — replace values with *** or similar)"
-              >
-                <textarea
-                  value={envSnapshot}
-                  onChange={(e) => setEnvSnapshot(e.target.value)}
-                  disabled={!canSubmit || loading}
-                  maxLength={8000}
-                  rows={4}
-                  placeholder={
-                    'NEXT_PUBLIC_SUPABASE_URL=***\nNEXT_PUBLIC_SUPABASE_ANON_KEY=***\nSTRIPE_SECRET_KEY=***\nDATABASE_URL=***'
-                  }
-                  style={{
-                    ...INPUT_BASE,
-                    resize: 'vertical',
-                    lineHeight: 1.65,
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 12,
-                    opacity: !canSubmit ? 0.45 : 1,
-                    cursor: !canSubmit ? 'not-allowed' : 'text',
-                  }}
-                  onFocus={canSubmit ? focusBorder : undefined}
-                  onBlur={blurBorder}
-                />
-              </Field>
-
-              {/* Submit button */}
-              <button
-                type="submit"
-                disabled={!canSubmit || loading}
-                style={{
-                  width: '100%',
-                  padding: '15px 0',
-                  background: canSubmit ? '#B3E0F2' : 'rgba(179,224,242,0.06)',
-                  color: canSubmit ? '#080D0C' : '#2E4A54',
-                  border: canSubmit ? 'none' : '1px solid rgba(179,224,242,0.1)',
-                  borderRadius: 2,
-                  fontSize: 14,
-                  fontWeight: 700,
-                  letterSpacing: '0.04em',
-                  cursor: !canSubmit || loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.6 : 1,
-                  transition: 'all 0.2s',
-                  marginTop: 4,
-                  fontFamily: "'Satoshi', sans-serif",
-                }}
-                onMouseEnter={(e) => {
-                  if (canSubmit && !loading)
-                    e.currentTarget.style.background = '#cceeff';
-                }}
-                onMouseLeave={(e) => {
-                  if (canSubmit)
-                    e.currentTarget.style.background = '#B3E0F2';
-                }}
-              >
-                {!isLead
-                  ? 'Lead access required'
-                  : trackIsExpired
-                    ? 'Submissions closed'
-                    : loading
-                      ? 'Logging to grid…'
-                      : existingSub
-                        ? 'Resubmit mission'
-                        : 'Submit mission →'}
-              </button>
-
-              {/* Disclaimer */}
-              <p
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: '#FFFFFF',
-                  letterSpacing: '0.05em',
-                  textAlign: 'center',
-                  marginTop: 12,
-                }}
-              >
-                {isLead
-                  ? 'All squad members should review before submitting. Only leads can submit.'
-                  : 'Ask your Team Lead to submit on behalf of the squad.'}
-              </p>
-            </form>
-          </>
-        )}
+  {/* ── Lock notice (members) ──────────────────────────────── */ }
+  {
+    !isLead && (
+      <div
+        style={{
+          margin: '20px 32px 0',
+          background: 'rgba(194,86,75,0.08)',
+          border: '1px solid rgba(194,86,75,0.3)',
+          borderLeft: '3px solid #C2564B',
+          borderRadius: 2,
+          padding: '12px 16px',
+        }}
+      >
+        <p
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 9,
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: '#C2564B',
+            marginBottom: 4,
+          }}
+        >
+          Lead access required
+        </p>
+        <p style={{ color: '#E6A79E', fontSize: 12.5, lineHeight: 1.6, margin: 0 }}>
+          Only your Team Lead can submit. Ask your lead to open this panel.
+        </p>
       </div>
-    </div>
+    )
+  }
+
+  {/* ── Submissions closed notice ──────────────────────────── */ }
+  {
+    trackIsExpired && isLead && (
+      <div
+        style={{
+          margin: '20px 32px 0',
+          background: 'rgba(194,86,75,0.1)',
+          border: '1px solid rgba(194,86,75,0.4)',
+          borderLeft: '3px solid #C2564B',
+          borderRadius: 2,
+          padding: '12px 16px',
+        }}
+      >
+        <p
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 9,
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: '#C2564B',
+            marginBottom: 4,
+          }}
+        >
+          Submissions closed
+        </p>
+        <p style={{ color: '#E6A79E', fontSize: 12.5, lineHeight: 1.6, margin: 0 }}>
+          The submission window has ended. No new entries can be accepted.
+        </p>
+      </div>
+    )
+  }
+
+  {/* ── Existing sub notice ────────────────────────────────── */ }
+  {
+    existingSub && isLead && !isExpired && (
+      <div
+        style={{
+          margin: '20px 32px 0',
+          background: 'rgba(93,145,166,0.08)',
+          border: '1px solid rgba(93,145,166,0.25)',
+          borderRadius: 2,
+          padding: '10px 14px',
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 11,
+          color: '#8AA5AE',
+        }}
+      >
+        <span style={{ color: '#5D91A6', marginRight: 8 }}>{'>'}</span>
+        Previous submission on record — submitting again adds a new entry.
+      </div>
+    )
+  }
+
+  {/* ── Error ─────────────────────────────────────────────── */ }
+  {
+    error && (
+      <div
+        style={{
+          margin: '20px 32px 0',
+          background: 'rgba(194,86,75,0.1)',
+          border: '1px solid rgba(194,86,75,0.45)',
+          borderLeft: '2px solid #C2564B',
+          borderRadius: 2,
+          padding: '10px 14px',
+        }}
+      >
+        <p
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 9,
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: '#C2564B',
+            marginBottom: 4,
+          }}
+        >
+          Transaction failed
+        </p>
+        <p style={{ color: '#E6A79E', fontSize: 12.5, margin: 0 }}>{error}</p>
+      </div>
+    )
+  }
+
+  {/* ── Form ──────────────────────────────────────────────── */ }
+  <form onSubmit={handleSubmit} style={{ padding: '24px 32px 32px' }}>
+
+    {/* GitHub PR URL */}
+    <Field
+      label="> GitHub URL"
+      hint="Must be a valid repository link — github.com/owner/repo"
+    >
+      <input
+        ref={prRef}
+        type="url"
+        value={prUrl}
+        onChange={(e) => setPrUrl(e.target.value)}
+        disabled={!canSubmit || loading}
+        placeholder="https://github.com/owner/repo"
+        style={{
+          ...INPUT_BASE,
+          opacity: !canSubmit ? 0.45 : 1,
+          cursor: !canSubmit ? 'not-allowed' : 'text',
+        }}
+        onFocus={canSubmit ? focusBorder : undefined}
+        onBlur={blurBorder}
+      />
+    </Field>
+
+    {/* Deployed / Vercel URL */}
+    <Field
+      label="> Vercel / Deployed URL"
+      hint="Optional — share your live deployment"
+    >
+      <input
+        type="url"
+        value={deployedUrl}
+        onChange={(e) => setDeployedUrl(e.target.value)}
+        disabled={!canSubmit || loading}
+        placeholder="https://your-app.vercel.app"
+        style={{
+          ...INPUT_BASE,
+          opacity: !canSubmit ? 0.45 : 1,
+          cursor: !canSubmit ? 'not-allowed' : 'text',
+        }}
+        onFocus={canSubmit ? focusBorder : undefined}
+        onBlur={blurBorder}
+      />
+    </Field>
+
+    {/* App notes */}
+    <Field
+      label="> Notes — describe your submission"
+      hint="Explain what your app does, key decisions, and anything judges should know (max 4000 chars)"
+    >
+      <textarea
+        value={appNotes}
+        onChange={(e) => setAppNotes(e.target.value)}
+        disabled={!canSubmit || loading}
+        maxLength={4000}
+        rows={5}
+        placeholder={
+          'We built a headless CMS with Supabase + Next.js RSC…\n\nKey features:\n- Real-time preview\n- Drag & drop media uploads\n- Auto-generated sitemap'
+        }
+        style={{
+          ...INPUT_BASE,
+          resize: 'vertical',
+          lineHeight: 1.65,
+          opacity: !canSubmit ? 0.45 : 1,
+          cursor: !canSubmit ? 'not-allowed' : 'text',
+        }}
+        onFocus={canSubmit ? focusBorder : undefined}
+        onBlur={blurBorder}
+      />
+      <div
+        style={{
+          textAlign: 'right',
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 9,
+          color: appNotes.length > 3800 ? '#E09B4A' : '#2E4A54',
+          marginTop: 4,
+        }}
+      >
+        {appNotes.length} / 4000
+      </div>
+    </Field>
+
+    {/* Env snapshot */}
+    <Field
+      label="> Environment variables"
+      hint="Paste your .env keys (redact secret values — replace values with *** or similar)"
+    >
+      <textarea
+        value={envSnapshot}
+        onChange={(e) => setEnvSnapshot(e.target.value)}
+        disabled={!canSubmit || loading}
+        maxLength={8000}
+        rows={4}
+        placeholder={
+          'NEXT_PUBLIC_SUPABASE_URL=***\nNEXT_PUBLIC_SUPABASE_ANON_KEY=***\nSTRIPE_SECRET_KEY=***\nDATABASE_URL=***'
+        }
+        style={{
+          ...INPUT_BASE,
+          resize: 'vertical',
+          lineHeight: 1.65,
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 12,
+          opacity: !canSubmit ? 0.45 : 1,
+          cursor: !canSubmit ? 'not-allowed' : 'text',
+        }}
+        onFocus={canSubmit ? focusBorder : undefined}
+        onBlur={blurBorder}
+      />
+    </Field>
+
+    {/* Submit button */}
+    <button
+      type="submit"
+      disabled={!canSubmit || loading}
+      style={{
+        width: '100%',
+        padding: '15px 0',
+        background: canSubmit ? '#B3E0F2' : 'rgba(179,224,242,0.06)',
+        color: canSubmit ? '#080D0C' : '#2E4A54',
+        border: canSubmit ? 'none' : '1px solid rgba(179,224,242,0.1)',
+        borderRadius: 2,
+        fontSize: 14,
+        fontWeight: 700,
+        letterSpacing: '0.04em',
+        cursor: !canSubmit || loading ? 'not-allowed' : 'pointer',
+        opacity: loading ? 0.6 : 1,
+        transition: 'all 0.2s',
+        marginTop: 4,
+        fontFamily: "'Satoshi', sans-serif",
+      }}
+      onMouseEnter={(e) => {
+        if (canSubmit && !loading)
+          e.currentTarget.style.background = '#cceeff';
+      }}
+      onMouseLeave={(e) => {
+        if (canSubmit)
+          e.currentTarget.style.background = '#B3E0F2';
+      }}
+    >
+      {!isLead
+        ? 'Lead access required'
+        : trackIsExpired
+          ? 'Submissions closed'
+          : loading
+            ? 'Logging to grid…'
+            : existingSub
+              ? 'Resubmit mission'
+              : 'Submit mission →'}
+    </button>
+
+    {/* Disclaimer */}
+    <p
+      style={{
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 11,
+        fontWeight: 600,
+        color: '#FFFFFF',
+        letterSpacing: '0.05em',
+        textAlign: 'center',
+        marginTop: 12,
+      }}
+    >
+      {isLead
+        ? 'All squad members should review before submitting. Only leads can submit.'
+        : 'Ask your Team Lead to submit on behalf of the squad.'}
+    </p>
+  </form>
+          </>
+        )
+}
+      </div >
+    </div >
   );
 
-  return createPortal(modal, document.body);
+return createPortal(modal, document.body);
 }
