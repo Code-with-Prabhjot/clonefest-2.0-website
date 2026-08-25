@@ -404,9 +404,9 @@ export default function SubmitPRModal({
                   <p style={{ marginBottom: '10px' }}>Your solution should cover the essential capabilities required for secure and controlled information sharing, while giving you the freedom to rethink the user experience, architecture, security model, collaboration features, usability, performance, and other aspects.</p>
                   <p style={{ marginBottom: '10px' }}>The provided PrivateBin repository is included as a reference implementation. Participants may clone and explore the repository to understand how the existing system works, but the final solution should demonstrate independent implementation and meaningful innovation.</p>
                   <p style={{ marginBottom: '10px' }}>Reference Repository:<br />
-                  <a href="https://github.com/PrivateBin/PrivateBin" target="_blank" rel="noopener noreferrer" style={{ color: '#5D91A6', textDecoration: 'underline' }}>https://github.com/PrivateBin/PrivateBin</a></p>
+                    <a href="https://github.com/PrivateBin/PrivateBin" target="_blank" rel="noopener noreferrer" style={{ color: '#5D91A6', textDecoration: 'underline' }}>https://github.com/PrivateBin/PrivateBin</a></p>
                   <p style={{ marginBottom: '10px' }}>Core idea: Understand the problem → preserve the essential purpose → build your own modern solution → innovate beyond the reference.</p>
-                  
+
                   <p style={{ color: '#B3E0F2', fontWeight: 600, fontSize: '15px', marginTop: '24px', marginBottom: '8px' }}>📋 Judging Rubric – 100 Marks</p>
                   <p style={{ marginBottom: '10px' }}>1️⃣ Problem Understanding & Core Functionality — 20 marks</p>
                   <p style={{ marginBottom: '10px' }}>2️⃣ Innovation & Meaningful Differentiation — 20 marks</p>
@@ -433,25 +433,25 @@ export default function SubmitPRModal({
             <div style={{ padding: '16px 32px 0' }}>
               <a
                 href="https://github.com/PrivateBin/PrivateBin"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 11,
-                    letterSpacing: '0.12em',
-                    color: '#5D91A6',
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    transition: 'color 0.15s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#B3E0F2')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#5D91A6')}
-                >
-                  ↗ View starter repo
-                </a>
-              </div>
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 11,
+                  letterSpacing: '0.12em',
+                  color: '#5D91A6',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  transition: 'color 0.15s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#B3E0F2')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#5D91A6')}
+              >
+                ↗ View starter repo
+              </a>
+            </div>
 
             {/* ── Lock notice (members) ──────────────────────────────── */}
             {!isLead && (
