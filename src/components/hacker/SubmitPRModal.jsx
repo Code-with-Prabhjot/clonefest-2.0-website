@@ -145,7 +145,7 @@ export default function SubmitPRModal({
   const prRef = useRef(null);
   const isLead = profile?.role === 'lead';
   const isScored = existingSub?.status === 'scored';
-  const canSubmit = isLead && !isExpired && !isScored;
+  const canSubmit = isLead && !isExpired && !isScored && track.id !== 'T1';
 
   // Focus PR input on open
   useEffect(() => {
@@ -378,7 +378,7 @@ export default function SubmitPRModal({
                   letterSpacing: '-0.01em',
                 }}
               >
-                {track.id === 'T1' ? 'Legacy Modernisation: PrivateBin' : track.id === 'T2' ? 'Transmission 02' : track.title}
+                {track.id === 'T1' ? 'Legacy Modernisation: PrivateBin' : track.id === 'T2' ? 'Developer Tool Reconstruction – Bugzilla' : track.title}
               </h2>
 
             </div>
@@ -482,7 +482,7 @@ export default function SubmitPRModal({
             )}
 
             {/* ── Submissions closed notice ──────────────────────────── */}
-            {isExpired && isLead && (
+            {(isExpired || track.id === 'T1') && isLead && (
               <div
                 style={{
                   margin: '20px 32px 0',
@@ -700,7 +700,7 @@ export default function SubmitPRModal({
               >
                 {!isLead
                   ? 'Lead access required'
-                  : isExpired
+                  : (isExpired || track.id === 'T1')
                     ? 'Submissions closed'
                     : loading
                       ? 'Logging to grid…'
