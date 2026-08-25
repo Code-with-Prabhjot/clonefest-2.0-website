@@ -56,15 +56,16 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
 
   const unlockTime = getUnlockDate(track.id);
   const isLocked = now < unlockTime;
+  const trackIsExpired = track.id === 'T1' ? now >= new Date('2026-08-26T03:00:00+05:30').getTime() : isExpired;
 
   useEffect(() => {
-    if (isLocked) {
+    if (isLocked || track.id === 'T1') {
       const interval = setInterval(() => {
         setNow(Date.now() + (serverTimeOffset || 0));
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [isLocked, serverTimeOffset]);
+  }, [isLocked, serverTimeOffset, track.id]);
 
   if (isLocked) {
     const timeLeft = Math.floor((unlockTime - now) / 1000);
@@ -180,7 +181,7 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
           color: '#E4EEF2', fontSize: 16, fontWeight: 600,
           margin: '0 0 4px 0', lineHeight: 1.3,
         }}>
-          {track.id === 'T1' ? 'Legacy Modernisation: PrivateBin' : track.id === 'T2' ? 'Transmission 02 (Locked)' : track.title}
+          {track.id === 'T1' ? 'Legacy Modernisation: PrivateBin' : track.id === 'T2' ? 'Developer Tool Reconstruction – Bugzilla' : track.title}
         </h3>
 
         {/* Footer: repo link */}
@@ -212,14 +213,14 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
               width: '100%',
               padding: '9px 0',
               background: 'transparent',
-              border: `1px solid ${isExpired
+              border: `1px solid ${trackIsExpired
                 ? 'rgba(194,86,75,0.2)'
                 : hovered
                   ? 'rgba(179,224,242,0.3)'
                   : 'rgba(179,224,242,0.12)'
                 }`,
               borderRadius: 2,
-              color: isExpired ? '#56707B' : hovered ? '#B3E0F2' : '#5D91A6',
+              color: trackIsExpired ? '#56707B' : hovered ? '#B3E0F2' : '#5D91A6',
               fontFamily: "'JetBrains Mono', monospace",
               fontSize: 10, letterSpacing: '0.2em',
               textTransform: 'uppercase',
@@ -228,7 +229,7 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
             }}
           >
             {profile?.role === 'lead'
-              ? isExpired
+              ? trackIsExpired
                 ? 'View details'
                 : latestSub
                   ? (latestSub.status === 'scored' ? 'View details' : 'Resubmit / View')
