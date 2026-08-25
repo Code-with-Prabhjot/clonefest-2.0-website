@@ -56,15 +56,16 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
 
   const unlockTime = getUnlockDate(track.id);
   const isLocked = now < unlockTime;
+  const trackIsExpired = track.id === 'T1' ? now >= new Date('2026-08-26T03:00:00+05:30').getTime() : isExpired;
 
   useEffect(() => {
-    if (isLocked) {
+    if (isLocked || track.id === 'T1') {
       const interval = setInterval(() => {
         setNow(Date.now() + (serverTimeOffset || 0));
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [isLocked, serverTimeOffset]);
+  }, [isLocked, serverTimeOffset, track.id]);
 
   if (isLocked) {
     const timeLeft = Math.floor((unlockTime - now) / 1000);
@@ -214,14 +215,14 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
               width: '100%',
               padding: '9px 0',
               background: 'transparent',
-              border: `1px solid ${(isExpired || track.id === 'T1')
+              border: `1px solid ${trackIsExpired
                 ? 'rgba(194,86,75,0.2)'
                 : hovered
                   ? 'rgba(179,224,242,0.3)'
                   : 'rgba(179,224,242,0.12)'
                 }`,
               borderRadius: 2,
-              color: (isExpired || track.id === 'T1') ? '#56707B' : hovered ? '#B3E0F2' : '#5D91A6',
+              color: trackIsExpired ? '#56707B' : hovered ? '#B3E0F2' : '#5D91A6',
               fontFamily: "'JetBrains Mono', monospace",
               fontSize: 10, letterSpacing: '0.2em',
               textTransform: 'uppercase',
@@ -230,7 +231,7 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
             }}
           >
             {profile?.role === 'lead'
-              ? (isExpired || track.id === 'T1')
+              ? trackIsExpired
                 ? 'View details'
                 : latestSub
                   ? (latestSub.status === 'scored' ? 'View details' : 'Resubmit / View')
