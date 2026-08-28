@@ -301,6 +301,7 @@ class AdminPortalView extends React.Component {
         track: q.track,
         w: [q.c1, q.c2],
         score: q.score,          // null until a points column exists
+        normalizedPoints: q.normalizedPoints,
         judge: q.judge,
         invite: q.invite,
         reg: q.registered
