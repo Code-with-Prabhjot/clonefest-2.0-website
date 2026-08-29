@@ -301,6 +301,7 @@ class AdminPortalView extends React.Component {
         track: q.track,
         w: [q.c1, q.c2],
         score: q.score,          // null until a points column exists
+        normalizedPoints: q.normalizedPoints,
         judge: q.judge,
         invite: q.invite,
         reg: q.registered
@@ -832,7 +833,7 @@ class AdminPortalView extends React.Component {
         this.setState({ modal: null });
         if (action === 'autoDistribute') {
           const allJudges = this.props.judges || [];
-          const allSquads = SQUADS.map(q => q.name);
+          const allSquads = SQUADS.filter(q => !q.judge).map(q => q.name);
           if (allJudges.length > 0 && allSquads.length > 0) {
             const allocations = allJudges.map(j => ({ id: j.id, names: [] }));
             allSquads.forEach((sq, i) => allocations[i % allocations.length].names.push(sq));
