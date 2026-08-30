@@ -150,7 +150,8 @@ export default function SubmitPRModal({
   const prRef = useRef(null);
   const isLead = profile?.role === 'lead';
   const isScored = existingSub?.status === 'scored';
-  const isT1Expired = track.id === 'T1' && (Date.now() + (serverTimeOffset || 0)) >= new Date('2026-08-26T03:00:00+05:30').getTime();
+  const [now] = useState(Date.now);
+  const isT1Expired = track.id === 'T1' && (now + (serverTimeOffset || 0)) >= new Date('2026-08-26T03:00:00+05:30').getTime();
   const trackIsExpired = track.id === 'T1' ? isT1Expired : isExpired;
   const canSubmit = isLead && !trackIsExpired && !isScored;
 
