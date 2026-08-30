@@ -17,7 +17,7 @@ import { supabase } from '../lib/supabase';
 export const CLEARED = new Set(['accepted', 'scored']);
 export const STATUSES = ['pending', 'accepted', 'rejected', 'scored'];
 
-function buildSquads({ teams, profiles, submissions, totals, assignments }) {
+function buildSquads({ teams, profiles, submissions, totals, assignments, tracks }) {
   const judgeById = new Map(
     profiles.filter((p) => p.role === 'judge').map((p) => [p.id, p]));
   const judgeForTeam = new Map(
@@ -57,30 +57,40 @@ function buildSquads({ teams, profiles, submissions, totals, assignments }) {
   }
 
   return [...byTeam.values()].map((row) => {
-    // Oldest first, so "challenge 1" is the squad's first submission.
+    // Oldest first for overall timeline
     const subs = row.subs
       .slice()
       .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
 
     const cleared = subs.filter((s) => CLEARED.has(s.status)).length;
-    const tracks = [...new Set(subs.map((s) => s.track_id).filter(Boolean))];
+    const squadTracks = [...new Set(subs.map((s) => s.track_id).filter(Boolean))];
 
     row.roster.sort((a, b) =>
       (a.role === 'LEAD' ? 0 : 1) - (b.role === 'LEAD' ? 0 : 1) ||
       a.callsign.localeCompare(b.callsign));
 
+    // Get the latest submission for each challenge track
+    const tracksList = tracks || [];
+    const t1Id = tracksList[0]?.id || 'T1';
+    const t2Id = tracksList[1]?.id || 'T2';
+    
+    // Reverse to get the newest submission per track first
+    const newestSubs = subs.slice().reverse();
+    const subT1 = newestSubs.find(s => s.track_id === t1Id);
+    const subT2 = newestSubs.find(s => s.track_id === t2Id);
+
     return {
       ...row,
       subs,
-      tracks,
-      track: tracks.join(', ') || '—',
+      tracks: squadTracks,
+      track: squadTracks.join(', ') || '—',
       total: subs.length,
       cleared,
       pending: subs.filter((s) => s.status === 'pending').length,
       rejected: subs.filter((s) => s.status === 'rejected').length,
-      // Status of the first and second submissions, for the two challenge columns.
-      c1: subs[0]?.status || 'none',
-      c2: subs[1]?.status || 'none',
+      // Status mapped precisely to Challenge 1 and Challenge 2
+      c1: subT1?.status || 'none',
+      c2: subT2?.status || 'none',
       lastAt: subs.length ? subs[subs.length - 1].created_at : null,
       firstClearedAt: subs.find((s) => CLEARED.has(s.status))?.created_at || null,
       // Finalised judge scores, via the public leaderboard_totals view.
@@ -268,8 +278,8 @@ export function useEventData() {
   }, []);
 
   const squads = useMemo(
-    () => buildSquads({ teams, profiles, submissions, totals, assignments }),
-    [teams, profiles, submissions, totals, assignments],
+    () => buildSquads({ teams, profiles, submissions, totals, assignments, tracks }),
+    [teams, profiles, submissions, totals, assignments, tracks],
   );
 
   const stats = useMemo(() => {
