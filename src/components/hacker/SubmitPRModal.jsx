@@ -16,12 +16,14 @@ import { supabase } from '../../lib/supabase';
  *  - Submit locked when deadline passed or submissions_open = false
  *
  * Props:
- *  - track       : { id, title, subtitle?, long_description?, repo_url? }
- *  - profile     : full profile object (role, team_name, id)
- *  - existingSub : last submission for this track (or null)
- *  - isExpired   : boolean
- *  - onClose     : () => void
- *  - onSuccess   : () => void
+ *  - track           : { id, title, subtitle?, long_description?, repo_url? }
+ *  - profile         : full profile object (role, team_name, id)
+ *  - existingSub     : last submission for this track (or null)
+ *  - isExpired       : boolean
+ *  - score           : final score object (or null) from useHackerData
+ *  - resultsPublished: boolean — if true, show the feedback panel
+ *  - onClose         : () => void
+ *  - onSuccess       : () => void
  */
 
 
@@ -133,6 +135,8 @@ export default function SubmitPRModal({
   existingSub,
   isExpired,
   serverTimeOffset,
+  score,
+  resultsPublished,
   onClose,
   onSuccess,
 }) {
@@ -421,6 +425,100 @@ export default function SubmitPRModal({
                 track.long_description && <ReactMarkdown>{track.long_description}</ReactMarkdown>
               )}
             </div>
+
+            {/* ── Judge Feedback Panel (visible only after results published) ── */}
+            {resultsPublished && score && (
+              <div
+                style={{
+                  margin: '24px 32px 0',
+                  background: 'linear-gradient(135deg, rgba(127,178,126,0.07), rgba(93,145,166,0.05))',
+                  border: '1px solid rgba(127,178,126,0.3)',
+                  borderLeft: '3px solid #7FB27E',
+                  borderRadius: 3,
+                  padding: '20px 22px',
+                  animation: 'popIn .35s ease-out both',
+                }}
+              >
+                {/* Panel header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <span style={{
+                    width: 7, height: 7, background: '#7FB27E', borderRadius: 1,
+                    display: 'inline-block', boxShadow: '0 0 8px #7FB27E88',
+                  }} />
+                  <span style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#7FB27E',
+                  }}>Judge Evaluation — Final</span>
+                  <span style={{
+                    marginLeft: 'auto',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 20, fontWeight: 700, color: '#B3E0F2',
+                    letterSpacing: '-0.02em',
+                  }}>{score.total ?? '—'}<span style={{ fontSize: 12, color: '#56707B', fontWeight: 400, marginLeft: 2 }}>/100</span></span>
+                </div>
+
+                {/* Rubric score breakdown */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px 12px', marginBottom: 16 }}>
+                  {[
+                    { label: 'Code Quality', value: score.code_quality, max: 20 },
+                    { label: 'Completeness', value: score.completeness, max: 25 },
+                    { label: 'UI / UX',       value: score.ux_design,   max: 20 },
+                    { label: 'Deployment',    value: score.deployment,  max: 15 },
+                    { label: 'Innovation',    value: score.innovation,  max: 20 },
+                  ].map(({ label, value, max }) => (
+                    <div key={label} style={{
+                      background: 'rgba(11,21,25,0.6)',
+                      border: '1px solid rgba(179,224,242,0.08)',
+                      borderRadius: 2,
+                      padding: '8px 12px',
+                    }}>
+                      <div style={{
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#56707B', marginBottom: 4,
+                      }}>{label}</div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 700, color: '#E4EEF2' }}>
+                          {value ?? '—'}
+                        </span>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#2E4A54' }}>/{max}</span>
+                      </div>
+                      {/* Mini progress bar */}
+                      <div style={{ height: 2, background: 'rgba(179,224,242,0.08)', marginTop: 6, borderRadius: 1, overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%', borderRadius: 1,
+                          background: 'linear-gradient(90deg, #5D91A6, #B3E0F2)',
+                          width: `${value != null ? Math.round((value / max) * 100) : 0}%`,
+                          transition: 'width 0.8s cubic-bezier(.22,1,.36,1)',
+                        }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Written feedback */}
+                {score.feedback ? (
+                  <div>
+                    <div style={{
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#5D91A6', marginBottom: 8,
+                    }}>Overall Feedback</div>
+                    <p style={{
+                      fontSize: 13, lineHeight: 1.75, color: '#C8DDE6',
+                      margin: 0, whiteSpace: 'pre-wrap',
+                      padding: '12px 14px',
+                      background: 'rgba(11,21,25,0.5)',
+                      border: '1px solid rgba(179,224,242,0.08)',
+                      borderRadius: 2,
+                    }}>{score.feedback}</p>
+                  </div>
+                ) : (
+                  <p style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 10, color: '#2E4A54', letterSpacing: '0.1em', margin: 0,
+                  }}>No written feedback provided for this submission.</p>
+                )}
+              </div>
+            )}
 
             {/* ── Divider ───────────────────────────────────────────── */}
             <div

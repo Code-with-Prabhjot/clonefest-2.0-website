@@ -77,27 +77,58 @@ export function useJudgeData() {
         (t) => !assignedNames || assignedNames.includes(t.name),
       );
 
+      // Build one entry per (team × track) so judges can score each track independently.
       const flattened = [];
       teams.forEach((t) => {
         const members = (profilesRes.data || []).filter((p) => p.team_name === t.name);
         const sortedMembers = members
           .sort((a, b) => (a.role === 'lead' ? 0 : 1) - (b.role === 'lead' ? 0 : 1))
           .map((m) => [m.full_name || 'operative', m.role === 'lead' ? 'LEAD' : '']);
-        const subs = (subsRes.data || []).filter((s) => s.team_name === t.name);
+        const teamSubs = (subsRes.data || []).filter((s) => s.team_name === t.name);
 
-        const latestSub = subs.length > 0 ? subs[subs.length - 1] : null;
-        const score = latestSub ? myScores.find((sc) => sc.submission_id === latestSub.id) : null;
-
-        flattened.push({
-          id: t.name,
-          name: t.name,
-          teamName: t.name,
-          members: sortedMembers,
-          subs: subs,
-          latestSubmissionId: latestSub ? latestSub.id : null,
-          updated: latestSub ? latestSub.created_at : t.created_at,
-          score: score || null,
+        // Group submissions by track_id, keeping the latest per track.
+        const subByTrack = {};
+        teamSubs.forEach((sub) => {
+          const existing = subByTrack[sub.track_id];
+          if (!existing || new Date(sub.created_at) > new Date(existing.created_at)) {
+            subByTrack[sub.track_id] = sub;
+          }
         });
+
+        const trackIds = Object.keys(subByTrack);
+
+        if (trackIds.length === 0) {
+          // Team has no submissions yet — show once with no track
+          flattened.push({
+            id: t.name,
+            name: t.name,
+            teamName: t.name,
+            trackId: null,
+            members: sortedMembers,
+            subs: [],
+            latestSubmissionId: null,
+            updated: t.created_at,
+            score: null,
+          });
+        } else {
+          trackIds.forEach((trackId) => {
+            const latestSub = subByTrack[trackId];
+            const score = myScores.find((sc) => sc.submission_id === latestSub.id) || null;
+            // Use composite key so two tracks for the same team are distinct rows.
+            const entryId = trackIds.length > 1 ? `${t.name} (${trackId})` : t.name;
+            flattened.push({
+              id: entryId,
+              name: entryId,
+              teamName: t.name,
+              trackId,
+              members: sortedMembers,
+              subs: [latestSub],
+              latestSubmissionId: latestSub.id,
+              updated: latestSub.created_at,
+              score,
+            });
+          });
+        }
       });
       setSquads(flattened);
 
@@ -157,9 +188,12 @@ export function useJudgeData() {
       const rest = rows.filter((r) => r.id !== data.id);
       return [...rest, data];
     });
-    setSquads((rows) => rows.map(
-      (r) => (r.name === teamName ? { ...r, score: data } : r),
-    ));
+    // Update only the specific squad entry that matches the submission, not all entries for the team.
+    setSquads((rows) =>
+      rows.map((r) =>
+        r.latestSubmissionId === submissionId ? { ...r, score: data } : r,
+      ),
+    );
 
     // Mark the submission scored so admin, the leaderboard and the squad agree.
     if (finalise) {

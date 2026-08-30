@@ -8,8 +8,9 @@ import { supabase } from '../lib/supabase';
  *  - Profile (with role) + joined team row
  *  - All problem tracks from the DB
  *  - Team's submission history
+ *  - Team's final scores (for feedback display when results are published)
  *
- * Returns { user, profile, team, tracks, submissions, loading, refetch }
+ * Returns { user, profile, team, tracks, submissions, scores, loading, refetch }
  */
 export function useHackerData() {
   const [user, setUser]               = useState(null);
@@ -17,6 +18,7 @@ export function useHackerData() {
   const [team, setTeam]               = useState(null);
   const [tracks, setTracks]           = useState([]);
   const [submissions, setSubmissions] = useState([]);
+  const [scores, setScores]           = useState([]);
   const [loading, setLoading]         = useState(true);
 
   const fetchAll = useCallback(async () => {
@@ -76,8 +78,19 @@ export function useHackerData() {
       if (subError) console.error('Supabase fetch error:', subError);
 
       setSubmissions(subData ?? []);
+
+      // 5. Final scores for this team (so feedback can be shown to teams when published)
+      const { data: scoreData, error: scoreError } = await supabase
+        .from('scores')
+        .select('submission_id, feedback, total, code_quality, completeness, ux_design, deployment, innovation, status')
+        .eq('team_name', profileData.team_name)
+        .eq('status', 'final');
+
+      if (scoreError) console.error('Supabase fetch error (scores):', scoreError);
+      setScores(scoreData ?? []);
     } else {
       setSubmissions([]);
+      setScores([]);
     }
 
     setLoading(false);
@@ -89,5 +102,5 @@ export function useHackerData() {
     })();
   }, [fetchAll]);
 
-  return { user, profile, team, tracks, submissions, loading, refetch: fetchAll };
+  return { user, profile, team, tracks, submissions, scores, loading, refetch: fetchAll };
 }

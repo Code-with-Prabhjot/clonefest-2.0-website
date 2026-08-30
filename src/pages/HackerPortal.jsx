@@ -123,7 +123,7 @@ function OnboardingScreen({ user }) {
 // StatusCard removed because it is no longer used
 
 // ─── Main dashboard (has a team) ─────────────────────────────────────────────
-function Dashboard({ profile, tracks, submissions, refetch }) {
+function Dashboard({ profile, tracks, submissions, scores, refetch }) {
   return (
     <div
       className="min-h-screen bg-[#080D0C] text-[#E4EEF2] pb-[var(--pet-lane)]"
@@ -198,6 +198,7 @@ function Dashboard({ profile, tracks, submissions, refetch }) {
           <TrackGrid
             tracks={tracks}
             submissions={submissions}
+            scores={scores}
             profile={profile}
             onRefetch={refetch}
           />
@@ -253,7 +254,7 @@ function SectionLabel({ children }) {
 
 // ─── Root export ──────────────────────────────────────────────────────────────
 export default function HackerPortal() {
-  const { user, profile, tracks, submissions, loading, refetch } = useHackerData();
+  const { user, profile, tracks, submissions, scores, loading, refetch } = useHackerData();
   const [detailsDone, setDetailsDone] = useState(false);
   // Raised on the transition out of ProfileDetailsForm, then never again.
   const [showInvite, setShowInvite] = useState(false);
@@ -294,6 +295,7 @@ export default function HackerPortal() {
       profile={profile}
       tracks={tracks}
       submissions={submissions}
+      scores={scores}
       refetch={refetch}
     />
   );

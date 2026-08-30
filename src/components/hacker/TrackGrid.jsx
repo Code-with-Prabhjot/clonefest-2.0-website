@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import SubmitPRModal from './SubmitPRModal';
 import { useEventSettings } from '../../hooks/useEventSettings';
 
@@ -9,6 +9,7 @@ import { useEventSettings } from '../../hooks/useEventSettings';
  * Props:
  *  - tracks      : Track[]  — from useHackerData
  *  - submissions : Submission[]  — team's existing submissions
+ *  - scores      : Score[]  — team's final judge scores (from useHackerData)
  *  - profile     : Profile  — current user profile (for role check + submit)
  *  - onRefetch   : () => void
  */
@@ -242,17 +243,29 @@ function MissionCard({ track, latestSub, profile, onCardClick, isExpired, server
   );
 }
 
-export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
+export default function TrackGrid({ tracks, submissions, scores, profile, onRefetch }) {
   const [activeTrack, setActiveTrack] = useState(null);
-  const { isExpired: globalIsExpired, serverTimeOffset } = useEventSettings();
+  const { isExpired: globalIsExpired, serverTimeOffset, resultsPublished } = useEventSettings();
 
   // Map track_id → latest submission for that track
-  const subByTrack = {};
-  submissions.forEach(s => {
-    if (!subByTrack[s.track_id] || new Date(s.created_at) > new Date(subByTrack[s.track_id].created_at)) {
-      subByTrack[s.track_id] = s;
-    }
-  });
+  const subByTrack = useMemo(() => {
+    const map = {};
+    submissions.forEach(s => {
+      if (!map[s.track_id] || new Date(s.created_at) > new Date(map[s.track_id].created_at)) {
+        map[s.track_id] = s;
+      }
+    });
+    return map;
+  }, [submissions]);
+
+  // Map submission_id → final score (so we can look up the score for each track's latest submission)
+  const scoreBySubmissionId = useMemo(() => {
+    const map = {};
+    (scores || []).forEach(sc => {
+      map[sc.submission_id] = sc;
+    });
+    return map;
+  }, [scores]);
 
   const handleCardClick = (track) => setActiveTrack(track);
   const handleClose = () => setActiveTrack(null);
@@ -309,6 +322,8 @@ export default function TrackGrid({ tracks, submissions, profile, onRefetch }) {
           existingSub={subByTrack[activeTrack.id] ?? null}
           isExpired={globalIsExpired}
           serverTimeOffset={serverTimeOffset}
+          score={scoreBySubmissionId[subByTrack[activeTrack.id]?.id] ?? null}
+          resultsPublished={resultsPublished}
           onClose={handleClose}
           onSuccess={handleSuccess}
         />

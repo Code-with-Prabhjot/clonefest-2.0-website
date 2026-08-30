@@ -8,17 +8,19 @@ import { supabase } from '../lib/supabase';
  * changes so any admin update is instantly reflected in the hacker portal.
  *
  * Returns:
- *  - deadline       : Date | null   — submission_deadline as a JS Date
- *  - submissionsOpen: boolean       — admin kill-switch
- *  - secondsLeft    : number | null — seconds until deadline (null if no deadline)
- *  - isExpired      : boolean       — true when past deadline OR submissions_open=false
- *  - serverTimeOffset: number       — offset in ms to add to Date.now() for true server time
+ *  - deadline         : Date | null   — submission_deadline as a JS Date
+ *  - submissionsOpen  : boolean       — admin kill-switch
+ *  - secondsLeft      : number | null — seconds until deadline (null if no deadline)
+ *  - isExpired        : boolean       — true when past deadline OR submissions_open=false
+ *  - serverTimeOffset : number        — offset in ms to add to Date.now() for true server time
+ *  - resultsPublished : boolean       — when true, teams can see final judge feedback
  */
 export function useEventSettings() {
-  const [deadline, setDeadline]             = useState(null);
-  const [submissionsOpen, setSubmissionsOpen] = useState(true);
-  const [secondsLeft, setSecondsLeft]       = useState(null);
-  const [tick, setTick]                     = useState(0);
+  const [deadline, setDeadline]                 = useState(null);
+  const [submissionsOpen, setSubmissionsOpen]   = useState(true);
+  const [resultsPublished, setResultsPublished] = useState(false);
+  const [secondsLeft, setSecondsLeft]           = useState(null);
+  const [tick, setTick]                         = useState(0);
   const [serverTimeOffset, setServerTimeOffset] = useState(0);
 
   // ── Fetch + realtime subscription ────────────────────────────────────────
@@ -41,7 +43,7 @@ export function useEventSettings() {
       // 2. Fetch event settings
       const { data, error } = await supabase
         .from('event_settings')
-        .select('submission_deadline, submissions_open')
+        .select('submission_deadline, submissions_open, results_published')
         .eq('id', 1)
         .maybeSingle();
 
@@ -53,6 +55,7 @@ export function useEventSettings() {
       if (data) {
         setDeadline(data.submission_deadline ? new Date(data.submission_deadline) : null);
         setSubmissionsOpen(data.submissions_open ?? true);
+        setResultsPublished(data.results_published ?? false);
       }
     }
 
@@ -68,6 +71,7 @@ export function useEventSettings() {
           const d = payload.new;
           setDeadline(d.submission_deadline ? new Date(d.submission_deadline) : null);
           setSubmissionsOpen(d.submissions_open ?? true);
+          setResultsPublished(d.results_published ?? false);
         }
       )
       .subscribe();
@@ -99,5 +103,5 @@ export function useEventSettings() {
 
   const isExpired = !submissionsOpen || (secondsLeft !== null && secondsLeft <= 0);
 
-  return { deadline, submissionsOpen, secondsLeft, isExpired, serverTimeOffset };
+  return { deadline, submissionsOpen, secondsLeft, isExpired, serverTimeOffset, resultsPublished };
 }

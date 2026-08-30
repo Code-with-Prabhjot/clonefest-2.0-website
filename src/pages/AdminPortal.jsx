@@ -11,6 +11,7 @@ import './AdminPortal.css';
 function SubmissionTimerPanel() {
   const [deadline, setDeadline] = useState('');
   const [open, setOpen] = useState(true);
+  const [resultsPublished, setResultsPublished] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [errMsg, setErrMsg] = useState(null);
@@ -20,7 +21,7 @@ function SubmissionTimerPanel() {
   useEffect(() => {
     supabase
       .from('event_settings')
-      .select('submission_deadline, submissions_open')
+      .select('submission_deadline, submissions_open, results_published')
       .eq('id', 1)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -35,6 +36,7 @@ function SubmissionTimerPanel() {
             setDeadline(local);
           }
           setOpen(data.submissions_open ?? true);
+          setResultsPublished(data.results_published ?? false);
         }
         setLoaded(true);
       });
@@ -47,7 +49,7 @@ function SubmissionTimerPanel() {
     const deadlineIso = deadline ? new Date(deadline).toISOString() : null;
     const { error } = await supabase
       .from('event_settings')
-      .update({ submission_deadline: deadlineIso, submissions_open: open })
+      .update({ submission_deadline: deadlineIso, submissions_open: open, results_published: resultsPublished })
       .eq('id', 1);
     setSaving(false);
     if (error) { setErrMsg(error.message); return; }
@@ -100,6 +102,21 @@ function SubmissionTimerPanel() {
           >
             <span style={{ width: 20, height: 12, display: 'block', transition: 'all .3s cubic-bezier(.22,1,.36,1)', border: `1px solid ${open ? ICE : CLAY}`, background: open ? ICE : CLAY, boxShadow: open ? `0 0 12px rgba(179,224,242,.5)` : 'none' }} />
             <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', transition: 'color .3s', color: open ? ICE : CLAY }}>{open ? 'OPEN' : 'CLOSED'}</span>
+          </button>
+        </div>
+
+        {/* Publish Results toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#0B1519', border: '1px solid rgba(179,224,242,.10)', borderRadius: 2 }}>
+          <div>
+            <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: DIM, marginBottom: 4 }}>PUBLISH RESULTS</div>
+            <div style={{ fontSize: 13, color: '#8AA5AE' }}>Release final scores &amp; judge feedback to teams</div>
+          </div>
+          <button
+            onClick={() => setResultsPublished(p => !p)}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px 6px 8px', background: 'transparent', cursor: 'pointer', transition: 'all .3s', borderRadius: 2, border: `1px solid ${resultsPublished ? 'rgba(127,178,126,.4)' : 'rgba(179,224,242,.2)'}` }}
+          >
+            <span style={{ width: 20, height: 12, display: 'block', transition: 'all .3s cubic-bezier(.22,1,.36,1)', border: `1px solid ${resultsPublished ? MOSS : STEEL}`, background: resultsPublished ? MOSS : 'transparent', boxShadow: resultsPublished ? `0 0 12px ${MOSS}88` : 'none' }} />
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', transition: 'color .3s', color: resultsPublished ? MOSS : STEEL }}>{resultsPublished ? 'PUBLISHED' : 'HIDDEN'}</span>
           </button>
         </div>
 
