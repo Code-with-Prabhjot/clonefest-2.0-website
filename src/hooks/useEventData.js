@@ -297,7 +297,7 @@ export function useEventData() {
       rejected: new Set(submissions.filter((s) => s.status === 'rejected').map(s => s.team_name)).size,
       tracks: tracks.length,
       scoredSquads: totals.length,
-      totalPoints: totals.reduce((n, t) => n + (t.points || 0), 0),
+      totalPoints: Math.floor(totals.reduce((n, t) => n + (t.points || 0), 0)),
     };
   }, [teams, profiles, submissions, tracks, totals]);
 
